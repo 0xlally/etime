@@ -38,6 +38,7 @@ class SessionListItemResponse(BaseModel):
     """Response schema for session list item"""
     id: int
     user_id: int
+    username: str | None = None
     category_id: Optional[int] = None
     start_time: datetime
     end_time: Optional[datetime] = None

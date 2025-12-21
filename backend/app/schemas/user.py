@@ -19,6 +19,17 @@ class UserLogin(BaseModel):
     password: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    """Forgot password request"""
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    """Reset password request"""
+    token: str
+    new_password: str = Field(..., min_length=6)
+
+
 class TokenRefresh(BaseModel):
     """Token refresh request"""
     refresh_token: str

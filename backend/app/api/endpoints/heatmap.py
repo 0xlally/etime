@@ -1,8 +1,8 @@
 ﻿"""Heatmap API Endpoints - Time tracking heatmap visualization"""
 from fastapi import APIRouter, Depends, Query, HTTPException, status
-from sqlalchemy import func, Date
+from sqlalchemy import func
 from sqlalchemy.orm import Session as DBSession
-from datetime import datetime, timezone, timedelta, date as DateType
+from datetime import datetime, timezone, timedelta, date as DateType, time as TimeType
 from typing import Optional, List
 
 from app.models.user import User
@@ -20,6 +20,7 @@ router = APIRouter()
 def get_heatmap(
     start: Optional[DateType] = Query(None, description="Start date (YYYY-MM-DD)"),
     end: Optional[DateType] = Query(None, description="End date (YYYY-MM-DD)"),
+    category_id: Optional[int] = Query(None, description="Filter by category id"),
     current_user: User = Depends(get_current_active_user),
     db: DBSession = Depends(get_db)
 ):
@@ -37,7 +38,7 @@ def get_heatmap(
     
     Note: Dates are in UTC. Only completed sessions are counted.
     """
-    # Default to last 365 days
+    # Default to last 180 days to reduce payload and query volume
     now = datetime.now(timezone.utc)
     
     if end is None:
@@ -46,7 +47,7 @@ def get_heatmap(
         end_date = end
     
     if start is None:
-        start_date = end_date - timedelta(days=365)
+        start_date = end_date - timedelta(days=180)
     else:
         start_date = start
     
@@ -57,18 +58,25 @@ def get_heatmap(
             detail="start date must be before or equal to end date"
         )
     
+    # Compute datetime bounds once so the filter can use an index on start_time
+    start_dt = datetime.combine(start_date, TimeType.min).replace(tzinfo=timezone.utc)
+    end_dt = datetime.combine(end_date, TimeType.max).replace(tzinfo=timezone.utc)
+
     # Query sessions grouped by date
-    # We need to extract the date part from start_time
-    # For SQLite, we use date() function
-    results = db.query(
+    query = db.query(
         func.date(Session.start_time).label("date"),
         func.coalesce(func.sum(Session.duration_seconds), 0).label("total_seconds")
     ).filter(
         Session.user_id == current_user.id,
         Session.end_time.isnot(None),  # Only completed sessions
-        func.date(Session.start_time) >= start_date,
-        func.date(Session.start_time) <= end_date
-    ).group_by(
+        Session.start_time >= start_dt,
+        Session.start_time <= end_dt
+    )
+
+    if category_id is not None:
+        query = query.filter(Session.category_id == category_id)
+
+    results = query.group_by(
         func.date(Session.start_time)
     ).order_by(
         func.date(Session.start_time)
@@ -89,6 +97,7 @@ def get_heatmap(
 @router.get("/day", response_model=List[DaySessionDetail])
 def get_day_sessions(
     date: DateType = Query(..., description="Date to query (YYYY-MM-DD)"),
+    category_id: Optional[int] = Query(None, description="Filter by category id"),
     current_user: User = Depends(get_current_active_user),
     db: DBSession = Depends(get_db)
 ):
@@ -106,8 +115,11 @@ def get_day_sessions(
     
     Note: Date is in UTC.
     """
+    day_start = datetime.combine(date, TimeType.min).replace(tzinfo=timezone.utc)
+    day_end = datetime.combine(date, TimeType.max).replace(tzinfo=timezone.utc)
+
     # Query sessions for the specific date
-    sessions = db.query(
+    sessions_query = db.query(
         Session.id,
         Session.category_id,
         Category.name.label("category_name"),
@@ -121,8 +133,14 @@ def get_day_sessions(
     ).filter(
         Session.user_id == current_user.id,
         Session.end_time.isnot(None),  # Only completed sessions
-        func.date(Session.start_time) == date
-    ).order_by(
+        Session.start_time >= day_start,
+        Session.start_time <= day_end
+    )
+
+    if category_id is not None:
+        sessions_query = sessions_query.filter(Session.category_id == category_id)
+
+    sessions = sessions_query.order_by(
         Session.start_time
     ).all()
     

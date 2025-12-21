@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { StatsChart } from '../components/StatsChart';
 import { apiClient } from '../api/client';
-import { DailyStats } from '../types';
+import { StatsSummary } from '../types';
 
 type Period = 'today' | 'week' | 'month' | 'custom';
 
@@ -9,7 +9,7 @@ export const Stats: React.FC = () => {
   const [period, setPeriod] = useState<Period>('today');
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
-  const [stats, setStats] = useState<DailyStats[]>([]);
+  const [summary, setSummary] = useState<StatsSummary | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -19,28 +19,21 @@ export const Stats: React.FC = () => {
   const loadStats = async () => {
     setLoading(true);
     try {
-      let endpoint = '';
-      switch (period) {
-        case 'today':
-          endpoint = '/stats/today';
-          break;
-        case 'week':
-          endpoint = '/stats/week';
-          break;
-        case 'month':
-          endpoint = '/stats/month';
-          break;
-        case 'custom':
-          if (customStart && customEnd) {
-            endpoint = `/stats/range?start=${customStart}&end=${customEnd}`;
-          }
-          break;
+      const params: any = {};
+      if (period === 'custom') {
+        if (!customStart || !customEnd) {
+          setSummary(null);
+          return;
+        }
+        // 自定义范围：把日期扩展为当天的 00:00:00 - 23:59:59（UTC）
+        params.start = `${customStart}T00:00:00Z`;
+        params.end = `${customEnd}T23:59:59Z`;
+      } else {
+        params.range = period;
       }
 
-      if (endpoint) {
-        const data = await apiClient.get<DailyStats[]>(endpoint);
-        setStats(data);
-      }
+      const data = await apiClient.get<StatsSummary>('/stats/summary', params);
+      setSummary(data);
     } catch (error) {
       console.error('加载统计失败', error);
     } finally {
@@ -49,27 +42,12 @@ export const Stats: React.FC = () => {
   };
 
   const aggregateStats = () => {
-    const categoryMap = new Map<number, { name: string; color: string; seconds: number }>();
+    if (!summary) return [];
 
-    stats.forEach((day) => {
-      day.by_category.forEach((cat) => {
-        const existing = categoryMap.get(cat.category_id);
-        if (existing) {
-          existing.seconds += cat.seconds;
-        } else {
-          categoryMap.set(cat.category_id, {
-            name: cat.category_name,
-            color: cat.category_color,
-            seconds: cat.seconds,
-          });
-        }
-      });
-    });
-
-    return Array.from(categoryMap.values()).map((cat) => ({
-      name: cat.name,
+    return summary.by_category.map((cat) => ({
+      name: cat.category_name || '未分类',
       value: cat.seconds,
-      color: cat.color,
+      color: cat.category_color || '#667eea',
     }));
   };
 
@@ -123,7 +101,7 @@ export const Stats: React.FC = () => {
 
       {loading ? (
         <p>加载中...</p>
-      ) : stats.length === 0 ? (
+      ) : !summary || summary.total_seconds === 0 ? (
         <p>暂无数据</p>
       ) : (
         <StatsChart data={aggregateStats()} title="分类占比" />

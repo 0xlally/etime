@@ -55,6 +55,17 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
     return encoded_jwt
 
 
+def create_reset_token(data: Dict[str, Any], expires_minutes: int = 30) -> str:
+    """Create a password reset token (short-lived)."""
+    to_encode = data.copy()
+    expire = datetime.utcnow() + timedelta(minutes=expires_minutes)
+    to_encode.update({
+        "exp": expire,
+        "type": "reset"
+    })
+    return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
+
+
 def decode_token(token: str) -> Optional[TokenData]:
     """
     Decode and validate a JWT token.

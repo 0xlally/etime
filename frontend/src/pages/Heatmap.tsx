@@ -1,22 +1,59 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { HeatmapGrid } from '../components/HeatmapGrid';
+import { CategorySelect } from '../components/CategorySelect';
 import { apiClient } from '../api/client';
-import { HeatmapDay, Session } from '../types';
+import { HeatmapDay } from '../types';
+
+interface DayDetail {
+  id: number;
+  category_id: number | null;
+  category_name: string | null;
+  start_time: string;
+  end_time: string;
+  duration_seconds: number;
+  note: string | null;
+  source: string;
+}
 
 export const Heatmap: React.FC = () => {
-  const [year, setYear] = useState(new Date().getFullYear());
+  const currentYear = new Date().getFullYear();
+  const today = new Date();
+  const initialEnd = today.toISOString().slice(0, 10);
+  const initialStart = new Date(today.getTime() - 180 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [year, setYear] = useState(currentYear);
+  const [start, setStart] = useState(initialStart);
+  const [end, setEnd] = useState(initialEnd);
+  const [categoryId, setCategoryId] = useState<number | undefined>();
   const [data, setData] = useState<HeatmapDay[]>([]);
-  const [selectedDay, setSelectedDay] = useState<HeatmapDay | null>(null);
+  const [selectedDay, setSelectedDay] = useState<(HeatmapDay & { sessions?: DayDetail[] }) | null>(null);
   const [loading, setLoading] = useState(false);
+  const yearSyncSkipped = useRef(false);
+
+  useEffect(() => {
+    // 跳过首次挂载，之后年份切换才重置为整年范围
+    if (!yearSyncSkipped.current) {
+      yearSyncSkipped.current = true;
+      return;
+    }
+    setStart(`${year}-01-01`);
+    setEnd(`${year}-12-31`);
+  }, [year]);
 
   useEffect(() => {
     loadHeatmap();
-  }, [year]);
+  }, [start, end, categoryId]);
 
   const loadHeatmap = async () => {
     setLoading(true);
     try {
-      const heatmapData = await apiClient.get<HeatmapDay[]>(`/heatmap/${year}`);
+      const params: any = { start, end };
+      if (categoryId) {
+        params.category_id = categoryId;
+      }
+      const heatmapData = await apiClient.get<HeatmapDay[]>('/heatmap', params);
       setData(heatmapData);
     } catch (error) {
       console.error('加载热力图失败', error);
@@ -29,10 +66,11 @@ export const Heatmap: React.FC = () => {
     if (day.total_seconds === 0) return;
 
     try {
-      const sessions = await apiClient.get<Session[]>('/sessions', {
-        start_time: `${day.date}T00:00:00`,
-        end_time: `${day.date}T23:59:59`,
-      });
+      const params: any = { date: day.date };
+      if (categoryId) {
+        params.category_id = categoryId;
+      }
+      const sessions = await apiClient.get<DayDetail[]>('/heatmap/day', params);
       setSelectedDay({ ...day, sessions });
     } catch (error) {
       console.error('加载明细失败', error);
@@ -47,7 +85,7 @@ export const Heatmap: React.FC = () => {
 
   return (
     <div className="heatmap-page">
-      <h1>年度热力图</h1>
+      <h1>时间热力图</h1>
 
       <div className="year-selector">
         <button onClick={() => setYear(year - 1)}>← {year - 1}</button>
@@ -55,10 +93,35 @@ export const Heatmap: React.FC = () => {
         <button onClick={() => setYear(year + 1)}>{year + 1} →</button>
       </div>
 
+      <div className="custom-range">
+        <input
+          type="date"
+          value={start}
+          onChange={(e) => setStart(e.target.value)}
+        />
+        <span>至</span>
+        <input
+          type="date"
+          value={end}
+          onChange={(e) => setEnd(e.target.value)}
+        />
+        <button onClick={loadHeatmap}>查询</button>
+      </div>
+
+      <div className="filter-section">
+        <CategorySelect
+          value={categoryId}
+          onChange={setCategoryId}
+          allowEmpty
+          showCreate={false}
+          label="按分类查看（可选）"
+        />
+      </div>
+
       {loading ? (
         <p>加载中...</p>
       ) : (
-        <HeatmapGrid year={year} data={data} onDayClick={handleDayClick} />
+        <HeatmapGrid start={start} end={end} data={data} onDayClick={handleDayClick} />
       )}
 
       {selectedDay && (
@@ -81,13 +144,9 @@ export const Heatmap: React.FC = () => {
                 <tbody>
                   {selectedDay.sessions.map((session) => (
                     <tr key={session.id}>
-                      <td>{session.category?.name}</td>
+                      <td>{session.category_name || '未分类'}</td>
                       <td>{new Date(session.start_time).toLocaleTimeString()}</td>
-                      <td>
-                        {session.end_time
-                          ? new Date(session.end_time).toLocaleTimeString()
-                          : '进行中'}
-                      </td>
+                      <td>{new Date(session.end_time).toLocaleTimeString()}</td>
                       <td>{formatTime(session.duration_seconds || 0)}</td>
                       <td>{session.note || '-'}</td>
                     </tr>

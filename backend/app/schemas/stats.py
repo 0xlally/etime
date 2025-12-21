@@ -7,6 +7,7 @@ class CategoryStats(BaseModel):
     """Statistics for a single category"""
     category_id: int | None
     category_name: str | None
+    category_color: str | None = None
     seconds: int
     
     model_config = {"from_attributes": True}

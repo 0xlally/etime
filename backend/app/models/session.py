@@ -1,5 +1,5 @@
 ﻿"""Session Model - Time tracking sessions"""
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, CheckConstraint
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, CheckConstraint, Index
 from sqlalchemy.sql import func
 from app.core.db import Base
 import enum
@@ -14,6 +14,11 @@ class SessionSource(str, enum.Enum):
 class Session(Base):
     """Session database model - user's time tracking sessions"""
     __tablename__ = "sessions"
+    __table_args__ = (
+        Index("ix_sessions_start_time", "start_time"),
+        Index("ix_sessions_end_time", "end_time"),
+        Index("ix_sessions_user_start_time", "user_id", "start_time"),
+    )
     
     id = Column(Integer, primary_key=True, index=True)
     user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)

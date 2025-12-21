@@ -7,6 +7,7 @@ from datetime import datetime
 
 from app.models.user import User, UserRole
 from app.models.session import Session as SessionModel
+from app.models.user import User
 from app.models.admin_audit_log import AdminAuditLog
 from app.schemas.admin import (
     UserUpdateByAdmin, UserListResponse, PaginatedUsersResponse,
@@ -206,12 +207,32 @@ def list_sessions(
     # Apply pagination
     offset = (page - 1) * page_size
     sessions = query.order_by(SessionModel.start_time.desc()).offset(offset).limit(page_size).all()
+
+    # Fetch usernames to avoid N+1
+    user_ids = {s.user_id for s in sessions}
+    user_map = {u.id: u.username for u in db.query(User.id, User.username).filter(User.id.in_(user_ids)).all()}
+
+    session_items = [
+        SessionListItemResponse(
+          id=s.id,
+          user_id=s.user_id,
+          username=user_map.get(s.user_id),
+          category_id=s.category_id,
+          start_time=s.start_time,
+          end_time=s.end_time,
+          duration_seconds=s.duration_seconds,
+          note=s.note,
+          source=s.source,
+          created_at=s.created_at,
+        )
+        for s in sessions
+    ]
     
     return PaginatedSessionsResponse(
         total=total,
         page=page,
         page_size=page_size,
-        sessions=[SessionListItemResponse.from_orm(session) for session in sessions]
+        sessions=session_items
     )
 
 
@@ -264,3 +285,153 @@ def delete_session(
         target_id=session_id,
         detail_json={"deleted_session": session_info}
     )
+
+
+@router.post("/users/{user_id}/reset-password", status_code=status.HTTP_200_OK)
+def reset_user_password(
+    user_id: int,
+    password_data: dict,
+    current_admin: User = Depends(get_current_admin),
+    db: DBSession = Depends(get_db)
+):
+    """
+    Reset a user's password.
+    
+    Admin only. Creates audit log for the operation.
+    
+    Args:
+        user_id: ID of user to reset password for
+        password_data: Dict with 'new_password' field
+        current_admin: Current admin user
+        db: Database session
+        
+    Returns:
+        Success message
+        
+    Raises:
+        HTTPException: If user not found or password invalid
+    """
+    from app.utils.security import hash_password
+    
+    # Find user
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    new_password = password_data.get("new_password")
+    if not new_password or len(new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Password must be at least 6 characters"
+        )
+    
+    # Update password
+    user.password_hash = hash_password(new_password)
+    db.commit()
+    
+    # Create audit log
+    create_audit_log(
+        db=db,
+        admin_user_id=current_admin.id,
+        action="reset_password",
+        target_type="user",
+        target_id=user_id,
+        detail_json={"username": user.username}
+    )
+    
+    return {"message": "Password reset successfully"}
+
+
+@router.delete("/users/{user_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_user(
+    user_id: int,
+    current_admin: User = Depends(get_current_admin),
+    db: DBSession = Depends(get_db)
+):
+    """
+    Delete a user account.
+    
+    Admin only. Creates audit log for the operation.
+    Cannot delete yourself or other admins.
+    
+    Args:
+        user_id: ID of user to delete
+        current_admin: Current admin user
+        db: Database session
+        
+    Raises:
+        HTTPException: If user not found or attempting to delete admin/self
+    """
+    # Find user
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Prevent deleting yourself
+    if user.id == current_admin.id:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete your own account"
+        )
+    
+    # Prevent deleting other admins
+    if user.role == UserRole.ADMIN:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot delete admin users"
+        )
+    
+    # Store user info for audit log
+    user_info = {
+        "username": user.username,
+        "email": user.email,
+        "role": user.role.value if isinstance(user.role, UserRole) else user.role
+    }
+    
+    # Delete user (cascade delete will handle related records)
+    db.delete(user)
+    db.commit()
+    
+    # Create audit log
+    create_audit_log(
+        db=db,
+        admin_user_id=current_admin.id,
+        action="delete_user",
+        target_type="user",
+        target_id=user_id,
+        detail_json={"deleted_user": user_info}
+    )
+
+
+@router.get("/audit-logs", response_model=list)
+def list_audit_logs(
+    limit: int = Query(100, ge=1, le=500, description="Number of logs to return"),
+    current_admin: User = Depends(get_current_admin),
+    db: DBSession = Depends(get_db)
+):
+    """
+    List audit logs.
+    
+    Admin only. Returns recent audit logs ordered by creation time.
+    
+    Args:
+        limit: Maximum number of logs to return (default 100, max 500)
+        current_admin: Current admin user
+        db: Database session
+        
+    Returns:
+        List of audit logs
+    """
+    from app.schemas.admin import AuditLogResponse
+    
+    logs = db.query(AdminAuditLog).order_by(
+        AdminAuditLog.created_at.desc()
+    ).limit(limit).all()
+    
+    return [AuditLogResponse.from_orm(log) for log in logs]

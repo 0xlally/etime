@@ -24,6 +24,8 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     window.location.href = '/login';
   };
 
+  const role = apiClient.getUserRole();
+
   return (
     <div className="app-layout">
       <nav className="navbar">
@@ -33,7 +35,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
           <Link to="/stats">统计</Link>
           <Link to="/heatmap">热力图</Link>
           <Link to="/targets">目标</Link>
-          <Link to="/admin">管理</Link>
+          {role === 'admin' && <Link to="/admin">管理</Link>}
         </div>
         <div className="nav-actions">
           <NotificationBell />
@@ -96,9 +98,13 @@ function App() {
           path="/admin"
           element={
             <ProtectedRoute>
-              <Layout>
-                <Admin />
-              </Layout>
+              {apiClient.isAdmin() ? (
+                <Layout>
+                  <Admin />
+                </Layout>
+              ) : (
+                <Navigate to="/timer" replace />
+              )}
             </ProtectedRoute>
           }
         />

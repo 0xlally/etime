@@ -166,8 +166,104 @@ button[type='submit']:disabled {
   margin: 0 auto;
 }
 
+.target-highlight {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.25rem;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #f0f7ff 0%, #f5fbff 100%);
+  border: 1px solid #e0ecff;
+  margin-bottom: 1.5rem;
+}
+
+.target-ring {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  position: relative;
+  color: #2c3e50;
+}
+
+.target-ring-inner {
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  background: white;
+  display: grid;
+  place-items: center;
+  text-align: center;
+  box-shadow: inset 0 0 0 1px #eef2ff;
+}
+
+.target-value {
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.target-label {
+  font-size: 0.85rem;
+  color: #6b7280;
+}
+
+.target-meta {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.target-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1f2937;
+}
+
+.target-desc,
+.target-progress {
+  color: #4b5563;
+}
+
 .category-select {
   margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  background: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.category-select > label {
+  font-weight: 600;
+  color: #333;
+}
+
+.category-select select {
+  padding: 0.6rem 0.75rem;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.category-create-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: flex-end;
+}
+
+.category-create-form .form-group {
+  flex: 1 1 140px;
+  margin-bottom: 0;
+}
+
+.category-create-form button[type='submit'] {
+  width: auto;
+  padding: 0.55rem 1.1rem;
+  font-size: 0.9rem;
 }
 
 .mode-toggle {

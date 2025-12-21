@@ -59,17 +59,56 @@ export const Admin: React.FC = () => {
     try {
       const data = await apiClient.get<AuditLog[]>('/admin/audit-logs');
       setLogs(data);
-    } catch (error) {
+    } catch (error: any) {
       console.error('加载日志失败', error);
+      if (error?.response?.status === 403) {
+        alert('没有权限访问审计日志');
+      }
     }
   };
 
   const toggleUserActive = async (userId: number, isActive: boolean) => {
     try {
       await apiClient.patch(`/admin/users/${userId}`, { is_active: !isActive });
+      alert('用户状态已更新');
       loadUsers();
-    } catch (error) {
-      console.error('更新用户失败', error);
+    } catch (error: any) {
+      alert(error?.response?.data?.detail || '更新用户失败');
+    }
+  };
+
+  const resetUserPassword = async (userId: number, username: string) => {
+    const newPassword = prompt(`为用户 ${username} 设置新密码：`);
+    if (!newPassword || newPassword.trim().length < 6) {
+      alert('密码至少需要 6 位字符');
+      return;
+    }
+    if (!confirm(`确认为用户 ${username} 重置密码？`)) return;
+
+    try {
+      await apiClient.post(`/admin/users/${userId}/reset-password`, {
+        new_password: newPassword,
+      });
+      alert('密码已重置');
+    } catch (error: any) {
+      alert(error?.response?.data?.detail || '重置密码失败');
+    }
+  };
+
+  const deleteUser = async (userId: number, username: string) => {
+    if (!confirm(`确认删除用户 ${username}？此操作不可恢复！`)) return;
+    const confirmText = prompt('请输入用户名以确认删除：');
+    if (confirmText !== username) {
+      alert('用户名不匹配，取消删除');
+      return;
+    }
+
+    try {
+      await apiClient.delete(`/admin/users/${userId}`);
+      alert('用户已删除');
+      loadUsers();
+    } catch (error: any) {
+      alert(error?.response?.data?.detail || '删除用户失败');
     }
   };
 
@@ -120,7 +159,7 @@ export const Admin: React.FC = () => {
             <button onClick={loadUsers}>搜索</button>
           </div>
 
-          {users && (
+          {users && users.users && users.users.length > 0 ? (
             <>
               <table>
                 <thead>
@@ -135,7 +174,7 @@ export const Admin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {users.data.map((user) => (
+                  {users.users.map((user) => (
                     <tr key={user.id}>
                       <td>{user.id}</td>
                       <td>{user.username}</td>
@@ -146,6 +185,14 @@ export const Admin: React.FC = () => {
                       <td>
                         <button onClick={() => toggleUserActive(user.id, user.is_active)}>
                           {user.is_active ? '禁用' : '启用'}
+                        </button>
+                        {' '}
+                        <button onClick={() => resetUserPassword(user.id, user.username)}>
+                          重置密码
+                        </button>
+                        {' '}
+                        <button onClick={() => deleteUser(user.id, user.username)} style={{ background: '#e74c3c' }}>
+                          删除
                         </button>
                       </td>
                     </tr>
@@ -168,6 +215,8 @@ export const Admin: React.FC = () => {
                 </button>
               </div>
             </>
+          ) : (
+            <p>暂无用户数据</p>
           )}
         </div>
       )}
@@ -196,13 +245,13 @@ export const Admin: React.FC = () => {
             <button onClick={loadSessions}>查询</button>
           </div>
 
-          {sessions && (
+          {sessions && sessions.sessions && sessions.sessions.length > 0 ? (
             <>
               <table>
                 <thead>
                   <tr>
                     <th>ID</th>
-                    <th>用户 ID</th>
+                    <th>用户</th>
                     <th>分类 ID</th>
                     <th>开始时间</th>
                     <th>结束时间</th>
@@ -211,10 +260,10 @@ export const Admin: React.FC = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {sessions.data.map((session) => (
+                  {sessions.sessions.map((session) => (
                     <tr key={session.id}>
                       <td>{session.id}</td>
-                      <td>{session.user_id}</td>
+                      <td>{session.username ? `${session.username} (ID:${session.user_id})` : session.user_id}</td>
                       <td>{session.category_id}</td>
                       <td>{new Date(session.start_time).toLocaleString()}</td>
                       <td>
@@ -249,6 +298,8 @@ export const Admin: React.FC = () => {
                 </button>
               </div>
             </>
+          ) : (
+            <p>暂无会话数据</p>
           )}
         </div>
       )}

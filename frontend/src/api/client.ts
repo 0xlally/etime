@@ -7,7 +7,8 @@ class ApiClient {
 
   constructor() {
     this.client = axios.create({
-      baseURL: '/api',
+      // 与后端 FastAPI 主路由前缀保持一致 (/api/v1)
+      baseURL: '/api/v1',
       headers: {
         'Content-Type': 'application/json',
       },
@@ -53,6 +54,21 @@ class ApiClient {
 
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  getUserRole(): string | null {
+    const token = this.getToken();
+    if (!token) return null;
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      return payload?.role ?? null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  isAdmin(): boolean {
+    return this.getUserRole() === 'admin';
   }
 
   // API 方法

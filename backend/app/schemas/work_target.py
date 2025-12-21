@@ -14,8 +14,8 @@ class WorkTargetCreate(BaseModel):
     @field_validator("period")
     @classmethod
     def validate_period(cls, v):
-        if v not in ["daily", "weekly", "monthly"]:
-            raise ValueError("period must be 'daily', 'weekly', or 'monthly'")
+        if v not in ["daily", "weekly", "monthly", "tomorrow"]:
+            raise ValueError("period must be 'daily', 'weekly', 'monthly', or 'tomorrow'")
         return v
     
     @field_validator("target_seconds")

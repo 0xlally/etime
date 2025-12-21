@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { Play, Square, Plus } from 'lucide-react';
+import { Play, Square } from 'lucide-react';
 import { apiClient } from '../api/client';
 
 interface TimerControlsProps {
@@ -14,7 +14,6 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   onSessionEnd,
 }) => {
   const [running, setRunning] = useState(false);
-  const [currentSessionId, setCurrentSessionId] = useState<number | null>(null);
   const [elapsed, setElapsed] = useState(0);
 
   React.useEffect(() => {
@@ -33,28 +32,31 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       return;
     }
     try {
-      const session = await apiClient.post<{ id: number }>('/sessions', {
+      await apiClient.post('/sessions/start', {
         category_id: categoryId,
       });
-      setCurrentSessionId(session.id);
       setRunning(true);
       setElapsed(0);
       onSessionStart?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('开始计时失败', error);
+      const detail = error?.response?.data?.detail;
+      alert(typeof detail === 'string' ? detail : '开始计时失败');
     }
   };
 
   const handleStop = async () => {
-    if (!currentSessionId) return;
     try {
-      await apiClient.patch(`/sessions/${currentSessionId}`, {});
+      await apiClient.post('/sessions/stop', {
+        note: undefined,
+      });
       setRunning(false);
-      setCurrentSessionId(null);
       setElapsed(0);
       onSessionEnd?.();
-    } catch (error) {
+    } catch (error: any) {
       console.error('结束计时失败', error);
+      const detail = error?.response?.data?.detail;
+      alert(typeof detail === 'string' ? detail : '结束计时失败');
     }
   };
 
@@ -70,7 +72,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       <div className="timer-display">{formatTime(elapsed)}</div>
       <div className="timer-buttons">
         {!running ? (
-          <button onClick={handleStart} disabled={!categoryId}>
+          <button onClick={handleStart}>
             <Play size={20} /> 开始计时
           </button>
         ) : (

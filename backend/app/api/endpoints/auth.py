@@ -4,9 +4,23 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.models.user import User, UserRole
-from app.schemas.user import UserRegister, UserLogin, TokenRefresh, TokenResponse, UserResponse
+from app.schemas.user import (
+    UserRegister,
+    UserLogin,
+    TokenRefresh,
+    TokenResponse,
+    UserResponse,
+    ForgotPasswordRequest,
+    ResetPasswordRequest,
+)
 from app.utils.security import hash_password, verify_password
-from app.utils.jwt import create_access_token, create_refresh_token, decode_token, verify_token_type
+from app.utils.jwt import (
+    create_access_token,
+    create_refresh_token,
+    create_reset_token,
+    decode_token,
+    verify_token_type,
+)
 
 router = APIRouter()
 
@@ -167,3 +181,48 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
         refresh_token=new_refresh_token,
         token_type="bearer"
     )
+
+
+@router.post("/forgot-password")
+def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+    """Issue a reset token for password recovery. In production you should email this token."""
+    user = db.query(User).filter(User.email == payload.email).first()
+
+    reset_token = None
+    if user:
+        reset_token = create_reset_token({"sub": str(user.id)})
+
+    # Always respond 200 to avoid user enumeration
+    return {
+        "message": "如果邮箱已注册，我们已发送重置链接（当前返回 token 便于前端直接使用）",
+        "reset_token": reset_token,
+    }
+
+
+@router.post("/reset-password")
+def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+    """Reset password using a valid reset token."""
+    if not verify_token_type(payload.token, "reset"):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
+        )
+
+    token_data = decode_token(payload.token)
+    if token_data is None or token_data.user_id is None:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset token"
+        )
+
+    user = db.query(User).filter(User.id == token_data.user_id).first()
+    if not user or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid reset token"
+        )
+
+    user.password_hash = hash_password(payload.new_password)
+    db.commit()
+
+    return {"message": "密码已重置，请重新登录"}

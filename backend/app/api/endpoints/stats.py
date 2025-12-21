@@ -121,10 +121,11 @@ def get_stats_summary(
     
     total_seconds = int(total_result.total) if total_result else 0
     
-    # Query by category with GROUP BY
+    # Query by category with GROUP BY (including category color)
     category_results = db.query(
         Session.category_id,
         Category.name.label("category_name"),
+        Category.color.label("category_color"),
         func.coalesce(func.sum(Session.duration_seconds), 0).label("seconds")
     ).outerjoin(
         Category, Session.category_id == Category.id
@@ -135,7 +136,8 @@ def get_stats_summary(
         Session.start_time <= end_time
     ).group_by(
         Session.category_id,
-        Category.name
+        Category.name,
+        Category.color
     ).all()
     
     # Build category stats
@@ -143,6 +145,7 @@ def get_stats_summary(
         CategoryStats(
             category_id=row.category_id,
             category_name=row.category_name,
+            category_color=row.category_color,
             seconds=int(row.seconds)
         )
         for row in category_results

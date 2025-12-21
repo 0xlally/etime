@@ -39,6 +39,18 @@ export interface DailyStats {
   }>;
 }
 
+export interface CategoryStatsSummaryItem {
+  category_id: number | null;
+  category_name: string | null;
+  category_color: string | null;
+  seconds: number;
+}
+
+export interface StatsSummary {
+  total_seconds: number;
+  by_category: CategoryStatsSummaryItem[];
+}
+
 export interface HeatmapDay {
   date: string;
   total_seconds: number;
@@ -48,10 +60,14 @@ export interface HeatmapDay {
 export interface WorkTarget {
   id: number;
   user_id: number;
-  target_type: 'daily' | 'weekly' | 'monthly';
+  target_type?: 'daily' | 'weekly' | 'monthly'; // Legacy field
+  period?: 'daily' | 'weekly' | 'monthly' | 'tomorrow'; // New field matching backend
   target_seconds: number;
-  category_ids: number[];
-  is_enabled: boolean;
+  category_ids?: number[]; // Legacy field
+  include_category_ids?: number[]; // New field matching backend
+  is_enabled?: boolean; // Legacy field
+  is_active?: boolean; // New field matching backend
+  effective_from?: string;
   created_at: string;
 }
 

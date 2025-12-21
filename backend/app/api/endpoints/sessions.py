@@ -1,6 +1,6 @@
 ﻿"""Session Endpoints - Time tracking sessions"""
 from typing import List, Optional
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import and_
@@ -179,25 +179,50 @@ def create_manual_session(
     # Validate category ownership
     _validate_category_ownership(session_data.category_id, current_user.id, db)
     
-    # Calculate duration
-    duration = (session_data.end_time - session_data.start_time).total_seconds()
+    start = session_data.start_time
+    end = session_data.end_time
     
-    # Create manual session
-    new_session = Session(
+    # If the session spans multiple days, split into per-day sessions
+    sessions_created = []
+    cursor = start
+    while cursor.date() < end.date():
+        # End of current day 23:59:59
+        day_end = cursor.replace(hour=23, minute=59, second=59, microsecond=999999)
+        duration = (day_end - cursor).total_seconds()
+        partial = Session(
+            user_id=current_user.id,
+            category_id=session_data.category_id,
+            start_time=cursor,
+            end_time=day_end,
+            duration_seconds=int(duration),
+            note=session_data.note,
+            source=SessionSource.MANUAL
+        )
+        db.add(partial)
+        sessions_created.append(partial)
+        # Move cursor to start of next day
+        cursor = day_end.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+    
+    # Last segment (same day or remaining part)
+    duration_last = (end - cursor).total_seconds()
+    last_segment = Session(
         user_id=current_user.id,
         category_id=session_data.category_id,
-        start_time=session_data.start_time,
-        end_time=session_data.end_time,
-        duration_seconds=int(duration),
+        start_time=cursor,
+        end_time=end,
+        duration_seconds=int(duration_last),
         note=session_data.note,
         source=SessionSource.MANUAL
     )
+    db.add(last_segment)
+    sessions_created.append(last_segment)
     
-    db.add(new_session)
     db.commit()
-    db.refresh(new_session)
+    for s in sessions_created:
+        db.refresh(s)
     
-    return new_session
+    # Return the last segment for simplicity
+    return last_segment
 
 
 @router.get("/active", response_model=Optional[ActiveSessionResponse])

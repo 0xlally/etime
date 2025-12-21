@@ -1,0 +1,46 @@
+﻿services:
+  db:
+    image: postgres:16
+    container_name: etime_db
+    environment:
+      POSTGRES_DB: etime
+      POSTGRES_USER: etime
+      POSTGRES_PASSWORD: etime_pass
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "55432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U etime -d etime"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+    container_name: etime_backend
+    env_file: ./backend/.env
+    environment:
+      DATABASE_URL: postgresql+psycopg2://etime:etime_pass@db:5432/etime
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8001:8001"
+    restart: unless-stopped
+
+  frontend:
+    build:
+      context: ./frontend
+    container_name: etime_frontend
+    environment:
+      API_PROXY_TARGET: http://backend:8001
+    depends_on:
+      - backend
+    ports:
+      - "3000:3000"
+    restart: unless-stopped
+
+volumes:
+  db_data:

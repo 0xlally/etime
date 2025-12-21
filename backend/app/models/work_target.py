@@ -10,6 +10,7 @@ class TargetPeriod(str, enum.Enum):
     DAILY = "daily"
     WEEKLY = "weekly"
     MONTHLY = "monthly"
+    TOMORROW = "tomorrow"
 
 
 class WorkTarget(Base):
