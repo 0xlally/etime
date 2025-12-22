@@ -7,6 +7,7 @@ from datetime import datetime, timezone, timedelta
 from app.core.config import settings
 from app.api.router import api_router
 from app.core.db import SessionLocal
+from app.core.init_db import init_database
 from app.services.evaluation import evaluate_targets_for_date
 
 # Create FastAPI application
@@ -71,6 +72,9 @@ async def startup_event():
     print(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     print(f"Debug mode: {settings.DEBUG}")
     print(f"Database: {settings.DATABASE_URL}")
+
+    # Ensure tables and default admin exist for dev/first boot
+    init_database()
     
     # Start scheduler
     scheduler.add_job(

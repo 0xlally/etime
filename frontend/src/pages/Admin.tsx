@@ -1,17 +1,17 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { apiClient } from '../api/client';
-import { AdminUser, Session, AuditLog, PaginatedResponse } from '../types';
+import { AuditLog, PaginatedSessionsResponse, PaginatedUsersResponse } from '../types';
 
 export const Admin: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'sessions' | 'logs'>('users');
 
   // 用户管理
-  const [users, setUsers] = useState<PaginatedResponse<AdminUser> | null>(null);
+  const [users, setUsers] = useState<PaginatedUsersResponse | null>(null);
   const [userSearch, setUserSearch] = useState('');
   const [userPage, setUserPage] = useState(1);
 
   // 会话管理
-  const [sessions, setSessions] = useState<PaginatedResponse<Session> | null>(null);
+  const [sessions, setSessions] = useState<PaginatedSessionsResponse | null>(null);
   const [sessionFilters, setSessionFilters] = useState({
     user_id: '',
     start: '',
@@ -30,7 +30,7 @@ export const Admin: React.FC = () => {
 
   const loadUsers = async () => {
     try {
-      const data = await apiClient.get<PaginatedResponse<AdminUser>>('/admin/users', {
+      const data = await apiClient.get<PaginatedUsersResponse>('/admin/users', {
         search: userSearch || undefined,
         page: userPage,
         page_size: 20,
@@ -48,7 +48,7 @@ export const Admin: React.FC = () => {
       if (sessionFilters.start) params.start = sessionFilters.start;
       if (sessionFilters.end) params.end = sessionFilters.end;
 
-      const data = await apiClient.get<PaginatedResponse<Session>>('/admin/sessions', params);
+      const data = await apiClient.get<PaginatedSessionsResponse>('/admin/sessions', params);
       setSessions(data);
     } catch (error) {
       console.error('加载会话失败', error);

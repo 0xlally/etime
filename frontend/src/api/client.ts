@@ -60,7 +60,12 @@ class ApiClient {
     const token = this.getToken();
     if (!token) return null;
     try {
-      const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+      const base = token.split('.')[1];
+      if (!base) return null;
+      // Base64URL decode with padding
+      let padded = base.replace(/-/g, '+').replace(/_/g, '/');
+      while (padded.length % 4 !== 0) padded += '=';
+      const payload = JSON.parse(atob(padded));
       return payload?.role ?? null;
     } catch (e) {
       return null;

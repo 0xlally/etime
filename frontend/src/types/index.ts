@@ -28,6 +28,19 @@ export interface Session {
   category?: Category;
 }
 
+export interface SessionListItem {
+  id: number;
+  user_id: number;
+  username?: string | null;
+  category_id?: number | null;
+  start_time: string;
+  end_time?: string | null;
+  duration_seconds?: number | null;
+  note?: string | null;
+  source: string;
+  created_at: string;
+}
+
 export interface DailyStats {
   date: string;
   total_seconds: number;
@@ -51,16 +64,27 @@ export interface StatsSummary {
   by_category: CategoryStatsSummaryItem[];
 }
 
+export interface DayDetail {
+  id: number;
+  category_id: number | null;
+  category_name: string | null;
+  start_time: string;
+  end_time: string;
+  duration_seconds: number;
+  note: string | null;
+  source: string;
+}
+
 export interface HeatmapDay {
   date: string;
   total_seconds: number;
-  sessions?: Session[];
+  sessions?: DayDetail[];
 }
 
 export interface WorkTarget {
   id: number;
   user_id: number;
-  target_type?: 'daily' | 'weekly' | 'monthly'; // Legacy field
+  target_type?: 'daily' | 'weekly' | 'monthly' | 'tomorrow'; // Legacy field
   period?: 'daily' | 'weekly' | 'monthly' | 'tomorrow'; // New field matching backend
   target_seconds: number;
   category_ids?: number[]; // Legacy field
@@ -89,6 +113,20 @@ export interface AdminUser {
   is_active: boolean;
   role: string;
   created_at: string;
+}
+
+export interface PaginatedUsersResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  users: AdminUser[];
+}
+
+export interface PaginatedSessionsResponse {
+  total: number;
+  page: number;
+  page_size: number;
+  sessions: SessionListItem[];
 }
 
 export interface AuditLog {

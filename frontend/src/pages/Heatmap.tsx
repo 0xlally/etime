@@ -2,18 +2,7 @@
 import { HeatmapGrid } from '../components/HeatmapGrid';
 import { CategorySelect } from '../components/CategorySelect';
 import { apiClient } from '../api/client';
-import { HeatmapDay } from '../types';
-
-interface DayDetail {
-  id: number;
-  category_id: number | null;
-  category_name: string | null;
-  start_time: string;
-  end_time: string;
-  duration_seconds: number;
-  note: string | null;
-  source: string;
-}
+import { DayDetail, HeatmapDay } from '../types';
 
 export const Heatmap: React.FC = () => {
   const currentYear = new Date().getFullYear();

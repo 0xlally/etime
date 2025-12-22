@@ -61,7 +61,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
         email=user_data.email,
         username=user_data.username,
         password_hash=hash_password(user_data.password),
-        role=UserRole.USER,  # Default role
+        role=UserRole.USER.value,  # Default role uses enum value
         is_active=True
     )
     
