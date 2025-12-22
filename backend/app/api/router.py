@@ -29,8 +29,10 @@ api_router.include_router(heatmap.router, prefix="/heatmap", tags=["heatmap"])
 # Include work targets endpoints
 api_router.include_router(targets.router, prefix="/targets", tags=["targets"])
 
-# Include evaluations endpoints
+# Include evaluations endpoints (primary)
 api_router.include_router(evaluations.router, prefix="/evaluations", tags=["evaluations"])
+# Backward compatibility for older frontend build that called /work-evaluations
+api_router.include_router(evaluations.router, prefix="/work-evaluations", tags=["evaluations-legacy"])
 
 # Include notifications endpoints
 api_router.include_router(notifications.router, prefix="/notifications", tags=["notifications"])

@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+﻿import React, { useEffect, useRef, useState } from 'react';
 import { CategorySelect } from '../components/CategorySelect';
 import { TimerControls } from '../components/TimerControls';
 import { apiClient } from '../api/client';
@@ -14,10 +14,36 @@ export const Timer: React.FC = () => {
   });
   const [highlightTarget, setHighlightTarget] = useState<WorkTarget | null>(null);
   const [progress, setProgress] = useState<{ actual: number; target: number; start: Date; end: Date } | null>(null);
+  const [isRunning, setIsRunning] = useState(false);
+  const intervalRef = useRef<number | null>(null);
 
   useEffect(() => {
     loadTargetsAndProgress();
   }, []);
+
+  useEffect(() => {
+    if (!isRunning) {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+      return;
+    }
+
+    intervalRef.current = window.setInterval(() => {
+      setProgress((prev) => {
+        if (!prev) return prev;
+        return { ...prev, actual: prev.actual + 1 };
+      });
+    }, 1000);
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    };
+  }, [isRunning]);
 
   const loadTargetsAndProgress = async () => {
     try {
@@ -199,7 +225,22 @@ export const Timer: React.FC = () => {
         </div>
 
         {!manualMode ? (
-          <TimerControls categoryId={categoryId} />
+          <TimerControls
+            categoryId={categoryId}
+            onSessionStart={loadTargetsAndProgress}
+            onSessionEnd={loadTargetsAndProgress}
+            onRunningChange={(running, initialElapsed = 0) => {
+              setIsRunning(running);
+              if (running && initialElapsed > 0) {
+                setProgress((prev) =>
+                  prev ? { ...prev, actual: prev.actual + initialElapsed } : prev,
+                );
+              }
+              if (!running) {
+                setProgress((prev) => (prev ? { ...prev } : prev));
+              }
+            }}
+          />
         ) : (
           <form onSubmit={handleManualSubmit} className="manual-form">
             <div className="form-group">

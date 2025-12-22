@@ -93,7 +93,7 @@ def start_session(
         category_id=session_data.category_id,
         start_time=datetime.now(timezone.utc),
         note=session_data.note,
-        source=SessionSource.TIMER
+        source=SessionSource.TIMER.value
     )
     
     db.add(new_session)
@@ -196,7 +196,7 @@ def create_manual_session(
             end_time=day_end,
             duration_seconds=int(duration),
             note=session_data.note,
-            source=SessionSource.MANUAL
+            source=SessionSource.MANUAL.value
         )
         db.add(partial)
         sessions_created.append(partial)
@@ -212,7 +212,7 @@ def create_manual_session(
         end_time=end,
         duration_seconds=int(duration_last),
         note=session_data.note,
-        source=SessionSource.MANUAL
+        source=SessionSource.MANUAL.value
     )
     db.add(last_segment)
     sessions_created.append(last_segment)

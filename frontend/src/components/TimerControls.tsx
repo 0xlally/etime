@@ -1,20 +1,43 @@
 ﻿import React, { useState } from 'react';
 import { Play, Square } from 'lucide-react';
 import { apiClient } from '../api/client';
+import { ActiveSession } from '../types';
 
 interface TimerControlsProps {
   categoryId?: number;
   onSessionStart?: () => void;
   onSessionEnd?: () => void;
+  onRunningChange?: (running: boolean, initialElapsed?: number) => void;
 }
 
 export const TimerControls: React.FC<TimerControlsProps> = ({
   categoryId,
   onSessionStart,
   onSessionEnd,
+  onRunningChange,
 }) => {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+
+  React.useEffect(() => {
+    const loadActive = async () => {
+      try {
+        const active = await apiClient.get<ActiveSession | null>('/sessions/active');
+        if (active) {
+          setRunning(true);
+          setElapsed(active.elapsed_seconds || 0);
+          onRunningChange?.(true, active.elapsed_seconds || 0);
+        } else {
+          setRunning(false);
+          setElapsed(0);
+          onRunningChange?.(false, 0);
+        }
+      } catch (error) {
+        // Ignore errors (unauth etc.), keep default state
+      }
+    };
+    loadActive();
+  }, []);
 
   React.useEffect(() => {
     let timer: number;
@@ -38,6 +61,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       setRunning(true);
       setElapsed(0);
       onSessionStart?.();
+      onRunningChange?.(true, 0);
     } catch (error: any) {
       console.error('开始计时失败', error);
       const detail = error?.response?.data?.detail;
@@ -53,10 +77,17 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       setRunning(false);
       setElapsed(0);
       onSessionEnd?.();
+      onRunningChange?.(false, 0);
     } catch (error: any) {
       console.error('结束计时失败', error);
       const detail = error?.response?.data?.detail;
       alert(typeof detail === 'string' ? detail : '结束计时失败');
+      if (error?.response?.status === 404) {
+        // No active session; sync UI to stopped state
+        setRunning(false);
+        setElapsed(0);
+        onRunningChange?.(false, 0);
+      }
     }
   };
 

@@ -29,7 +29,7 @@ export const Targets: React.FC = () => {
     try {
       const [targetsData, evaluationsData, categoriesData] = await Promise.all([
         apiClient.get<WorkTarget[]>('/targets'),
-        apiClient.get<WorkEvaluation[]>('/work-evaluations'),
+        apiClient.get<WorkEvaluation[]>('/evaluations'),
         apiClient.get<Category[]>('/categories'),
       ]);
       setTargets(targetsData);
@@ -47,12 +47,13 @@ export const Targets: React.FC = () => {
         ? `${formData.effective_from}:00`
         : formData.effective_from;
 
-      await apiClient.post('/targets', {
+      const created = await apiClient.post<WorkTarget>('/targets', {
         period: formData.target_type,
         target_seconds: formData.target_seconds,
         include_category_ids: formData.category_ids.length > 0 ? formData.category_ids : null,
         effective_from: effective,
       });
+      setTargets((prev) => [created, ...prev]);
       setShowForm(false);
       loadData();
       setFormData({

@@ -31,7 +31,11 @@ class Session(Base):
     
     # Metadata
     note = Column(String(500), nullable=True)
-    source = Column(Enum(SessionSource), nullable=False, default=SessionSource.TIMER)
+    source = Column(
+        Enum(SessionSource, values_callable=lambda obj: [e.value for e in obj], name="sessionsource"),
+        nullable=False,
+        default=SessionSource.TIMER.value,
+    )
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

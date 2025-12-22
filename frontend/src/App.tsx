@@ -3,7 +3,7 @@ import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { Login } from './pages/Login';
 import { Timer } from './pages/Timer';
-import { Stats } from './pages/Stats';
+import { Classification } from './pages/Classification';
 import { Heatmap } from './pages/Heatmap';
 import { Targets } from './pages/Targets';
 import { Admin } from './pages/Admin';
@@ -32,9 +32,9 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="nav-brand">ETime</div>
         <div className="nav-links">
           <Link to="/timer">计时器</Link>
-          <Link to="/stats">统计</Link>
+          <Link to="/classification">分类统计</Link>
           <Link to="/heatmap">热力图</Link>
-          <Link to="/targets">目标</Link>
+          <Link to="/targets">时间规划</Link>
           {role === 'admin' && <Link to="/admin">管理</Link>}
         </div>
         <div className="nav-actions">
@@ -65,15 +65,17 @@ function App() {
           }
         />
         <Route
-          path="/stats"
+          path="/classification"
           element={
             <ProtectedRoute>
               <Layout>
-                <Stats />
+                <Classification />
               </Layout>
             </ProtectedRoute>
           }
         />
+        <Route path="/stats" element={<Navigate to="/classification" replace />} />
+        <Route path="/summary" element={<Navigate to="/classification" replace />} />
         <Route
           path="/heatmap"
           element={

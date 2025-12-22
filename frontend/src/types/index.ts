@@ -28,6 +28,15 @@ export interface Session {
   category?: Category;
 }
 
+export interface ActiveSession {
+  id: number;
+  user_id: number;
+  category_id?: number | null;
+  start_time: string;
+  note?: string | null;
+  elapsed_seconds: number;
+}
+
 export interface SessionListItem {
   id: number;
   user_id: number;
