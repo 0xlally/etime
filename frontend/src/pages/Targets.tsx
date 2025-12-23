@@ -90,12 +90,23 @@ export const Targets: React.FC = () => {
     }
   };
 
+  const deleteTarget = async (id: number) => {
+    if (!window.confirm('确认删除该目标吗？')) return;
+    try {
+      await apiClient.delete(`/targets/${id}`);
+      setTargets((prev) => prev.filter((t) => t.id !== id));
+      alert('目标已删除');
+      loadData();
+    } catch (error: any) {
+      alert(error?.response?.data?.detail || '删除失败');
+    }
+  };
+
   const formatTime = (seconds: number) => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     return `${hours}h ${minutes}m`;
   };
-
   return (
     <div className="targets-page">
       <h1>目标设置</h1>
@@ -244,6 +255,12 @@ export const Targets: React.FC = () => {
                     <td>
                       <button onClick={() => toggleTarget(target.id, isActive)}>
                         {isActive ? '停用' : '启用'}
+                      </button>
+                      <button
+                        style={{ marginLeft: 8 }}
+                        onClick={() => deleteTarget(target.id)}
+                      >
+                        删除
                       </button>
                     </td>
                   </tr>

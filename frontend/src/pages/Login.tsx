@@ -12,6 +12,15 @@ export const Login: React.FC = () => {
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const navigate = useNavigate();
+  const backgroundStyle = {
+    backgroundImage: "url('/ink/wallhaven-exd3w8.png')",
+    backgroundSize: 'contain',
+    backgroundPosition: 'center',
+    backgroundRepeat: 'no-repeat',
+  } as const;
+
+  const inputClass =
+    'w-full rounded-lg border border-slate-200 bg-white/90 px-4 py-3 text-slate-800 shadow-sm transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/60 focus:outline-none';
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -73,116 +82,141 @@ export const Login: React.FC = () => {
   };
 
   return (
-    <div className="login-page">
-      <div className="login-card">
-        <h1>ETime 时间追踪</h1>
-        <form onSubmit={handleSubmit}>
-          {authMode !== 'forgot' && (
-            <div className="form-group">
-              <label>用户名</label>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                required
-              />
-            </div>
-          )}
+    <div
+      className="relative min-h-screen bg-slate-900 px-4 py-10 flex items-center justify-center"
+      style={backgroundStyle}
+    >
+      <div className="relative z-10 w-full max-w-xl">
+        <div className="rounded-2xl bg-white/95 backdrop-blur border border-white/60 shadow-2xl px-6 py-8 sm:px-8">
+          <h1 className="mb-6 text-center text-3xl font-semibold tracking-[0.08em] text-slate-800">
+            ETime
+          </h1>
 
-          {(authMode === 'register' || authMode === 'forgot') && (
-            <div className="form-group">
-              <label>邮箱</label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          {authMode === 'login' && (
-            <div className="form-group">
-              <label>密码</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          {authMode === 'register' && (
-            <div className="form-group">
-              <label>密码</label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-              />
-            </div>
-          )}
-
-          {authMode === 'forgot' && resetToken && (
-            <>
-              <div className="form-group">
-                <label>重置令牌（已自动填入，可复制留存）</label>
-                <input type="text" value={resetToken} readOnly />
-              </div>
-              <div className="form-group">
-                <label>新密码</label>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {authMode !== 'forgot' && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">用户名</label>
                 <input
-                  type="password"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
+                  className={inputClass}
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
                   required
                 />
               </div>
-            </>
-          )}
+            )}
 
-          <button type="submit" disabled={loading}>
-            {loading
-              ? '处理中...'
-              : authMode === 'register'
-              ? '注册'
-              : authMode === 'login'
-              ? '登录'
-              : resetToken
-              ? '重置密码'
-              : '获取重置链接'}
-          </button>
-        </form>
+            {(authMode === 'register' || authMode === 'forgot') && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">邮箱</label>
+                <input
+                  className={inputClass}
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              </div>
+            )}
 
-        <p className="toggle-mode">
-          {authMode === 'login' ? '没有账号？' : authMode === 'register' ? '已有账号？' : '想起密码了？'}
-          <a
-            onClick={() => {
-              setAuthMode(authMode === 'login' ? 'register' : 'login');
-              setResetToken('');
-              setNewPassword('');
-            }}
-          >
-            {authMode === 'login' ? '去注册' : authMode === 'register' ? '去登录' : '去登录'}
-          </a>
-        </p>
+            {authMode === 'login' && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">密码</label>
+                <input
+                  className={inputClass}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            )}
 
-        {authMode !== 'forgot' && (
-          <p className="toggle-mode">
-            忘记密码？
-            <a
-              onClick={() => {
-                setAuthMode('forgot');
-                setResetToken('');
-                setNewPassword('');
-              }}
+            {authMode === 'register' && (
+              <div className="space-y-2">
+                <label className="block text-sm font-medium text-slate-700">密码</label>
+                <input
+                  className={inputClass}
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                />
+              </div>
+            )}
+
+            {authMode === 'forgot' && resetToken && (
+              <>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">
+                    重置令牌（已自动填入，可复制留存）
+                  </label>
+                  <input className={inputClass} type="text" value={resetToken} readOnly />
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-slate-700">新密码</label>
+                  <input
+                    className={inputClass}
+                    type="password"
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    required
+                  />
+                </div>
+              </>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full rounded-xl bg-slate-800 px-4 py-3 text-white font-semibold tracking-wide shadow-lg transition hover:bg-slate-900 disabled:cursor-not-allowed disabled:bg-slate-400"
             >
-              找回密码
-            </a>
-          </p>
-        )}
+              {loading
+                ? '处理中...'
+                : authMode === 'register'
+                ? '注册'
+                : authMode === 'login'
+                ? '登录'
+                : resetToken
+                ? '重置密码'
+                : '获取重置链接'}
+            </button>
+          </form>
+
+          <div className="mt-4 space-y-2 text-center text-sm text-slate-700">
+            <p className="space-x-2">
+              <span>{authMode === 'login' ? '没有账号？' : authMode === 'register' ? '已有账号？' : '想起密码了？'}</span>
+              <button
+                className="text-slate-900 font-semibold hover:underline"
+                type="button"
+                onClick={() => {
+                  setAuthMode(authMode === 'login' ? 'register' : 'login');
+                  setResetToken('');
+                  setNewPassword('');
+                }}
+              >
+                {authMode === 'login' ? '去注册' : authMode === 'register' ? '去登录' : '去登录'}
+              </button>
+            </p>
+
+            {authMode !== 'forgot' && (
+              <p className="space-x-2">
+                <span>忘记密码？</span>
+                <button
+                  className="text-slate-900 font-semibold hover:underline"
+                  type="button"
+                  onClick={() => {
+                    setAuthMode('forgot');
+                    setResetToken('');
+                    setNewPassword('');
+                  }}
+                >
+                  找回密码
+                </button>
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

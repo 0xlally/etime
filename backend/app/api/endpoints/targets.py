@@ -115,3 +115,26 @@ def update_target(
     db.refresh(target)
     
     return target
+
+
+@router.delete("/{target_id}", status_code=status.HTTP_204_NO_CONTENT)
+def delete_target(
+    target_id: int,
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db)
+):
+    """Delete a work target for the current user."""
+    target = db.query(WorkTarget).filter(
+        WorkTarget.id == target_id,
+        WorkTarget.user_id == current_user.id
+    ).first()
+    
+    if not target:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Work target not found"
+        )
+    
+    db.delete(target)
+    db.commit()
+    return None

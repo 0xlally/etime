@@ -1,4 +1,11 @@
-﻿/* 布局 */
+﻿body {
+  margin: 0;
+  font-family: 'Noto Serif SC', 'STKaiti', 'KaiTi', 'Songti SC', serif;
+  background: #f7f6f2;
+  color: #1f2937;
+}
+
+/* 布局 */
 .app-layout {
   display: flex;
   flex-direction: column;
@@ -68,30 +75,6 @@
   width: 100%;
 }
 
-/* 登录页 */
-.login-page {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-}
-
-.login-card {
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  width: 100%;
-  max-width: 400px;
-}
-
-.login-card h1 {
-  margin-bottom: 1.5rem;
-  text-align: center;
-  color: #2c3e50;
-}
-
 .form-group {
   margin-bottom: 1rem;
 }
@@ -108,8 +91,8 @@
 .form-group textarea {
   width: 100%;
   padding: 0.75rem;
-  border: 1px solid #ddd;
-  border-radius: 4px;
+  border: 1px solid #d8d7d1;
+  border-radius: 6px;
   font-size: 1rem;
 }
 
@@ -117,26 +100,28 @@
 .form-group select:focus,
 .form-group textarea:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  border-color: #1f2a44;
+  box-shadow: 0 0 0 3px rgba(31, 42, 68, 0.12);
 }
 
 button[type='submit'],
 button.primary {
   width: 100%;
-  padding: 0.75rem;
-  background: #667eea;
-  color: white;
+  padding: 0.8rem;
+  background: linear-gradient(120deg, #1f2a44, #1f2a44 50%, #263859);
+  color: #fefefe;
   border: none;
-  border-radius: 4px;
+  border-radius: 10px;
   font-size: 1rem;
-  font-weight: 600;
-  transition: background 0.2s;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  transition: transform 0.15s ease, box-shadow 0.2s ease;
 }
 
 button[type='submit']:hover,
 button.primary:hover {
-  background: #5568d3;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 24px rgba(31, 42, 68, 0.25);
 }
 
 button[type='submit']:disabled {
@@ -147,11 +132,11 @@ button[type='submit']:disabled {
 .toggle-mode {
   margin-top: 1rem;
   text-align: center;
-  color: #666;
+  color: #3e4658;
 }
 
 .toggle-mode a {
-  color: #667eea;
+  color: #1f2a44;
   cursor: pointer;
   margin-left: 0.5rem;
 }

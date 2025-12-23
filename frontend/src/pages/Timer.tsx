@@ -184,6 +184,10 @@ export const Timer: React.FC = () => {
     <div className="timer-page">
       <h1>计时器</h1>
 
+      <p className="mb-6 rounded-xl border-l-4 border-slate-800 bg-gradient-to-r from-white/90 to-slate-50 px-4 py-3 text-slate-800 shadow">
+        运用认知的力量，保持耐心与饥渴，和时间做朋友
+      </p>
+
       {highlightTarget && progress && (
         <div className="target-highlight">
           <div className="target-ring" style={{
