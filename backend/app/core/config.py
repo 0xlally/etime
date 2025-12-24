@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     DEBUG: bool = False
     
     # Database
-    DATABASE_URL: str = "sqlite:///./app.db"
+    DATABASE_URL: str = "postgresql+psycopg2://etime:etime_pass@db:5432/etime"
     
     # Security
     JWT_SECRET: str = "your-secret-key-change-in-production"
