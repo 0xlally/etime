@@ -12,7 +12,6 @@ interface Notification {
 export const NotificationBell: React.FC = () => {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     loadNotifications();
@@ -25,7 +24,6 @@ export const NotificationBell: React.FC = () => {
     try {
       const data = await apiClient.get<Notification[]>('/notifications');
       setNotifications(data);
-      setUnreadCount(data.filter((n) => !n.is_read).length);
     } catch (error) {
       console.error('加载通知失败', error);
     }
@@ -44,7 +42,6 @@ export const NotificationBell: React.FC = () => {
     <div className="notification-bell">
       <button onClick={() => setShowDropdown(!showDropdown)} className="bell-button">
         <Bell size={20} />
-        {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
       </button>
 
       {showDropdown && (

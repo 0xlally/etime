@@ -72,6 +72,35 @@ export const Heatmap: React.FC = () => {
     return `${hours}h ${minutes}m`;
   };
 
+  const handleDelete = async (sessionId: number, day: HeatmapDay) => {
+    if (!window.confirm('确认删除这段计时记录？')) return;
+    try {
+      await apiClient.delete(`/sessions/${sessionId}`);
+      await loadHeatmap();
+      // Refresh selected day details
+      await handleDayClick(day);
+    } catch (error) {
+      alert('删除失败');
+    }
+  };
+
+  const handleAdjustMultiplier = async (sessionId: number, day: HeatmapDay) => {
+    const input = window.prompt('输入新的系数（0~10，可带小数）');
+    if (input === null) return;
+    const value = Number(input);
+    if (Number.isNaN(value) || value < 0 || value > 10) {
+      alert('请输入 0~10 的数字');
+      return;
+    }
+    try {
+      await apiClient.patch(`/sessions/${sessionId}/multiplier`, { multiplier: value });
+      await loadHeatmap();
+      await handleDayClick(day);
+    } catch (error) {
+      alert('调整失败');
+    }
+  };
+
   return (
     <div className="heatmap-page">
       <h1>时间热力图</h1>
@@ -126,8 +155,9 @@ export const Heatmap: React.FC = () => {
                     <th>分类</th>
                     <th>开始时间</th>
                     <th>结束时间</th>
-                    <th>时长</th>
+                    <th>有效时长</th>
                     <th>备注</th>
+                    <th>操作</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -136,8 +166,12 @@ export const Heatmap: React.FC = () => {
                       <td>{session.category_name || '未分类'}</td>
                       <td>{new Date(session.start_time).toLocaleTimeString()}</td>
                       <td>{new Date(session.end_time).toLocaleTimeString()}</td>
-                      <td>{formatTime(session.duration_seconds || 0)}</td>
+                      <td>{formatTime(session.effective_seconds || session.duration_seconds || 0)}</td>
                       <td>{session.note || '-'}</td>
+                      <td>
+                        <button onClick={() => handleAdjustMultiplier(session.id, selectedDay)}>调整系数</button>
+                        <button onClick={() => handleDelete(session.id, selectedDay)} style={{ marginLeft: 8 }}>删除</button>
+                      </td>
                     </tr>
                   ))}
                 </tbody>

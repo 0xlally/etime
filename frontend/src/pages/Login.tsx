@@ -11,14 +11,8 @@ export const Login: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [resetToken, setResetToken] = useState('');
   const [newPassword, setNewPassword] = useState('');
+  const [tokenRequested, setTokenRequested] = useState(false);
   const navigate = useNavigate();
-  const backgroundStyle = {
-    backgroundImage: "url('/ink/wallhaven-exd3w8.png')",
-    backgroundSize: 'contain',
-    backgroundPosition: 'center',
-    backgroundRepeat: 'no-repeat',
-  } as const;
-
   const inputClass =
     'w-full rounded-lg border border-slate-200 bg-white/90 px-4 py-3 text-slate-800 shadow-sm transition focus:border-slate-500 focus:ring-2 focus:ring-slate-500/60 focus:outline-none';
 
@@ -43,16 +37,15 @@ export const Login: React.FC = () => {
         navigate('/timer');
       } else {
         // 忘记密码流程
-        if (!resetToken) {
-          const resp = await apiClient.post<{ reset_token?: string; message: string }>(
-            '/auth/forgot-password',
-            { email }
-          );
-          if (resp.reset_token) {
-            setResetToken(resp.reset_token);
-          }
-          alert('重置链接已发送（当前会直接返回重置令牌供下一步使用）');
+        if (!tokenRequested) {
+          await apiClient.post('/auth/forgot-password', { email });
+          alert('重置邮件已发送，请查收邮箱获取重置令牌');
+          setTokenRequested(true);
         } else {
+          if (!resetToken) {
+            alert('请输入邮箱收到的重置令牌');
+            return;
+          }
           await apiClient.post('/auth/reset-password', {
             token: resetToken,
             new_password: newPassword,
@@ -61,6 +54,7 @@ export const Login: React.FC = () => {
           setAuthMode('login');
           setResetToken('');
           setNewPassword('');
+          setTokenRequested(false);
         }
       }
     } catch (error: any) {
@@ -83,8 +77,7 @@ export const Login: React.FC = () => {
 
   return (
     <div
-      className="relative min-h-screen bg-slate-900 px-4 py-10 flex items-center justify-center"
-      style={backgroundStyle}
+      className="relative min-h-screen bg-slate-900 px-4 py-10 flex items-center justify-center login-bg"
     >
       <div className="relative z-10 w-full max-w-xl">
         <div className="rounded-2xl bg-white/95 backdrop-blur border border-white/60 shadow-2xl px-6 py-8 sm:px-8">
@@ -145,13 +138,17 @@ export const Login: React.FC = () => {
               </div>
             )}
 
-            {authMode === 'forgot' && resetToken && (
+            {authMode === 'forgot' && tokenRequested && (
               <>
                 <div className="space-y-2">
-                  <label className="block text-sm font-medium text-slate-700">
-                    重置令牌（已自动填入，可复制留存）
-                  </label>
-                  <input className={inputClass} type="text" value={resetToken} readOnly />
+                  <label className="block text-sm font-medium text-slate-700">重置令牌</label>
+                  <input
+                    className={inputClass}
+                    type="text"
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    required
+                  />
                 </div>
                 <div className="space-y-2">
                   <label className="block text-sm font-medium text-slate-700">新密码</label>
@@ -177,9 +174,9 @@ export const Login: React.FC = () => {
                 ? '注册'
                 : authMode === 'login'
                 ? '登录'
-                : resetToken
+                : tokenRequested
                 ? '重置密码'
-                : '获取重置链接'}
+                : '获取重置邮件'}
             </button>
           </form>
 
@@ -209,6 +206,7 @@ export const Login: React.FC = () => {
                     setAuthMode('forgot');
                     setResetToken('');
                     setNewPassword('');
+                    setTokenRequested(false);
                   }}
                 >
                   找回密码

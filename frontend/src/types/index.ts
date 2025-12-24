@@ -23,6 +23,8 @@ export interface Session {
   start_time: string;
   end_time?: string;
   duration_seconds?: number;
+  effective_seconds?: number;
+  effectiveness_multiplier?: number;
   note?: string;
   created_at: string;
   category?: Category;
@@ -80,6 +82,7 @@ export interface DayDetail {
   start_time: string;
   end_time: string;
   duration_seconds: number;
+  effective_seconds?: number;
   note: string | null;
   source: string;
 }

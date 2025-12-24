@@ -20,6 +20,7 @@ class DaySessionDetail(BaseModel):
     start_time: datetime
     end_time: datetime
     duration_seconds: int
+    effective_seconds: Optional[int] = None
     note: Optional[str]
     source: str
     

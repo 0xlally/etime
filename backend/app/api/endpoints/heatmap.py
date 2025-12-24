@@ -65,7 +65,7 @@ def get_heatmap(
     # Query sessions grouped by date
     query = db.query(
         func.date(Session.start_time).label("date"),
-        func.coalesce(func.sum(Session.duration_seconds), 0).label("total_seconds")
+        func.coalesce(func.sum(func.coalesce(Session.effective_seconds, Session.duration_seconds)), 0).label("total_seconds")
     ).filter(
         Session.user_id == current_user.id,
         Session.end_time.isnot(None),  # Only completed sessions
@@ -85,7 +85,8 @@ def get_heatmap(
     # Convert to response format
     heatmap_data = [
         HeatmapDay(
-            date=row.date,
+            # Convert date object to ISO string to satisfy schema validation
+            date=row.date.isoformat(),
             total_seconds=int(row.total_seconds)
         )
         for row in results
@@ -126,6 +127,7 @@ def get_day_sessions(
         Session.start_time,
         Session.end_time,
         Session.duration_seconds,
+        Session.effective_seconds,
         Session.note,
         Session.source
     ).outerjoin(
@@ -153,6 +155,7 @@ def get_day_sessions(
             start_time=s.start_time if s.start_time.tzinfo else s.start_time.replace(tzinfo=timezone.utc),
             end_time=s.end_time if s.end_time.tzinfo else s.end_time.replace(tzinfo=timezone.utc),
             duration_seconds=s.duration_seconds,
+            effective_seconds=s.effective_seconds if s.effective_seconds is not None else s.duration_seconds,
             note=s.note,
             source=s.source
         )

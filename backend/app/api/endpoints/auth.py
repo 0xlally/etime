@@ -1,5 +1,6 @@
 ﻿"""Authentication Endpoints"""
 from datetime import datetime
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from app.core.db import get_db
@@ -21,6 +22,10 @@ from app.utils.jwt import (
     decode_token,
     verify_token_type,
 )
+from app.utils.email import send_email, build_reset_email
+
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter()
 
@@ -185,17 +190,22 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
 
 @router.post("/forgot-password")
 def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    """Issue a reset token for password recovery. In production you should email this token."""
+    """Issue a reset token for password recovery and send via email."""
     user = db.query(User).filter(User.email == payload.email).first()
 
-    reset_token = None
     if user:
         reset_token = create_reset_token({"sub": str(user.id)})
+        try:
+            subject, body = build_reset_email(user.email, reset_token)
+            send_email(user.email, subject, body)
+        except Exception as exc:  # pragma: no cover - side effect
+            logger.exception("Failed to send reset email: %s", exc)
+            # Do not leak SMTP errors to client; keep response generic to avoid user enumeration.
+            pass
 
     # Always respond 200 to avoid user enumeration
     return {
-        "message": "如果邮箱已注册，我们已发送重置链接（当前返回 token 便于前端直接使用）",
-        "reset_token": reset_token,
+        "message": "如果邮箱已注册，我们已尝试发送重置邮件（如未收到请稍后重试）",
     }
 
 

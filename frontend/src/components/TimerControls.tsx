@@ -18,6 +18,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 }) => {
   const [running, setRunning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
+  const [multiplier, setMultiplier] = useState(1);
 
   React.useEffect(() => {
     const loadActive = async () => {
@@ -73,6 +74,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
     try {
       await apiClient.post('/sessions/stop', {
         note: undefined,
+        multiplier,
       });
       setRunning(false);
       setElapsed(0);
@@ -101,16 +103,32 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   return (
     <div className="timer-controls">
       <div className="timer-display">{formatTime(elapsed)}</div>
-      <div className="timer-buttons">
-        {!running ? (
-          <button onClick={handleStart}>
-            <Play size={20} /> 开始计时
-          </button>
-        ) : (
-          <button onClick={handleStop} className="stop">
-            <Square size={20} /> 停止
-          </button>
-        )}
+      <div className="timer-footer">
+        <div className="multiplier-control">
+          <label>
+            系数
+            <input
+              type="number"
+              step="0.1"
+              min="0"
+              max="10"
+              value={multiplier}
+              onChange={(e) => setMultiplier(parseFloat(e.target.value) || 0)}
+            />
+          </label>
+          <span className="multiplier-hint">结束后按系数折算有效时长（取整到分钟）</span>
+        </div>
+        <div className="timer-buttons">
+          {!running ? (
+            <button onClick={handleStart}>
+              <Play size={20} /> 开始计时
+            </button>
+          ) : (
+            <button onClick={handleStop} className="stop">
+              <Square size={20} /> 停止
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

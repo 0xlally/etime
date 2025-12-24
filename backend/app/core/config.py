@@ -31,6 +31,15 @@ class Settings(BaseSettings):
     
     # API
     API_V1_PREFIX: str = "/api/v1"
+
+    # SMTP / Email
+    SMTP_HOST: Optional[str] = None
+    SMTP_PORT: int = 465
+    SMTP_USER: Optional[str] = None
+    SMTP_PASSWORD: Optional[str] = None
+    SMTP_FROM: Optional[str] = None
+    SMTP_TLS: bool = False
+    SMTP_SSL: bool = True
     
     model_config = SettingsConfigDict(
         env_file=".env",

@@ -9,12 +9,35 @@ from app.models.user import User
 from app.models.category import Category
 from app.models.session import Session, SessionSource
 from app.schemas.session import (
-    SessionStart, SessionStop, SessionManual, 
-    SessionResponse, ActiveSessionResponse
+    SessionStart, SessionStop, SessionManual,
+    SessionResponse, ActiveSessionResponse, SessionAdjustMultiplier
 )
 from app.api.deps import get_current_active_user
 
 router = APIRouter()
+
+
+def _round_to_minute(seconds: float) -> int:
+    """Round seconds to nearest minute (in seconds)."""
+    return int(round(seconds / 60.0)) * 60
+
+
+def _recalc_effective(session: Session, multiplier: float) -> None:
+    duration = None
+    if session.duration_seconds is not None:
+        duration = session.duration_seconds
+    elif session.start_time and session.end_time:
+        start_time = session.start_time if session.start_time.tzinfo else session.start_time.replace(tzinfo=timezone.utc)
+        end_time = session.end_time if session.end_time.tzinfo else session.end_time.replace(tzinfo=timezone.utc)
+        duration = int((end_time - start_time).total_seconds())
+        session.duration_seconds = duration
+
+    if duration is None:
+        session.effective_seconds = None
+        return
+
+    session.effectiveness_multiplier = multiplier
+    session.effective_seconds = _round_to_minute(duration * multiplier)
 
 
 def _validate_category_ownership(category_id: Optional[int], user_id: int, db: DBSession) -> None:
@@ -134,15 +157,20 @@ def stop_session(
     # Stop the session
     now = datetime.now(timezone.utc)
     active_session.end_time = now
-    
+
     # Ensure start_time has timezone (SQLite stores as naive)
     start_time = active_session.start_time
     if start_time.tzinfo is None:
         start_time = start_time.replace(tzinfo=timezone.utc)
-    
+
     # Calculate duration in seconds
     duration = (now - start_time).total_seconds()
     active_session.duration_seconds = int(duration)
+
+    # Apply multiplier to get effective seconds (rounded to minute)
+    multiplier = session_data.multiplier if session_data.multiplier is not None else 1.0
+    multiplier = max(0.0, min(multiplier, 10.0))
+    _recalc_effective(active_session, multiplier)
     
     # Update note if provided
     if session_data.note:
@@ -182,6 +210,9 @@ def create_manual_session(
     start = session_data.start_time
     end = session_data.end_time
     
+    multiplier = session_data.multiplier if session_data.multiplier is not None else 1.0
+    multiplier = max(0.0, min(multiplier, 10.0))
+
     # If the session spans multiple days, split into per-day sessions
     sessions_created = []
     cursor = start
@@ -195,6 +226,8 @@ def create_manual_session(
             start_time=cursor,
             end_time=day_end,
             duration_seconds=int(duration),
+            effectiveness_multiplier=multiplier,
+            effective_seconds=_round_to_minute(duration * multiplier),
             note=session_data.note,
             source=SessionSource.MANUAL.value
         )
@@ -211,6 +244,8 @@ def create_manual_session(
         start_time=cursor,
         end_time=end,
         duration_seconds=int(duration_last),
+        effectiveness_multiplier=multiplier,
+        effective_seconds=_round_to_minute(duration_last * multiplier),
         note=session_data.note,
         source=SessionSource.MANUAL.value
     )
@@ -382,3 +417,30 @@ def delete_session(
     db.commit()
     
     return None
+
+
+@router.patch("/{session_id}/multiplier", response_model=SessionResponse)
+def adjust_multiplier(
+    session_id: int,
+    payload: SessionAdjustMultiplier,
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db)
+):
+    """Adjust multiplier/effective time for a completed session."""
+    session = db.query(Session).filter(Session.id == session_id).first()
+
+    if not session:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Session not found")
+
+    if session.user_id != current_user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not authorized to modify this session")
+
+    if session.end_time is None:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Cannot adjust an active session")
+
+    multiplier = max(0.0, min(payload.multiplier, 10.0))
+    _recalc_effective(session, multiplier)
+
+    db.commit()
+    db.refresh(session)
+    return session

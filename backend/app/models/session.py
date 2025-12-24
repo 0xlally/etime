@@ -1,5 +1,5 @@
 ﻿"""Session Model - Time tracking sessions"""
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, CheckConstraint, Index
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, CheckConstraint, Index, Float
 from sqlalchemy.sql import func
 from app.core.db import Base
 import enum
@@ -28,6 +28,8 @@ class Session(Base):
     start_time = Column(DateTime(timezone=True), nullable=False)
     end_time = Column(DateTime(timezone=True), nullable=True)  # NULL means session is ongoing
     duration_seconds = Column(Integer, nullable=True)  # Calculated when session ends
+    effectiveness_multiplier = Column(Float, nullable=True, default=1.0)
+    effective_seconds = Column(Integer, nullable=True)  # duration_seconds * multiplier rounded to minute
     
     # Metadata
     note = Column(String(500), nullable=True)

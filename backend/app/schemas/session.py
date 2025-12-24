@@ -15,6 +15,7 @@ class SessionStart(BaseModel):
 class SessionStop(BaseModel):
     """Stop current timer session"""
     note: Optional[str] = Field(None, max_length=500)
+    multiplier: Optional[float] = Field(None, ge=0, le=10, description="Efficiency multiplier applied to duration")
 
 
 class SessionManual(BaseModel):
@@ -23,14 +24,12 @@ class SessionManual(BaseModel):
     start_time: datetime
     end_time: datetime
     note: Optional[str] = Field(None, max_length=500)
-    
-    @field_validator('end_time')
-    @classmethod
-    def validate_end_after_start(cls, v, info):
-        """Ensure end_time is after start_time"""
-        if 'start_time' in info.data and v <= info.data['start_time']:
-            raise ValueError('end_time must be after start_time')
-        return v
+    multiplier: Optional[float] = Field(None, ge=0, le=10, description="Efficiency multiplier applied to duration")
+
+
+class SessionAdjustMultiplier(BaseModel):
+    """Adjust multiplier for an existing completed session"""
+    multiplier: float = Field(..., ge=0, le=10, description="Efficiency multiplier applied to duration")
 
 
 # Response Schemas
@@ -42,6 +41,8 @@ class SessionResponse(BaseModel):
     start_time: datetime
     end_time: Optional[datetime] = None
     duration_seconds: Optional[int] = None
+    effective_seconds: Optional[int] = None
+    effectiveness_multiplier: Optional[float] = None
     note: Optional[str] = None
     source: SessionSource
     created_at: datetime

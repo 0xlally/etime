@@ -111,7 +111,7 @@ def get_stats_summary(
     # Query total seconds
     # Only count completed sessions (end_time is not NULL)
     total_result = db.query(
-        func.coalesce(func.sum(Session.duration_seconds), 0).label("total")
+           func.coalesce(func.sum(func.coalesce(Session.effective_seconds, Session.duration_seconds)), 0).label("total")
     ).filter(
         Session.user_id == current_user.id,
         Session.end_time.isnot(None),  # Only completed sessions
@@ -126,7 +126,7 @@ def get_stats_summary(
         Session.category_id,
         Category.name.label("category_name"),
         Category.color.label("category_color"),
-        func.coalesce(func.sum(Session.duration_seconds), 0).label("seconds")
+           func.coalesce(func.sum(func.coalesce(Session.effective_seconds, Session.duration_seconds)), 0).label("seconds")
     ).outerjoin(
         Category, Session.category_id == Category.id
     ).filter(

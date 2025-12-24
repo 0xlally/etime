@@ -182,109 +182,126 @@ export const Timer: React.FC = () => {
 
   return (
     <div className="timer-page">
-      <h1>计时器</h1>
+      <div className="timer-shell">
+        <div className="timer-header">
+          <p className="timer-banner">运用认知的力量，保持耐心与饥渴，和时间做朋友</p>
+        </div>
 
-      <p className="mb-6 rounded-xl border-l-4 border-slate-800 bg-gradient-to-r from-white/90 to-slate-50 px-4 py-3 text-slate-800 shadow">
-        运用认知的力量，保持耐心与饥渴，和时间做朋友
-      </p>
-
-      {highlightTarget && progress && (
-        <div className="target-highlight">
-          <div className="target-ring" style={{
-            background: `conic-gradient(#27ae60 ${Math.min(100, (progress.actual / progress.target) * 100)}%, #e5e7eb 0)`
-          }}>
-            <div className="target-ring-inner">
-              <div className="target-value">
-                {formatTime(progress.target - progress.actual > 0 ? progress.target - progress.actual : 0)}
+        <div className="timer-grid">
+          {highlightTarget && progress && (
+            <div className="ui-card target-card">
+              <div
+                className="target-ring"
+                style={{
+                  background: `conic-gradient(#27ae60 ${Math.min(100, (progress.actual / progress.target) * 100)}%, #e5e7eb 0)`,
+                }}
+              >
+                <div className="target-ring-inner">
+                  <div className="target-value">
+                    {formatTime(progress.target - progress.actual > 0 ? progress.target - progress.actual : 0)}
+                  </div>
+                  <div className="target-label">剩余</div>
+                </div>
               </div>
-              <div className="target-label">剩余</div>
+
+              <div className="target-meta">
+                <div className="target-title">
+                  待完成目标：
+                  {(highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'tomorrow'
+                    ? '明天'
+                    : (highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'daily'
+                    ? '每日'
+                    : (highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'weekly'
+                    ? '每周'
+                    : '每月'}
+                </div>
+                <div className="target-desc">
+                  目标 {formatTime(highlightTarget.target_seconds)} · 窗口 {progress.start.toLocaleDateString()} - {progress.end.toLocaleDateString()}
+                </div>
+                <div className="target-progress">已完成 {formatTime(progress.actual)} / {formatTime(progress.target)}</div>
+              </div>
             </div>
-          </div>
-          <div className="target-meta">
-            <div className="target-title">待完成目标：{(highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'tomorrow' ? '明天' : (highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'daily' ? '每日' : (highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'weekly' ? '每周' : '每月'}</div>
-            <div className="target-desc">
-              目标 {formatTime(highlightTarget.target_seconds)} · 窗口 {progress.start.toLocaleDateString()} - {progress.end.toLocaleDateString()}
+          )}
+
+          <div className="ui-card category-card">
+            <div className="card-head">
+              <div>
+                <div className="card-eyebrow">分类</div>
+                <h3 className="card-title">选择或新建分类</h3>
+              </div>
             </div>
-            <div className="target-progress">已完成 {formatTime(progress.actual)} / {formatTime(progress.target)}</div>
+            <CategorySelect value={categoryId} onChange={setCategoryId} />
           </div>
         </div>
-      )}
 
-      <div className="timer-section">
-        <CategorySelect value={categoryId} onChange={setCategoryId} />
+        <div className="ui-card timer-card">
+          <div className="mode-toggle">
+            <button className={!manualMode ? 'active' : ''} onClick={() => setManualMode(false)}>
+              实时计时
+            </button>
+            <button className={manualMode ? 'active' : ''} onClick={() => setManualMode(true)}>
+              手动补录
+            </button>
+          </div>
 
-        <div className="mode-toggle">
-          <button
-            className={!manualMode ? 'active' : ''}
-            onClick={() => setManualMode(false)}
-          >
-            实时计时
-          </button>
-          <button
-            className={manualMode ? 'active' : ''}
-            onClick={() => setManualMode(true)}
-          >
-            手动补录
-          </button>
+          {!manualMode ? (
+            <TimerControls
+              categoryId={categoryId}
+              onSessionStart={loadTargetsAndProgress}
+              onSessionEnd={loadTargetsAndProgress}
+              onRunningChange={(running, initialElapsed = 0) => {
+                setIsRunning(running);
+                if (running && initialElapsed > 0) {
+                  setProgress((prev) =>
+                    prev ? { ...prev, actual: prev.actual + initialElapsed } : prev,
+                  );
+                }
+                if (!running) {
+                  setProgress((prev) => (prev ? { ...prev } : prev));
+                }
+              }}
+            />
+          ) : (
+            <form onSubmit={handleManualSubmit} className="manual-form">
+              <div className="form-group">
+                <label>开始时间</label>
+                <input
+                  type="datetime-local"
+                  step="60"
+                  value={manualData.start_time}
+                  onChange={(e) =>
+                    setManualData({ ...manualData, start_time: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>结束时间</label>
+                <input
+                  type="datetime-local"
+                  step="60"
+                  value={manualData.end_time}
+                  onChange={(e) =>
+                    setManualData({ ...manualData, end_time: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>备注（可选）</label>
+                <textarea
+                  value={manualData.note}
+                  onChange={(e) => setManualData({ ...manualData, note: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <button type="submit">提交补录</button>
+            </form>
+          )}
         </div>
-
-        {!manualMode ? (
-          <TimerControls
-            categoryId={categoryId}
-            onSessionStart={loadTargetsAndProgress}
-            onSessionEnd={loadTargetsAndProgress}
-            onRunningChange={(running, initialElapsed = 0) => {
-              setIsRunning(running);
-              if (running && initialElapsed > 0) {
-                setProgress((prev) =>
-                  prev ? { ...prev, actual: prev.actual + initialElapsed } : prev,
-                );
-              }
-              if (!running) {
-                setProgress((prev) => (prev ? { ...prev } : prev));
-              }
-            }}
-          />
-        ) : (
-          <form onSubmit={handleManualSubmit} className="manual-form">
-            <div className="form-group">
-              <label>开始时间</label>
-              <input
-                type="datetime-local"
-                step="60"
-                value={manualData.start_time}
-                onChange={(e) =>
-                  setManualData({ ...manualData, start_time: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>结束时间</label>
-              <input
-                type="datetime-local"
-                step="60"
-                value={manualData.end_time}
-                onChange={(e) =>
-                  setManualData({ ...manualData, end_time: e.target.value })
-                }
-                required
-              />
-            </div>
-
-            <div className="form-group">
-              <label>备注（可选）</label>
-              <textarea
-                value={manualData.note}
-                onChange={(e) => setManualData({ ...manualData, note: e.target.value })}
-                rows={3}
-              />
-            </div>
-
-            <button type="submit">提交补录</button>
-          </form>
-        )}
       </div>
     </div>
   );
