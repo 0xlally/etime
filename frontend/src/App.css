@@ -313,6 +313,14 @@ button[type='submit']:disabled {
   color: #4b5563;
 }
 
+.category-split {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: stretch;
+}
+
 .category-card .category-select {
   margin: 0;
   padding: 0;
@@ -350,6 +358,16 @@ button[type='submit']:disabled {
   padding: 0.65rem 1.1rem;
   font-size: 0.95rem;
   justify-self: end;
+}
+
+@media (max-width: 900px) {
+  .category-split {
+    grid-template-columns: 1fr;
+  }
+
+  .category-card .category-create-form {
+    grid-template-columns: 1fr;
+  }
 }
 
 .mode-toggle {

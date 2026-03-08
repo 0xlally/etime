@@ -1,9 +1,16 @@
-﻿import axios, { AxiosInstance, AxiosError } from 'axios';
+﻿import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
 
 const TOKEN_KEY = 'etime_token';
+const REFRESH_TOKEN_KEY = 'etime_refresh_token';
+
+interface RetryableRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
 
 class ApiClient {
   private client: AxiosInstance;
+  private isRefreshing = false;
+  private refreshPromise: Promise<string | null> | null = null;
 
   constructor() {
     this.client = axios.create({
@@ -29,12 +36,37 @@ class ApiClient {
     // 响应拦截器：401 自动跳转登录
     this.client.interceptors.response.use(
       (response) => response,
-      (error: AxiosError) => {
-        if (error.response?.status === 401) {
-          this.removeToken();
-          window.location.href = '/login';
+      async (error: AxiosError) => {
+        const originalRequest = error.config as RetryableRequestConfig | undefined;
+
+        if (error.response?.status !== 401 || !originalRequest) {
+          return Promise.reject(error);
         }
-        return Promise.reject(error);
+
+        if (originalRequest.url?.includes('/auth/login') || originalRequest.url?.includes('/auth/refresh')) {
+          this.clearAuth();
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        if (originalRequest._retry) {
+          this.clearAuth();
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        originalRequest._retry = true;
+        const newAccessToken = await this.refreshAccessToken();
+
+        if (!newAccessToken) {
+          this.clearAuth();
+          window.location.href = '/login';
+          return Promise.reject(error);
+        }
+
+        originalRequest.headers = originalRequest.headers ?? {};
+        originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+        return this.client(originalRequest);
       }
     );
   }
@@ -44,16 +76,71 @@ class ApiClient {
     localStorage.setItem(TOKEN_KEY, token);
   }
 
+  setAuthTokens(accessToken: string, refreshToken: string) {
+    localStorage.setItem(TOKEN_KEY, accessToken);
+    localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
+  }
+
   getToken(): string | null {
     return localStorage.getItem(TOKEN_KEY);
+  }
+
+  getRefreshToken(): string | null {
+    return localStorage.getItem(REFRESH_TOKEN_KEY);
   }
 
   removeToken() {
     localStorage.removeItem(TOKEN_KEY);
   }
 
+  removeRefreshToken() {
+    localStorage.removeItem(REFRESH_TOKEN_KEY);
+  }
+
+  clearAuth() {
+    this.removeToken();
+    this.removeRefreshToken();
+  }
+
   isAuthenticated(): boolean {
     return !!this.getToken();
+  }
+
+  private async refreshAccessToken(): Promise<string | null> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      return null;
+    }
+
+    if (this.isRefreshing && this.refreshPromise) {
+      return this.refreshPromise;
+    }
+
+    this.isRefreshing = true;
+    this.refreshPromise = (async () => {
+      try {
+        const response = await axios.post('/api/v1/auth/refresh', {
+          refresh_token: refreshToken,
+        });
+
+        const newAccessToken = response.data?.access_token as string | undefined;
+        const newRefreshToken = (response.data?.refresh_token as string | undefined) ?? refreshToken;
+
+        if (!newAccessToken) {
+          return null;
+        }
+
+        this.setAuthTokens(newAccessToken, newRefreshToken);
+        return newAccessToken;
+      } catch (_e) {
+        return null;
+      } finally {
+        this.isRefreshing = false;
+        this.refreshPromise = null;
+      }
+    })();
+
+    return this.refreshPromise;
   }
 
   getUserRole(): string | null {

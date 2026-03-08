@@ -44,7 +44,7 @@ def create_refresh_token(data: Dict[str, Any]) -> str:
         Encoded JWT token string
     """
     to_encode = data.copy()
-    expire = datetime.utcnow() + timedelta(days=7)  # Refresh token valid for 7 days
+    expire = datetime.utcnow() + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     
     to_encode.update({
         "exp": expire,

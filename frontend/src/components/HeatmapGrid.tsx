@@ -16,10 +16,10 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({ start, end, data, onDa
 
   const getColorIntensity = (seconds: number): string => {
     if (seconds === 0) return '#ebedf0';
-    if (seconds < 1800) return '#c6e48b'; // < 30min
-    if (seconds < 3600) return '#7bc96f'; // < 1h
-    if (seconds < 7200) return '#239a3b'; // < 2h
-    return '#196127'; // >= 2h
+    if (seconds < 3600) return '#c6e48b'; // < 1h
+    if (seconds < 3 * 3600) return '#7bc96f'; // < 3h
+    if (seconds < 8 * 3600) return '#239a3b'; // < 8h
+    return '#196127'; // >= 8h
   };
 
   const dataMap = new Map(data.map((d) => [d.date, d]));

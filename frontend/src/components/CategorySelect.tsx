@@ -8,6 +8,7 @@ interface CategorySelectProps {
   disabled?: boolean;
   label?: string;
   allowEmpty?: boolean; // 是否允许空值（用于“全部分类”等场景）
+  showSelect?: boolean; // 是否显示分类下拉
   showCreate?: boolean; // 是否显示创建分类表单
 }
 
@@ -17,6 +18,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   disabled,
   label = '选择分类',
   allowEmpty = false,
+  showSelect = true,
   showCreate = true,
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -67,24 +69,28 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
 
   return (
     <div className="category-select">
-      <label>{label}</label>
-      <select
-        value={value !== undefined ? String(value) : ''}
-        onChange={(e) => {
-          const selected = e.target.value;
-          const id = selected ? Number(selected) : undefined;
-          onChange(id);
-        }}
-        disabled={disabled || loading}
-        required={!allowEmpty}
-      >
-        <option value="">{allowEmpty ? '全部分类' : '-- 请选择 --'}</option>
-        {categories.map((cat) => (
-          <option key={cat.id} value={cat.id}>
-            {cat.name}
-          </option>
-        ))}
-      </select>
+      {showSelect && (
+        <>
+          <label>{label}</label>
+          <select
+            value={value !== undefined ? String(value) : ''}
+            onChange={(e) => {
+              const selected = e.target.value;
+              const id = selected ? Number(selected) : undefined;
+              onChange(id);
+            }}
+            disabled={disabled || loading}
+            required={!allowEmpty}
+          >
+            <option value="">{allowEmpty ? '全部分类' : '-- 请选择 --'}</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
       {showCreate && (
         <form onSubmit={handleCreateCategory} className="category-create-form">
