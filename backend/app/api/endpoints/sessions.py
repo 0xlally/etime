@@ -1,6 +1,6 @@
 ﻿"""Session Endpoints - Time tracking sessions"""
 from typing import List, Optional
-from datetime import datetime, timezone, timedelta
+from datetime import datetime, time, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import and_
@@ -75,6 +75,12 @@ def _get_active_session(user_id: int, db: DBSession) -> Optional[Session]:
         Session.user_id == user_id,
         Session.end_time.is_(None)
     ).first()
+
+
+def _next_day_start(value: datetime) -> datetime:
+    """Return midnight at the start of the day after value, preserving tzinfo."""
+    next_date = value.date() + timedelta(days=1)
+    return datetime.combine(next_date, time.min).replace(tzinfo=value.tzinfo)
 
 
 @router.post("/start", response_model=SessionResponse, status_code=status.HTTP_201_CREATED)
@@ -207,8 +213,15 @@ def create_manual_session(
     # Validate category ownership
     _validate_category_ownership(session_data.category_id, current_user.id, db)
     
-    start = session_data.start_time
-    end = session_data.end_time
+    if session_data.start_time is not None and session_data.end_time is not None:
+        start = session_data.start_time
+        end = session_data.end_time
+    else:
+        start = datetime.combine(session_data.entry_date, time.min)
+        end = start + timedelta(
+            hours=session_data.hours or 0,
+            minutes=session_data.minutes or 0,
+        )
     
     multiplier = session_data.multiplier if session_data.multiplier is not None else 1.0
     multiplier = max(0.0, min(multiplier, 10.0))
@@ -217,8 +230,7 @@ def create_manual_session(
     sessions_created = []
     cursor = start
     while cursor.date() < end.date():
-        # End of current day 23:59:59
-        day_end = cursor.replace(hour=23, minute=59, second=59, microsecond=999999)
+        day_end = _next_day_start(cursor)
         duration = (day_end - cursor).total_seconds()
         partial = Session(
             user_id=current_user.id,
@@ -233,31 +245,31 @@ def create_manual_session(
         )
         db.add(partial)
         sessions_created.append(partial)
-        # Move cursor to start of next day
-        cursor = day_end.replace(hour=0, minute=0, second=0, microsecond=0) + timedelta(days=1)
+        cursor = day_end
     
     # Last segment (same day or remaining part)
-    duration_last = (end - cursor).total_seconds()
-    last_segment = Session(
-        user_id=current_user.id,
-        category_id=session_data.category_id,
-        start_time=cursor,
-        end_time=end,
-        duration_seconds=int(duration_last),
-        effectiveness_multiplier=multiplier,
-        effective_seconds=_round_to_minute(duration_last * multiplier),
-        note=session_data.note,
-        source=SessionSource.MANUAL.value
-    )
-    db.add(last_segment)
-    sessions_created.append(last_segment)
+    if end > cursor:
+        duration_last = (end - cursor).total_seconds()
+        last_segment = Session(
+            user_id=current_user.id,
+            category_id=session_data.category_id,
+            start_time=cursor,
+            end_time=end,
+            duration_seconds=int(duration_last),
+            effectiveness_multiplier=multiplier,
+            effective_seconds=_round_to_minute(duration_last * multiplier),
+            note=session_data.note,
+            source=SessionSource.MANUAL.value
+        )
+        db.add(last_segment)
+        sessions_created.append(last_segment)
     
     db.commit()
     for s in sessions_created:
         db.refresh(s)
     
     # Return the last segment for simplicity
-    return last_segment
+    return sessions_created[-1]
 
 
 @router.get("/active", response_model=Optional[ActiveSessionResponse])

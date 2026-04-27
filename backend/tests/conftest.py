@@ -1,4 +1,10 @@
 ﻿"""Test configuration and fixtures"""
+import os
+
+os.environ["AUTO_INIT_ADMIN"] = "false"
+os.environ["DATABASE_URL"] = "sqlite:///./test.db"
+os.environ["DEBUG"] = "false"
+
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine

@@ -12,7 +12,8 @@ export interface Category {
   id: number;
   user_id: number;
   name: string;
-  color: string;
+  color?: string | null;
+  is_archived?: boolean;
   created_at: string;
 }
 
@@ -73,6 +74,13 @@ export interface CategoryStatsSummaryItem {
 export interface StatsSummary {
   total_seconds: number;
   by_category: CategoryStatsSummaryItem[];
+}
+
+export interface TimeTraceEntry {
+  id: number;
+  user_id: number;
+  content: string;
+  created_at: string;
 }
 
 export interface DayDetail {

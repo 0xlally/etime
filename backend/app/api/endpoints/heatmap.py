@@ -16,6 +16,11 @@ from app.core.db import get_db
 router = APIRouter()
 
 
+def _date_label(value) -> str:
+    """Normalize DB-specific date aggregation values to YYYY-MM-DD."""
+    return value.isoformat() if hasattr(value, "isoformat") else str(value)
+
+
 @router.get("", response_model=List[HeatmapDay])
 def get_heatmap(
     start: Optional[DateType] = Query(None, description="Start date (YYYY-MM-DD)"),
@@ -85,8 +90,7 @@ def get_heatmap(
     # Convert to response format
     heatmap_data = [
         HeatmapDay(
-            # Convert date object to ISO string to satisfy schema validation
-            date=row.date.isoformat(),
+            date=_date_label(row.date),
             total_seconds=int(row.total_seconds)
         )
         for row in results

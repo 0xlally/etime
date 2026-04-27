@@ -138,6 +138,58 @@ def test_session_manual_creation(client: TestClient):
     print("✓ Validation rejected invalid time range")
 
 
+def test_session_manual_duration_creation(client: TestClient):
+    """
+    Test manually creating a session with date + hours/minutes.
+    """
+    register_data = {
+        "email": "manual_duration@example.com",
+        "username": "manualduration",
+        "password": "testpass123"
+    }
+    client.post("/api/v1/auth/register", json=register_data)
+
+    login_response = client.post("/api/v1/auth/login", json={
+        "username": register_data["username"],
+        "password": register_data["password"]
+    })
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    category_response = client.post(
+        "/api/v1/categories",
+        json={"name": "Writing"},
+        headers=headers,
+    )
+    category_id = category_response.json()["id"]
+
+    response = client.post(
+        "/api/v1/sessions/manual",
+        json={
+            "category_id": category_id,
+            "entry_date": "2026-04-27",
+            "hours": 1,
+            "minutes": 30,
+            "note": "Duration style entry",
+        },
+        headers=headers,
+    )
+    assert response.status_code == 201, response.text
+
+    session = response.json()
+    assert session["category_id"] == category_id
+    assert session["source"] == "manual"
+    assert session["duration_seconds"] == 5400
+    assert session["note"] == "Duration style entry"
+
+    response = client.post(
+        "/api/v1/sessions/manual",
+        json={"entry_date": "2026-04-27", "hours": 0, "minutes": 0},
+        headers=headers,
+    )
+    assert response.status_code == 422
+
+
 def test_concurrent_session_prevention(client: TestClient):
     """
     Test that only one session can be active at a time

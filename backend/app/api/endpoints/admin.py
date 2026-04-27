@@ -134,7 +134,7 @@ def update_user(
     
     if update_data.role is not None:
         old_value = user.role.value if isinstance(user.role, UserRole) else user.role
-        user.role = update_data.role
+        user.role = update_data.role.lower()
         changes["role"] = {"old": old_value, "new": update_data.role}
     
     # Commit changes

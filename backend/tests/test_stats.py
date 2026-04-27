@@ -372,9 +372,10 @@ def test_stats_active_session_excluded(client: TestClient):
     
     # Create a completed session: 2 hours
     now = datetime.now(timezone.utc)
+    today_slot = now.replace(hour=9, minute=0, second=0, microsecond=0)
     completed = {
-        "start_time": (now - timedelta(hours=3)).isoformat(),
-        "end_time": (now - timedelta(hours=1)).isoformat(),
+        "start_time": today_slot.isoformat(),
+        "end_time": (today_slot + timedelta(hours=2)).isoformat(),
         "note": "Completed session"
     }
     client.post("/api/v1/sessions/manual", json=completed, headers=headers)

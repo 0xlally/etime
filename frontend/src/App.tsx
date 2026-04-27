@@ -5,6 +5,7 @@ import { Login } from './pages/Login';
 import { Timer } from './pages/Timer';
 import { Classification } from './pages/Classification';
 import { Heatmap } from './pages/Heatmap';
+import { TimeTrace } from './pages/TimeTrace';
 import { Targets } from './pages/Targets';
 import { Admin } from './pages/Admin';
 import { NotificationBell } from './components/NotificationBell';
@@ -33,6 +34,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         <div className="nav-links">
           <Link to="/timer">计时器</Link>
           <Link to="/classification">分类统计</Link>
+          <Link to="/time-trace">时痕</Link>
           <Link to="/heatmap">热力图</Link>
           <Link to="/targets">时间规划</Link>
           {role === 'admin' && <Link to="/admin">管理</Link>}
@@ -82,6 +84,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Heatmap />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/time-trace"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <TimeTrace />
               </Layout>
             </ProtectedRoute>
           }

@@ -120,10 +120,12 @@ def test_heatmap_cross_day_sessions(client: TestClient):
     heatmap = response.json()
     print(f"\nCross-day heatmap: {heatmap}")
     
-    # Should be grouped by start date (2025-12-15)
-    assert len(heatmap) == 1
-    assert heatmap[0]["date"] == "2025-12-15"
-    assert heatmap[0]["total_seconds"] == 7200  # 2 hours
+    # Manual sessions spanning midnight are split into daily segments.
+    assert len(heatmap) == 2
+    first_day = next(d for d in heatmap if d["date"] == "2025-12-15")
+    second_day = next(d for d in heatmap if d["date"] == "2025-12-16")
+    assert first_day["total_seconds"] == 3600
+    assert second_day["total_seconds"] == 3600
     
     print("✓ Cross-midnight session grouped by start_time date")
 
@@ -347,9 +349,10 @@ def test_heatmap_active_session_excluded(client: TestClient):
     
     # Create a completed session today
     now = datetime.now(timezone.utc)
+    today_slot = now.replace(hour=9, minute=0, second=0, microsecond=0)
     completed = {
-        "start_time": (now - timedelta(hours=2)).isoformat(),
-        "end_time": (now - timedelta(hours=1)).isoformat(),
+        "start_time": today_slot.isoformat(),
+        "end_time": (today_slot + timedelta(hours=1)).isoformat(),
         "note": "Completed"
     }
     client.post("/api/v1/sessions/manual", json=completed, headers=headers)

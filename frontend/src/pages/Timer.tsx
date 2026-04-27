@@ -4,12 +4,19 @@ import { TimerControls } from '../components/TimerControls';
 import { apiClient } from '../api/client';
 import { StatsSummary, WorkTarget } from '../types';
 
+const getLocalDateInputValue = () => {
+  const now = new Date();
+  now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+  return now.toISOString().slice(0, 10);
+};
+
 export const Timer: React.FC = () => {
   const [categoryId, setCategoryId] = useState<number | undefined>();
   const [manualMode, setManualMode] = useState(false);
   const [manualData, setManualData] = useState({
-    start_time: '',
-    end_time: '',
+    entry_date: getLocalDateInputValue(),
+    hours: '',
+    minutes: '',
     note: '',
   });
   const [highlightTarget, setHighlightTarget] = useState<WorkTarget | null>(null);
@@ -148,28 +155,40 @@ export const Timer: React.FC = () => {
       return;
     }
 
-    if (!manualData.start_time || !manualData.end_time) {
-      alert('请选择开始和结束时间');
+    if (!manualData.entry_date) {
+      alert('请选择日期');
+      return;
+    }
+
+    const hours = manualData.hours === '' ? 0 : Number(manualData.hours);
+    const minutes = manualData.minutes === '' ? 0 : Number(manualData.minutes);
+    if (
+      !Number.isFinite(hours) ||
+      !Number.isFinite(minutes) ||
+      hours < 0 ||
+      minutes < 0 ||
+      hours > 24 ||
+      minutes > 59
+    ) {
+      alert('请输入有效的小时和分钟');
+      return;
+    }
+    if (hours === 0 && minutes === 0) {
+      alert('补录时长必须大于 0');
       return;
     }
 
     try {
-      // Keep local time (browser) but append seconds for backend parsing
-      const startStr = manualData.start_time.includes(':')
-        ? `${manualData.start_time}:00`
-        : manualData.start_time;
-      const endStr = manualData.end_time.includes(':')
-        ? `${manualData.end_time}:00`
-        : manualData.end_time;
-
       await apiClient.post('/sessions/manual', {
         category_id: categoryId,
-        start_time: startStr,
-        end_time: endStr,
+        entry_date: manualData.entry_date,
+        hours,
+        minutes,
         note: manualData.note || undefined,
       });
       alert('手动补录成功');
-      setManualData({ start_time: '', end_time: '', note: '' });
+      setManualData({ entry_date: getLocalDateInputValue(), hours: '', minutes: '', note: '' });
+      loadTargetsAndProgress();
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
       if (Array.isArray(detail)) {
@@ -263,29 +282,52 @@ export const Timer: React.FC = () => {
             />
           ) : (
             <form onSubmit={handleManualSubmit} className="manual-form">
+              <div className="manual-category-field">
+                <CategorySelect
+                  value={categoryId}
+                  onChange={setCategoryId}
+                  showCreate={false}
+                  label="分类"
+                />
+              </div>
+
               <div className="form-group">
-                <label>开始时间</label>
+                <label>日期</label>
                 <input
-                  type="datetime-local"
-                  step="60"
-                  value={manualData.start_time}
+                  type="date"
+                  value={manualData.entry_date}
                   onChange={(e) =>
-                    setManualData({ ...manualData, start_time: e.target.value })
+                    setManualData({ ...manualData, entry_date: e.target.value })
                   }
                   required
                 />
               </div>
 
               <div className="form-group">
-                <label>结束时间</label>
+                <label>小时</label>
                 <input
-                  type="datetime-local"
-                  step="60"
-                  value={manualData.end_time}
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="1"
+                  placeholder="0"
+                  value={manualData.hours}
                   onChange={(e) =>
-                    setManualData({ ...manualData, end_time: e.target.value })
+                    setManualData({ ...manualData, hours: e.target.value })
                   }
-                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>分钟</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  step="1"
+                  placeholder="0"
+                  value={manualData.minutes}
+                  onChange={(e) => setManualData({ ...manualData, minutes: e.target.value })}
                 />
               </div>
 
