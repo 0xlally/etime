@@ -316,6 +316,14 @@ button[type='submit']:disabled {
   color: #4b5563;
 }
 
+.category-split {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  align-items: stretch;
+}
+
 .category-card .category-select {
   margin: 0;
   padding: 0;
@@ -428,6 +436,16 @@ button[type='submit']:disabled {
 
   .category-edit-actions button {
     flex: 1;
+  }
+}
+
+@media (max-width: 900px) {
+  .category-split {
+    grid-template-columns: 1fr;
+  }
+
+  .category-card .category-create-form {
+    grid-template-columns: 1fr;
   }
 }
 

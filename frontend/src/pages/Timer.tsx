@@ -203,7 +203,7 @@ export const Timer: React.FC = () => {
     <div className="timer-page">
       <div className="timer-shell">
         <div className="timer-header">
-          <p className="timer-banner">运用认知的力量，保持耐心与饥渴，和时间做朋友</p>
+          <p className="timer-banner">运用认知的力量，保持耐心，和时间做朋友</p>
         </div>
 
         <div className="timer-grid">
@@ -242,14 +242,36 @@ export const Timer: React.FC = () => {
             </div>
           )}
 
-          <div className="ui-card category-card">
-            <div className="card-head">
-              <div>
-                <div className="card-eyebrow">分类</div>
-                <h3 className="card-title">选择或新建分类</h3>
+          <div className="category-split">
+            <div className="ui-card category-card">
+              <div className="card-head">
+                <div>
+                  <div className="card-eyebrow">分类</div>
+                  <h3 className="card-title">选择分类</h3>
+                </div>
               </div>
+              <CategorySelect
+                value={categoryId}
+                onChange={setCategoryId}
+                showCreate={false}
+              />
             </div>
-            <CategorySelect value={categoryId} onChange={setCategoryId} />
+
+            <div className="ui-card category-card">
+              <div className="card-head">
+                <div>
+                  <div className="card-eyebrow">分类</div>
+                  <h3 className="card-title">新建分类</h3>
+                </div>
+              </div>
+              <CategorySelect
+                value={categoryId}
+                onChange={setCategoryId}
+                showSelect={false}
+                showCreate
+                showEdit={false}
+              />
+            </div>
           </div>
         </div>
 

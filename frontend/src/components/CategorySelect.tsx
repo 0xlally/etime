@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import { Category } from '../types';
 
@@ -8,7 +8,9 @@ interface CategorySelectProps {
   disabled?: boolean;
   label?: string;
   allowEmpty?: boolean; // 是否允许空值（用于“全部分类”等场景）
+  showSelect?: boolean; // 是否显示分类下拉
   showCreate?: boolean; // 是否显示创建分类表单
+  showEdit?: boolean; // 是否显示当前分类编辑入口
 }
 
 export const CategorySelect: React.FC<CategorySelectProps> = ({
@@ -17,7 +19,9 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   disabled,
   label = '选择分类',
   allowEmpty = false,
+  showSelect = true,
   showCreate = true,
+  showEdit = true,
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -106,27 +110,31 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
 
   return (
     <div className="category-select">
-      <label>{label}</label>
-      <select
-        value={value !== undefined ? String(value) : ''}
-        onChange={(e) => {
-          const selected = e.target.value;
-          const id = selected ? Number(selected) : undefined;
-          setEditingId(null);
-          onChange(id);
-        }}
-        disabled={disabled || loading}
-        required={!allowEmpty}
-      >
-        <option value="">{allowEmpty ? '全部分类' : '-- 请选择 --'}</option>
-        {categories.map((cat) => (
-          <option key={cat.id} value={cat.id}>
-            {cat.name}
-          </option>
-        ))}
-      </select>
+      {showSelect && (
+        <>
+          <label>{label}</label>
+          <select
+            value={value !== undefined ? String(value) : ''}
+            onChange={(e) => {
+              const selected = e.target.value;
+              const id = selected ? Number(selected) : undefined;
+              setEditingId(null);
+              onChange(id);
+            }}
+            disabled={disabled || loading}
+            required={!allowEmpty}
+          >
+            <option value="">{allowEmpty ? '全部分类' : '-- 请选择 --'}</option>
+            {categories.map((cat) => (
+              <option key={cat.id} value={cat.id}>
+                {cat.name}
+              </option>
+            ))}
+          </select>
+        </>
+      )}
 
-      {showCreate && selectedCategory && (
+      {showEdit && selectedCategory && (
         <div className="category-edit-panel">
           {editingId === selectedCategory.id ? (
             <form onSubmit={handleUpdateCategory} className="category-edit-form">

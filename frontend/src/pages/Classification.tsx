@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StatsChart } from '../components/StatsChart';
 import { apiClient } from '../api/client';
 import { StatsSummary } from '../types';
@@ -18,16 +18,16 @@ const toDateInputValue = (date: Date) => {
   return copy.toISOString().slice(0, 10);
 };
 
-const addDays = (date: Date, days: number) => {
+const addLocalDays = (date: Date, days: number) => {
   const copy = new Date(date);
   copy.setDate(copy.getDate() + days);
   return copy;
 };
 
-const startOfWeek = (date: Date) => {
+const startOfLocalWeek = (date: Date) => {
   const day = date.getDay();
   const mondayOffset = day === 0 ? -6 : 1 - day;
-  return addDays(date, mondayOffset);
+  return addLocalDays(date, mondayOffset);
 };
 
 const getCurrentRange = (period: Exclude<Period, 'custom'>) => {
@@ -36,8 +36,8 @@ const getCurrentRange = (period: Exclude<Period, 'custom'>) => {
     return { start: now, end: now };
   }
   if (period === 'week') {
-    const start = startOfWeek(now);
-    return { start, end: addDays(start, 6) };
+    const start = startOfLocalWeek(now);
+    return { start, end: addLocalDays(start, 6) };
   }
   const start = new Date(now.getFullYear(), now.getMonth(), 1);
   const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
@@ -55,7 +55,7 @@ const buildHistoryRanges = (period: Exclude<Period, 'custom'>) => {
   const now = new Date();
   if (period === 'today') {
     return Array.from({ length: 7 }, (_, index) => {
-      const day = addDays(now, -index);
+      const day = addLocalDays(now, -index);
       return {
         label: index === 0 ? '今日' : index === 1 ? '昨天' : `${day.getMonth() + 1}月${day.getDate()}日`,
         start: day,
@@ -65,10 +65,10 @@ const buildHistoryRanges = (period: Exclude<Period, 'custom'>) => {
   }
 
   if (period === 'week') {
-    const currentStart = startOfWeek(now);
+    const currentStart = startOfLocalWeek(now);
     return Array.from({ length: 8 }, (_, index) => {
-      const start = addDays(currentStart, -7 * index);
-      const end = addDays(start, 6);
+      const start = addLocalDays(currentStart, -7 * index);
+      const end = addLocalDays(start, 6);
       return {
         label: index === 0 ? '本周' : `${shortDate(start)}-${shortDate(end)}`,
         start,

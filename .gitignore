@@ -1,0 +1,6 @@
+.pytest_cache/
+test.db
+backend/test.db
+frontend/dist/
+frontend/node_modules/
+node_modules/

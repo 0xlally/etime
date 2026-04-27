@@ -33,7 +33,7 @@ export const Login: React.FC = () => {
           password,
         });
 
-        apiClient.setToken(response.access_token);
+        apiClient.setAuthTokens(response.access_token, response.refresh_token);
         navigate('/timer');
       } else {
         // 忘记密码流程
