@@ -1,7 +1,22 @@
 ﻿import axios, { AxiosInstance, AxiosError, InternalAxiosRequestConfig } from 'axios';
+import { Capacitor } from '@capacitor/core';
 
 const TOKEN_KEY = 'etime_token';
 const REFRESH_TOKEN_KEY = 'etime_refresh_token';
+const DEFAULT_NATIVE_API_BASE_URL = 'https://time.lally.top/api/v1';
+
+const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
+
+const getApiBaseUrl = () => {
+  const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  if (configuredBaseUrl) {
+    return normalizeBaseUrl(configuredBaseUrl);
+  }
+
+  return Capacitor.isNativePlatform() ? DEFAULT_NATIVE_API_BASE_URL : '/api/v1';
+};
+
+const API_BASE_URL = getApiBaseUrl();
 
 interface RetryableRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -15,7 +30,7 @@ class ApiClient {
   constructor() {
     this.client = axios.create({
       // 与后端 FastAPI 主路由前缀保持一致 (/api/v1)
-      baseURL: '/api/v1',
+      baseURL: API_BASE_URL,
       headers: {
         'Content-Type': 'application/json',
       },
@@ -119,7 +134,7 @@ class ApiClient {
     this.isRefreshing = true;
     this.refreshPromise = (async () => {
       try {
-        const response = await axios.post('/api/v1/auth/refresh', {
+        const response = await axios.post(`${API_BASE_URL}/auth/refresh`, {
           refresh_token: refreshToken,
         });
 

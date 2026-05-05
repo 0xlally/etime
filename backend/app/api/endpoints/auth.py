@@ -1,8 +1,9 @@
 ﻿"""Authentication Endpoints"""
 from datetime import datetime
 import logging
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy.orm import Session
+from app.core.config import settings
 from app.core.db import get_db
 from app.models.user import User, UserRole
 from app.schemas.user import (
@@ -19,15 +20,37 @@ from app.utils.jwt import (
     create_access_token,
     create_refresh_token,
     create_reset_token,
+    create_password_reset_fingerprint,
     decode_token,
+    decode_token_payload,
+    RESET_PASSWORD_FINGERPRINT_CLAIM,
     verify_token_type,
+    verify_password_reset_fingerprint,
 )
+from app.utils.rate_limit import is_rate_limited
 from app.utils.email import send_email, build_reset_email
 
 
 logger = logging.getLogger(__name__)
 
 router = APIRouter()
+
+
+def _client_host(request: Request) -> str:
+    return request.client.host if request.client else "unknown"
+
+
+def _enforce_rate_limit(
+    key: str,
+    max_attempts: int,
+    window_seconds: int,
+    detail: str,
+) -> None:
+    if is_rate_limited(key, max_attempts, window_seconds):
+        raise HTTPException(
+            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+            detail=detail,
+        )
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
@@ -78,7 +101,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(credentials: UserLogin, db: Session = Depends(get_db)):
+def login(credentials: UserLogin, request: Request, db: Session = Depends(get_db)):
     """
     Authenticate user and return access and refresh tokens.
     
@@ -92,6 +115,14 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     Raises:
         HTTPException: If credentials are invalid
     """
+    normalized_username = credentials.username.strip().lower()
+    _enforce_rate_limit(
+        key=f"login:{_client_host(request)}:{normalized_username}",
+        max_attempts=settings.LOGIN_RATE_LIMIT_MAX_ATTEMPTS,
+        window_seconds=settings.LOGIN_RATE_LIMIT_WINDOW_SECONDS,
+        detail="Too many login attempts. Please try again later.",
+    )
+
     # Find user by username or email
     user = db.query(User).filter(
         (User.username == credentials.username) | (User.email == credentials.username)
@@ -189,12 +220,23 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
 
 
 @router.post("/forgot-password")
-def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(payload: ForgotPasswordRequest, request: Request, db: Session = Depends(get_db)):
     """Issue a reset token for password recovery and send via email."""
+    normalized_email = payload.email.lower()
+    _enforce_rate_limit(
+        key=f"forgot-password:{_client_host(request)}:{normalized_email}",
+        max_attempts=settings.PASSWORD_RESET_RATE_LIMIT_MAX_ATTEMPTS,
+        window_seconds=settings.PASSWORD_RESET_RATE_LIMIT_WINDOW_SECONDS,
+        detail="Too many password reset requests. Please try again later.",
+    )
+
     user = db.query(User).filter(User.email == payload.email).first()
 
     if user:
-        reset_token = create_reset_token({"sub": str(user.id)})
+        reset_token = create_reset_token({
+            "sub": str(user.id),
+            RESET_PASSWORD_FINGERPRINT_CLAIM: create_password_reset_fingerprint(user.password_hash),
+        })
         try:
             subject, body = build_reset_email(user.email, reset_token)
             send_email(user.email, subject, body)
@@ -210,16 +252,24 @@ def forgot_password(payload: ForgotPasswordRequest, db: Session = Depends(get_db
 
 
 @router.post("/reset-password")
-def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db)):
+def reset_password(payload: ResetPasswordRequest, request: Request, db: Session = Depends(get_db)):
     """Reset password using a valid reset token."""
+    _enforce_rate_limit(
+        key=f"reset-password:{_client_host(request)}",
+        max_attempts=settings.PASSWORD_RESET_RATE_LIMIT_MAX_ATTEMPTS,
+        window_seconds=settings.PASSWORD_RESET_RATE_LIMIT_WINDOW_SECONDS,
+        detail="Too many password reset attempts. Please try again later.",
+    )
+
     if not verify_token_type(payload.token, "reset"):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired reset token"
         )
 
+    raw_payload = decode_token_payload(payload.token)
     token_data = decode_token(payload.token)
-    if token_data is None or token_data.user_id is None:
+    if raw_payload is None or token_data is None or token_data.user_id is None:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid reset token"
@@ -230,6 +280,15 @@ def reset_password(payload: ResetPasswordRequest, db: Session = Depends(get_db))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid reset token"
+        )
+
+    if not verify_password_reset_fingerprint(
+        raw_payload.get(RESET_PASSWORD_FINGERPRINT_CLAIM),
+        user.password_hash,
+    ):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid or expired reset token"
         )
 
     user.password_hash = hash_password(payload.new_password)

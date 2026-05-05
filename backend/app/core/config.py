@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     JWT_ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+    LOGIN_RATE_LIMIT_MAX_ATTEMPTS: int = 20
+    LOGIN_RATE_LIMIT_WINDOW_SECONDS: int = 300
+    PASSWORD_RESET_RATE_LIMIT_MAX_ATTEMPTS: int = 5
+    PASSWORD_RESET_RATE_LIMIT_WINDOW_SECONDS: int = 900
 
     # Database bootstrap
     AUTO_CREATE_TABLES: bool = True
@@ -28,7 +32,13 @@ class Settings(BaseSettings):
     DEFAULT_ADMIN_PASSWORD: str = "admin123"
     
     # CORS
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"]
+    BACKEND_CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+        "http://localhost",
+        "https://localhost",
+        "capacitor://localhost",
+    ]
     
     # API
     API_V1_PREFIX: str = "/api/v1"

@@ -1,9 +1,14 @@
 ﻿"""JWT token utilities"""
+import hashlib
+import hmac
 from datetime import datetime, timedelta
 from typing import Optional, Dict, Any
 from jose import JWTError, jwt
 from app.core.config import settings
 from app.schemas.user import TokenData
+
+
+RESET_PASSWORD_FINGERPRINT_CLAIM = "pwd"
 
 
 def create_access_token(data: Dict[str, Any], expires_delta: Optional[timedelta] = None) -> str:
@@ -66,6 +71,31 @@ def create_reset_token(data: Dict[str, Any], expires_minutes: int = 30) -> str:
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
+def create_password_reset_fingerprint(password_hash: str) -> str:
+    """Bind reset tokens to the current password hash without exposing it."""
+    return hmac.new(
+        settings.JWT_SECRET.encode("utf-8"),
+        password_hash.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+
+
+def verify_password_reset_fingerprint(token_fingerprint: Optional[str], password_hash: str) -> bool:
+    """Return True only when the reset token matches the current password hash."""
+    if not isinstance(token_fingerprint, str) or not token_fingerprint:
+        return False
+    expected = create_password_reset_fingerprint(password_hash)
+    return hmac.compare_digest(token_fingerprint, expected)
+
+
+def decode_token_payload(token: str) -> Optional[Dict[str, Any]]:
+    """Decode and validate a JWT token, returning the raw payload."""
+    try:
+        return jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
+    except JWTError:
+        return None
+
+
 def decode_token(token: str) -> Optional[TokenData]:
     """
     Decode and validate a JWT token.
@@ -76,23 +106,23 @@ def decode_token(token: str) -> Optional[TokenData]:
     Returns:
         TokenData object if valid, None otherwise
     """
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-        user_id_str = payload.get("sub")
-        role: str = payload.get("role")
-        
-        if user_id_str is None:
-            return None
-        
-        # Convert user_id from string to int
-        try:
-            user_id = int(user_id_str)
-        except (ValueError, TypeError):
-            return None
-            
-        return TokenData(user_id=user_id, role=role)
-    except JWTError:
+    payload = decode_token_payload(token)
+    if payload is None:
         return None
+
+    user_id_str = payload.get("sub")
+    role: str = payload.get("role")
+
+    if user_id_str is None:
+        return None
+
+    # Convert user_id from string to int
+    try:
+        user_id = int(user_id_str)
+    except (ValueError, TypeError):
+        return None
+
+    return TokenData(user_id=user_id, role=role)
 
 
 def verify_token_type(token: str, token_type: str) -> bool:
@@ -106,8 +136,7 @@ def verify_token_type(token: str, token_type: str) -> bool:
     Returns:
         True if token type matches, False otherwise
     """
-    try:
-        payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
-        return payload.get("type") == token_type
-    except JWTError:
+    payload = decode_token_payload(token)
+    if payload is None:
         return False
+    return payload.get("type") == token_type

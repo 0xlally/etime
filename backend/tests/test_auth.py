@@ -9,6 +9,10 @@ This test demonstrates the complete authentication workflow:
 import pytest
 from fastapi.testclient import TestClient
 
+from app.api.endpoints import auth as auth_endpoint
+from app.core.config import settings
+from app.utils.rate_limit import clear_rate_limits
+
 
 def test_user_authentication_flow(client: TestClient):
     """
@@ -162,6 +166,72 @@ def test_invalid_credentials(client: TestClient):
     assert response.status_code == 401
     assert "Incorrect username or password" in response.json()["detail"]
     print("✓ Invalid credentials correctly rejected")
+
+
+def test_password_reset_token_cannot_be_replayed(client: TestClient, monkeypatch):
+    """A reset token should become invalid after the password changes."""
+    sent_messages = []
+
+    def fake_send_email(to_email: str, subject: str, content: str) -> None:
+        sent_messages.append((to_email, subject, content))
+
+    monkeypatch.setattr(auth_endpoint, "send_email", fake_send_email)
+
+    register_data = {
+        "email": "reset@example.com",
+        "username": "resetuser",
+        "password": "oldpassword123",
+    }
+    response = client.post("/api/v1/auth/register", json=register_data)
+    assert response.status_code == 201
+
+    response = client.post("/api/v1/auth/forgot-password", json={"email": register_data["email"]})
+    assert response.status_code == 200
+    assert len(sent_messages) == 1
+
+    token = next(line for line in sent_messages[0][2].splitlines() if line.startswith("eyJ"))
+
+    response = client.post("/api/v1/auth/reset-password", json={
+        "token": token,
+        "new_password": "newpassword123",
+    })
+    assert response.status_code == 200
+
+    response = client.post("/api/v1/auth/login", json={
+        "username": register_data["username"],
+        "password": register_data["password"],
+    })
+    assert response.status_code == 401
+
+    response = client.post("/api/v1/auth/login", json={
+        "username": register_data["username"],
+        "password": "newpassword123",
+    })
+    assert response.status_code == 200
+
+    response = client.post("/api/v1/auth/reset-password", json={
+        "token": token,
+        "new_password": "replayedpassword123",
+    })
+    assert response.status_code == 400
+    assert "Invalid or expired reset token" in response.json()["detail"]
+
+
+def test_forgot_password_rate_limit(client: TestClient, monkeypatch):
+    """Forgot-password requests are throttled per client/email pair."""
+    clear_rate_limits()
+    monkeypatch.setattr(settings, "PASSWORD_RESET_RATE_LIMIT_MAX_ATTEMPTS", 2)
+    monkeypatch.setattr(settings, "PASSWORD_RESET_RATE_LIMIT_WINDOW_SECONDS", 60)
+
+    try:
+        for _ in range(2):
+            response = client.post("/api/v1/auth/forgot-password", json={"email": "limited@example.com"})
+            assert response.status_code == 200
+
+        response = client.post("/api/v1/auth/forgot-password", json={"email": "limited@example.com"})
+        assert response.status_code == 429
+    finally:
+        clear_rate_limits()
 
 
 if __name__ == "__main__":

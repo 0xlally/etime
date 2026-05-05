@@ -54,12 +54,23 @@ npm run dev
 npm run build
 ```
 
+### Android 端
+安卓端基于 Capacitor，原生工程在 `frontend/android`：
+
+```bash
+npm run android:sync
+npm run android:build:debug
+```
+
+更多说明见 [ANDROID.md](./ANDROID.md)。
+
 ## 核心功能
 
 ### API 客户端
 - **自动 Token 管理**: 自动在请求头添加 Bearer token
 - **401 自动跳转**: 未认证时自动重定向到登录页
 - **统一错误处理**: 集中处理 HTTP 错误
+- **多端 API 地址**: 浏览器端默认使用 `/api/v1`，安卓原生端默认连接 `https://time.lally.top/api/v1`，也可通过 `VITE_API_BASE_URL` 覆盖。
 
 ### 页面功能
 
@@ -158,14 +169,14 @@ npm run build
 
 ## API 代理配置
 
-开发环境下，所有 `/api` 请求自动代理到 `http://localhost:8000`:
+开发环境下，所有 `/api` 请求自动代理到 `http://localhost:8001`（可用 `API_PROXY_TARGET` 覆盖）:
 
 ```ts
 // vite.config.ts
 server: {
   proxy: {
     '/api': {
-      target: 'http://localhost:8000',
+      target: process.env.API_PROXY_TARGET || 'http://localhost:8001',
       changeOrigin: true,
     }
   }
@@ -174,7 +185,7 @@ server: {
 
 ## 注意事项
 
-1. **后端依赖**: 前端依赖后端 API，确保后端服务运行在 `http://localhost:8000`
+1. **后端依赖**: 前端依赖后端 API，确保后端服务运行在 `http://localhost:8001`
 2. **CORS**: 后端需配置 CORS 允许跨域请求
 3. **Token 过期**: Token 过期时会自动跳转登录页
 4. **管理员权限**: `/admin` 页面需要管理员角色

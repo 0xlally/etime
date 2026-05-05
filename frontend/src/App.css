@@ -15,7 +15,7 @@
 
 @media (min-width: 768px) {
   .login-bg {
-    background-image: url('/ink/wallhaven-exd3w8.png');
+    background-image: url('/img/wallhaven-exd3w8.png');
   }
 }
 
@@ -880,6 +880,126 @@ table button {
 .fail {
   color: #e74c3c;
   font-weight: bold;
+}
+
+/* 自律模式 */
+.discipline-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding-bottom: 3rem;
+}
+
+.discipline-panel {
+  background: #ffffff;
+  border: 1px solid #e7e9ef;
+  border-radius: 10px;
+  padding: 1.25rem;
+  box-shadow: 0 8px 30px rgba(15, 23, 42, 0.06);
+}
+
+.discipline-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.discipline-head h1,
+.discipline-form h2 {
+  margin: 0 0 0.5rem;
+}
+
+.discipline-head p,
+.discipline-message {
+  margin: 0;
+  color: #4b5563;
+}
+
+.discipline-head button,
+.discipline-permissions button,
+.discipline-form button {
+  width: auto;
+  border: none;
+  border-radius: 8px;
+  padding: 0.65rem 1rem;
+  background: #1f2a44;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.discipline-status-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.discipline-status-grid div,
+.discipline-permissions div {
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 0.85rem;
+  background: #f8fafc;
+}
+
+.discipline-status-grid span,
+.discipline-permissions span {
+  display: block;
+  color: #6b7280;
+  margin-bottom: 0.35rem;
+}
+
+.discipline-status-grid strong,
+.discipline-permissions strong {
+  color: #111827;
+}
+
+.discipline-permissions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.discipline-permissions .ready {
+  border-color: #bbf7d0;
+  background: #f0fdf4;
+}
+
+.discipline-permissions button {
+  margin-top: 0.75rem;
+}
+
+.discipline-form {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 1rem;
+  border-top: 1px solid #e5e7eb;
+  padding-top: 1rem;
+}
+
+.discipline-form label {
+  display: grid;
+  gap: 0.45rem;
+  color: #374151;
+  font-weight: 700;
+}
+
+.discipline-form input {
+  border: 1px solid #d8d7d1;
+  border-radius: 8px;
+  padding: 0.75rem;
+  font-size: 1rem;
+}
+
+.discipline-form.danger button {
+  background: #b91c1c;
+}
+
+.discipline-message {
+  margin-top: 1rem;
+  font-weight: 700;
 }
 
 /* 管理员页 */
