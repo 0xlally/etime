@@ -5,9 +5,15 @@ from typing import List
 
 from app.models.user import User
 from app.models.work_target import WorkTarget
-from app.schemas.work_target import WorkTargetCreate, WorkTargetUpdate, WorkTargetResponse
+from app.schemas.work_target import (
+    TargetDashboardResponse,
+    WorkTargetCreate,
+    WorkTargetResponse,
+    WorkTargetUpdate,
+)
 from app.api.deps import get_current_active_user
 from app.core.db import get_db
+from app.services.evaluation import build_target_dashboard
 
 
 router = APIRouter()
@@ -66,6 +72,15 @@ def list_targets(
     ).order_by(WorkTarget.created_at.desc()).all()
     
     return targets
+
+
+@router.get("/dashboard", response_model=TargetDashboardResponse)
+def get_target_dashboard(
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db)
+):
+    """Get target streaks, current progress, and debt/compensation events."""
+    return build_target_dashboard(current_user.id, db)
 
 
 @router.patch("/{target_id}", response_model=WorkTargetResponse)

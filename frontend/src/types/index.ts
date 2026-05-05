@@ -113,17 +113,127 @@ export interface WorkTarget {
   is_active?: boolean; // New field matching backend
   effective_from?: string;
   created_at: string;
+  updated_at?: string;
 }
 
 export interface WorkEvaluation {
   id: number;
   user_id: number;
   target_id: number;
-  evaluation_date: string;
+  period_start: string;
+  period_end: string;
   actual_seconds: number;
-  is_pass: boolean;
+  target_seconds: number;
+  status: 'met' | 'missed';
+  deficit_seconds: number;
   created_at: string;
   target?: WorkTarget;
+}
+
+export interface TargetMetric {
+  target_id: number;
+  period: 'daily' | 'weekly' | 'monthly' | 'tomorrow';
+  target_seconds: number;
+  current_streak: number;
+  best_streak: number;
+  total_evaluations: number;
+  met_evaluations: number;
+  completion_rate: number;
+  active_debt_seconds: number;
+  suggested_compensation_seconds: number;
+}
+
+export interface TargetProgress {
+  target_id: number;
+  period: 'daily' | 'weekly' | 'monthly' | 'tomorrow';
+  period_start: string;
+  period_end: string;
+  actual_seconds: number;
+  target_seconds: number;
+  remaining_seconds: number;
+  progress_ratio: number;
+}
+
+export interface PunishmentEvent {
+  id: number;
+  user_id: number;
+  evaluation_id: number;
+  rule_type: 'time_debt' | 'compensation' | string;
+  payload_json?: Record<string, any> | null;
+  created_at: string;
+}
+
+export interface TargetDashboard {
+  metrics: TargetMetric[];
+  progress: TargetProgress[];
+  events: PunishmentEvent[];
+}
+
+export interface NotificationItem {
+  id: number;
+  user_id: number;
+  type: string;
+  title: string;
+  content?: string | null;
+  created_at: string;
+  read_at?: string | null;
+}
+
+export interface ReviewCategoryItem {
+  category_id: number | null;
+  category_name: string | null;
+  category_color: string | null;
+  seconds: number;
+  trend_delta_seconds: number;
+}
+
+export interface ReviewEvaluationItem {
+  id: number;
+  target_id: number;
+  period: string;
+  period_start: string;
+  period_end: string;
+  actual_seconds: number;
+  target_seconds: number;
+  status: 'met' | 'missed';
+  deficit_seconds: number;
+}
+
+export interface ReviewTargetSummary {
+  total_count: number;
+  met_count: number;
+  missed_count: number;
+  remaining_seconds: number;
+  evaluations: ReviewEvaluationItem[];
+}
+
+export interface ReviewDayTotal {
+  date: string;
+  total_seconds: number;
+}
+
+export interface DailyReview {
+  date: string;
+  total_seconds: number;
+  top_category: ReviewCategoryItem | null;
+  by_category: ReviewCategoryItem[];
+  target_summary: ReviewTargetSummary;
+  time_traces: TimeTraceEntry[];
+  markdown: string;
+}
+
+export interface WeeklyReview {
+  start_date: string;
+  end_date: string;
+  total_seconds: number;
+  average_daily_seconds: number;
+  best_day: ReviewDayTotal | null;
+  gap_days: number;
+  by_category: ReviewCategoryItem[];
+  daily_totals: ReviewDayTotal[];
+  target_summary: ReviewTargetSummary;
+  time_traces: TimeTraceEntry[];
+  markdown: string;
 }
 
 export interface AdminUser {

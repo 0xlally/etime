@@ -1,4 +1,6 @@
 .pytest_cache/
+.env
+backend/.env
 test.db
 backend/test.db
 frontend/dist/

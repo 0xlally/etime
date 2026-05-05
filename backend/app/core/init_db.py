@@ -12,6 +12,9 @@ from app.models.user import User, UserRole
 from app.utils.security import hash_password
 
 
+INSECURE_ADMIN_PASSWORDS = {"admin", "admin123", "password", "password123", "changeme"}
+
+
 def create_tables_if_missing() -> None:
     """Create all tables if they do not already exist."""
     Base.metadata.create_all(bind=engine)
@@ -25,6 +28,11 @@ def ensure_default_admin(db: Session) -> Tuple[User, bool, bool]:
     admin_username = settings.DEFAULT_ADMIN_USERNAME
     admin_email = settings.DEFAULT_ADMIN_EMAIL
     admin_password = settings.DEFAULT_ADMIN_PASSWORD
+    if not admin_password:
+        raise ValueError("DEFAULT_ADMIN_PASSWORD must be set when AUTO_INIT_ADMIN is enabled")
+
+    if len(admin_password) < 12 or admin_password.lower() in INSECURE_ADMIN_PASSWORDS:
+        raise ValueError("DEFAULT_ADMIN_PASSWORD must be at least 12 characters and not a known default")
 
     admin = db.query(User).filter(User.username == admin_username).first()
     created = False

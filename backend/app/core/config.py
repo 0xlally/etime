@@ -26,10 +26,10 @@ class Settings(BaseSettings):
 
     # Database bootstrap
     AUTO_CREATE_TABLES: bool = True
-    AUTO_INIT_ADMIN: bool = True
+    AUTO_INIT_ADMIN: bool = False
     DEFAULT_ADMIN_EMAIL: str = "admin@example.com"
     DEFAULT_ADMIN_USERNAME: str = "admin"
-    DEFAULT_ADMIN_PASSWORD: str = "admin123"
+    DEFAULT_ADMIN_PASSWORD: Optional[str] = None
     
     # CORS
     BACKEND_CORS_ORIGINS: list[str] = [

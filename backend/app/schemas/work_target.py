@@ -1,7 +1,7 @@
 ﻿"""Work Target Schemas - Request/Response models for work targets"""
 from pydantic import BaseModel, field_validator
 from datetime import datetime
-from typing import Optional, List
+from typing import Any, Optional, List
 
 
 class WorkTargetCreate(BaseModel):
@@ -82,3 +82,48 @@ class NotificationResponse(BaseModel):
     read_at: Optional[datetime]
     
     model_config = {"from_attributes": True}
+
+
+class PunishmentEventResponse(BaseModel):
+    """Schema for punishment/reward event response"""
+    id: int
+    user_id: int
+    evaluation_id: int
+    rule_type: str
+    payload_json: Optional[dict[str, Any]]
+    created_at: datetime
+
+    model_config = {"from_attributes": True}
+
+
+class TargetMetricResponse(BaseModel):
+    """Aggregated evaluation metrics for a target"""
+    target_id: int
+    period: str
+    target_seconds: int
+    current_streak: int
+    best_streak: int
+    total_evaluations: int
+    met_evaluations: int
+    completion_rate: float
+    active_debt_seconds: int
+    suggested_compensation_seconds: int
+
+
+class TargetProgressResponse(BaseModel):
+    """Current period progress for an active target"""
+    target_id: int
+    period: str
+    period_start: datetime
+    period_end: datetime
+    actual_seconds: int
+    target_seconds: int
+    remaining_seconds: int
+    progress_ratio: float
+
+
+class TargetDashboardResponse(BaseModel):
+    """Target engine dashboard response"""
+    metrics: List[TargetMetricResponse]
+    progress: List[TargetProgressResponse]
+    events: List[PunishmentEventResponse]

@@ -1,12 +1,22 @@
 ﻿import React from 'react';
-import { BrowserRouter, Routes, Route, Link, Navigate } from 'react-router-dom';
-import { LogOut } from 'lucide-react';
+import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
+import {
+  CalendarDays,
+  GitBranch,
+  LogOut,
+  PieChart,
+  Settings,
+  ShieldCheck,
+  Target,
+  Timer as TimerIcon,
+} from 'lucide-react';
 import { Login } from './pages/Login';
 import { Timer } from './pages/Timer';
 import { Classification } from './pages/Classification';
 import { Heatmap } from './pages/Heatmap';
 import { TimeTrace } from './pages/TimeTrace';
 import { Targets } from './pages/Targets';
+import { Review } from './pages/Review';
 import { Discipline } from './pages/Discipline';
 import { Admin } from './pages/Admin';
 import { NotificationBell } from './components/NotificationBell';
@@ -22,24 +32,41 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const handleLogout = () => {
-    apiClient.removeToken();
+    apiClient.clearAuth();
     window.location.href = '/login';
   };
 
   const role = apiClient.getUserRole();
+  const navItems = [
+    { to: '/timer', label: '计时', icon: TimerIcon },
+    { to: '/classification', label: '统计', icon: PieChart },
+    { to: '/time-trace', label: '时痕', icon: GitBranch },
+    { to: '/heatmap', label: '热力', icon: CalendarDays },
+    { to: '/targets', label: '目标', icon: Target },
+    { to: '/review', label: '复盘', icon: CalendarDays },
+    { to: '/discipline', label: '自律', icon: ShieldCheck },
+  ];
 
   return (
     <div className="app-layout">
       <nav className="navbar">
         <div className="nav-brand">ETime</div>
         <div className="nav-links">
-          <Link to="/timer">计时器</Link>
-          <Link to="/classification">分类统计</Link>
-          <Link to="/time-trace">时痕</Link>
-          <Link to="/heatmap">热力图</Link>
-          <Link to="/targets">时间规划</Link>
-          <Link to="/discipline">自律模式</Link>
-          {role === 'admin' && <Link to="/admin">管理</Link>}
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink key={item.to} to={item.to}>
+                <Icon size={17} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+          {role === 'admin' && (
+            <NavLink to="/admin">
+              <Settings size={17} />
+              <span>管理</span>
+            </NavLink>
+          )}
         </div>
         <div className="nav-actions">
           <NotificationBell />
@@ -106,6 +133,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Targets />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/review"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Review />
               </Layout>
             </ProtectedRoute>
           }
