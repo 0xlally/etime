@@ -181,6 +181,61 @@ export interface NotificationItem {
   read_at?: string | null;
 }
 
+export type GroupRole = 'owner' | 'admin' | 'member';
+export type GroupVisibility = 'private' | 'invite_code';
+export type GroupMessageType = 'text' | 'status_share' | 'card_share' | 'system';
+
+export interface Group {
+  id: number;
+  name: string;
+  description?: string | null;
+  owner_id: number;
+  invite_code: string;
+  visibility: GroupVisibility;
+  created_at: string;
+  updated_at: string;
+  member_count: number;
+  my_role?: GroupRole | null;
+}
+
+export interface GroupMember {
+  id: number;
+  group_id: number;
+  user_id: number;
+  username: string;
+  role: GroupRole;
+  joined_at: string;
+  muted_until?: string | null;
+  is_active: boolean;
+}
+
+export interface GroupStatusMetadata {
+  date?: string;
+  total_seconds?: number;
+  target_completed_count?: number;
+  target_total_count?: number;
+  streak_days?: number;
+  top_category?: {
+    category_id: number | null;
+    category_name: string | null;
+    category_color: string | null;
+    seconds: number;
+  } | null;
+  by_category?: CategoryStatsSummaryItem[];
+}
+
+export interface GroupMessage {
+  id: number;
+  group_id: number;
+  user_id: number;
+  username: string;
+  message_type: GroupMessageType;
+  content: string;
+  metadata_json?: GroupStatusMetadata & Record<string, unknown> | null;
+  created_at: string;
+  deleted_at?: string | null;
+}
+
 export interface ReviewCategoryItem {
   category_id: number | null;
   category_name: string | null;

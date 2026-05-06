@@ -7,6 +7,7 @@
 - 目标进度：按日/周/月（含“明天”）显示目标窗口、剩余时长、已完成时长。
 - 目标引擎 2.0：支持连胜、最佳连胜、完成率、时间债务、补偿记录和惩罚/奖励可视化。
 - 自动复盘：日报/周报串联统计、目标达成、分类趋势和时痕，并支持一键导出 Markdown。
+- 小组协作 MVP：支持创建/加入/退出学习小组、邀请码邀请、成员列表、轻量群聊、分享今日状态和复盘卡片摘要。
 - 分类管理：分类选择与新建一体化卡片，对齐控件减少跳跃感。
 - 统计视图：分类占比、热力图、目标达成等多视角复盘（前端已内置对应页面）。
 - 账号安全：JWT 登录、刷新令牌、邮箱密码重置；重置令牌会绑定当前密码状态，使用一次后自动失效。
@@ -63,6 +64,38 @@ POSTGRES_PASSWORD=replace-with-a-long-random-password
 - 查库：`docker exec -it etime_db psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"`
 - PostgreSQL 默认只在 Compose 内网可用，不再映射到宿主机。需要临时直连时可手动添加本地端口映射，不建议生产环境暴露。
 
+## 小组协作 MVP
+
+小组页面位于 `/groups`，导航栏入口为“小组”。第一版 intentionally 保持轻量：
+
+- 创建小组后自动成为 owner，并生成 10 位邀请码。
+- 成员可通过邀请码加入小组，非成员无法读取成员列表或消息。
+- 小组内支持文本消息、系统提示、今日状态分享和复盘卡片摘要分享。
+- 今日状态会聚合当前用户当天总时长、Top 分类、目标完成数和简单连续记录天数。
+- Web 端使用 7 秒轮询刷新当前小组消息；页面离开时会自动停止轮询。
+- 移动端/Capacitor Android 使用聊天式布局：顶部小组信息、中间消息滚动、底部输入区固定。
+
+后端 API：
+
+- `GET /api/v1/groups`
+- `POST /api/v1/groups`
+- `GET /api/v1/groups/{group_id}`
+- `PATCH /api/v1/groups/{group_id}`
+- `POST /api/v1/groups/join`
+- `POST /api/v1/groups/{group_id}/leave`
+- `GET /api/v1/groups/{group_id}/members`
+- `GET /api/v1/groups/{group_id}/messages?before=&limit=50`
+- `POST /api/v1/groups/{group_id}/messages`
+- `POST /api/v1/groups/{group_id}/share-status`
+- `POST /api/v1/groups/{group_id}/share-card`
+
+权限约束：
+
+- 只有小组成员能读取小组、成员列表和消息，也只有成员能发消息或分享状态。
+- owner/admin 可修改小组信息。
+- MVP 阶段 owner 不能直接退出小组。
+- 文本消息限制为 1000 字以内。
+
 ## 安全默认值
 
 - 不内置可登录的默认管理员；`admin/admin123` 不会被自动创建。
@@ -93,6 +126,16 @@ npm run android:sync
 ```
 
 实时计时的离线记录会保存在本地，包含 `local_timer_id`、分类、开始/结束时间、状态和来源（Web 为 `web`，Capacitor Android 为 `android`）。应用启动、进入计时页和浏览器/ WebView 恢复在线时都会尝试同步；后端使用 `client_generated_id` 做幂等去重，重复提交同一条本地记录不会创建重复 session。
+
+小组功能 Android 手动验证建议：
+
+1. 设置真实后端地址后运行 `cd frontend && npm run android:sync`。
+2. 安装或打开 debug APK，登录账号，进入底部导航“小组”。
+3. 创建小组，确认页面显示邀请码、成员数和消息空状态。
+4. 发送一条文本消息，确认消息立即刷新且不重复追加。
+5. 点击“分享今日状态”和“分享复盘卡片”，确认出现状态卡片和卡片摘要。
+6. 用第二个账号通过邀请码加入，确认成员列表增加且非成员无法访问消息。
+7. 切换到其他页面或退出小组页面，确认返回后消息仍能加载，轮询不会在后台持续刷新。
 
 debug APK 输出位置：
 

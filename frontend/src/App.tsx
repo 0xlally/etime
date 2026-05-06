@@ -9,6 +9,7 @@ import {
   ShieldCheck,
   Target,
   Timer as TimerIcon,
+  Users,
 } from 'lucide-react';
 import { Login } from './pages/Login';
 import { Timer } from './pages/Timer';
@@ -18,6 +19,7 @@ import { TimeTrace } from './pages/TimeTrace';
 import { Targets } from './pages/Targets';
 import { Review } from './pages/Review';
 import { Discipline } from './pages/Discipline';
+import { Groups } from './pages/Groups';
 import { Admin } from './pages/Admin';
 import { NotificationBell } from './components/NotificationBell';
 import { apiClient } from './api/client';
@@ -60,6 +62,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { to: '/heatmap', label: '热力', icon: CalendarDays },
     { to: '/targets', label: '目标', icon: Target },
     { to: '/review', label: '复盘', icon: CalendarDays },
+    { to: '/groups', label: '小组', icon: Users },
     { to: '/discipline', label: '自律', icon: ShieldCheck },
   ];
 
@@ -169,6 +172,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Discipline />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/groups"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Groups />
               </Layout>
             </ProtectedRoute>
           }

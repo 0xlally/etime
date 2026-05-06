@@ -8,7 +8,16 @@ from sqlalchemy.orm import Session
 
 from app.core.db import Base, SessionLocal, engine
 from app.core.config import settings
+from app.models.admin_audit_log import AdminAuditLog  # noqa: F401
+from app.models.category import Category  # noqa: F401
+from app.models.group import Group, GroupDailySnapshot, GroupMember, GroupMessage  # noqa: F401
+from app.models.notification import Notification  # noqa: F401
+from app.models.punishment_event import PunishmentEvent  # noqa: F401
+from app.models.session import Session  # noqa: F401
+from app.models.time_trace import TimeTrace  # noqa: F401
 from app.models.user import User, UserRole
+from app.models.work_evaluation import WorkEvaluation  # noqa: F401
+from app.models.work_target import WorkTarget  # noqa: F401
 from app.utils.security import hash_password
 
 
