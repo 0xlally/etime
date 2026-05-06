@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { Button, Card, EmptyState, LoadingState, PageShell, Progress, StatCard } from '../components/ui';
 import { apiClient } from '../api/client';
 import { Category, TargetDashboard, WorkEvaluation, WorkTarget } from '../types';
 
@@ -49,6 +50,7 @@ export const Targets: React.FC = () => {
   const [evaluations, setEvaluations] = useState<WorkEvaluation[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [dashboard, setDashboard] = useState<TargetDashboard | null>(null);
+  const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formData, setFormData] = useState({
     target_type: 'daily' as TargetPeriod,
@@ -62,6 +64,7 @@ export const Targets: React.FC = () => {
   }, []);
 
   const loadData = async () => {
+    setLoading(true);
     try {
       const [targetsData, evaluationsData, categoriesData, dashboardData] = await Promise.all([
         apiClient.get<WorkTarget[]>('/targets'),
@@ -75,6 +78,8 @@ export const Targets: React.FC = () => {
       setDashboard(dashboardData);
     } catch (error) {
       console.error('加载目标数据失败', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -178,35 +183,24 @@ export const Targets: React.FC = () => {
   };
 
   return (
-    <div className="targets-page">
-      <div className="targets-header">
-        <h1>目标引擎 2.0</h1>
-        <button onClick={() => setShowForm(!showForm)}>
-          {showForm ? '取消' : '+ 新建目标'}
-        </button>
-      </div>
+    <PageShell
+      className="targets-page"
+      eyebrow="目标工作台"
+      title="目标页"
+      description="目标不是催促，是帮你看见时间去向的温和边界。"
+      action={(
+        <Button variant={showForm ? 'ghost' : 'primary'} onClick={() => setShowForm(!showForm)}>
+          {showForm ? '收起' : '+ 新建目标'}
+        </Button>
+      )}
+    >
 
       <div className="target-overview">
-        <div>
-          <span>当前连胜</span>
-          <strong>{overview.currentStreak}</strong>
-        </div>
-        <div>
-          <span>最佳连胜</span>
-          <strong>{overview.bestStreak}</strong>
-        </div>
-        <div>
-          <span>完成率</span>
-          <strong>{Math.round(overview.completionRate * 100)}%</strong>
-        </div>
-        <div>
-          <span>时间债务</span>
-          <strong>{formatTime(overview.activeDebt)}</strong>
-        </div>
-        <div>
-          <span>建议补回</span>
-          <strong>{formatTime(overview.suggestedCompensation)}</strong>
-        </div>
+        <StatCard label="当前连胜" value={overview.currentStreak} hint="保持一种轻节奏" />
+        <StatCard label="最佳连胜" value={overview.bestStreak} hint="你曾经做到过" />
+        <StatCard label="完成率" value={`${Math.round(overview.completionRate * 100)}%`} hint="只看趋势" />
+        <StatCard label="时间债务" value={formatTime(overview.activeDebt)} hint="慢慢补回" />
+        <StatCard label="建议补回" value={formatTime(overview.suggestedCompensation)} hint="留一个缓冲" />
       </div>
 
       {dashboard?.progress && dashboard.progress.length > 0 && (
@@ -217,9 +211,7 @@ export const Targets: React.FC = () => {
                 <span>{periodLabel(item.period)}</span>
                 <strong>{Math.round(item.progress_ratio * 100)}%</strong>
               </div>
-              <div className="target-progress-bar">
-                <span style={{ width: `${Math.round(item.progress_ratio * 100)}%` }} />
-              </div>
+              <Progress value={item.progress_ratio} max={1} className="target-progress-bar" />
               <p>
                 已完成 {formatTime(item.actual_seconds)}，还差 {formatTime(item.remaining_seconds)}
               </p>
@@ -229,7 +221,7 @@ export const Targets: React.FC = () => {
       )}
 
       {showForm && (
-        <form onSubmit={handleSubmit} className="target-form">
+        <Card as="form" onSubmit={handleSubmit} className="target-form">
           <div className="form-group">
             <label>周期</label>
             <select value={formData.target_type} onChange={(e) => handlePeriodChange(e.target.value as TargetPeriod)}>
@@ -288,14 +280,16 @@ export const Targets: React.FC = () => {
             </div>
           </div>
 
-          <button type="submit">创建</button>
-        </form>
+          <Button type="submit">创建</Button>
+        </Card>
       )}
 
-      <div className="targets-list">
+      <Card className="targets-list">
         <h2>我的目标</h2>
-        {targets.length === 0 ? (
-          <p>暂无目标</p>
+        {loading ? (
+          <LoadingState text="正在整理目标进度..." />
+        ) : targets.length === 0 ? (
+          <EmptyState title="还没有目标" description="可以先设一个很小的每日目标，让系统陪你开始。" />
         ) : (
           <table>
             <thead>
@@ -331,12 +325,12 @@ export const Targets: React.FC = () => {
                     <td>{formatTime(metric?.active_debt_seconds ?? 0)}</td>
                     <td>{isActive ? '启用' : '停用'}</td>
                     <td>
-                      <button onClick={() => toggleTarget(target.id, isActive)}>
+                      <Button variant="ghost" onClick={() => toggleTarget(target.id, isActive)}>
                         {isActive ? '停用' : '启用'}
-                      </button>
-                      <button style={{ marginLeft: 8 }} onClick={() => deleteTarget(target.id)}>
+                      </Button>
+                      <Button variant="danger" style={{ marginLeft: 8 }} onClick={() => deleteTarget(target.id)}>
                         删除
-                      </button>
+                      </Button>
                     </td>
                   </tr>
                 );
@@ -344,12 +338,14 @@ export const Targets: React.FC = () => {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
-      <div className="evaluations-list">
+      <Card className="evaluations-list">
         <h2>最近评估结果</h2>
-        {evaluations.length === 0 ? (
-          <p>暂无评估记录</p>
+        {loading ? (
+          <LoadingState text="正在查看最近评估..." />
+        ) : evaluations.length === 0 ? (
+          <EmptyState title="暂无评估记录" description="等目标走过一个周期，这里会出现复盘结果。" />
         ) : (
           <table>
             <thead>
@@ -384,12 +380,14 @@ export const Targets: React.FC = () => {
             </tbody>
           </table>
         )}
-      </div>
+      </Card>
 
-      <div className="target-events">
-        <h2>惩罚 / 奖励可视化</h2>
-        {!dashboard || dashboard.events.length === 0 ? (
-          <p>暂无事件</p>
+      <Card className="target-events">
+        <h2>补回与提醒</h2>
+        {loading ? (
+          <LoadingState text="正在查看补回记录..." />
+        ) : !dashboard || dashboard.events.length === 0 ? (
+          <EmptyState title="暂无事件" description="没有需要补回的时间，也是一种稳定。" />
         ) : (
           <div className="target-event-list">
             {dashboard.events.slice(0, 20).map((event) => {
@@ -416,7 +414,7 @@ export const Targets: React.FC = () => {
             })}
           </div>
         )}
-      </div>
-    </div>
+      </Card>
+    </PageShell>
   );
 };

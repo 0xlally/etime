@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { HeatmapGrid } from '../components/HeatmapGrid';
 import { CategorySelect } from '../components/CategorySelect';
+import { Button, Card, LoadingState, PageShell, SectionHeader } from '../components/ui';
 import { apiClient } from '../api/client';
 import { DayDetail, HeatmapDay } from '../types';
 
@@ -102,13 +103,17 @@ export const Heatmap: React.FC = () => {
   };
 
   return (
-    <div className="heatmap-page">
-      <h1>时间热力图</h1>
+    <PageShell
+      className="heatmap-page"
+      eyebrow="时间感"
+      title="热力图"
+      description="让每一天留下轻一点的刻度，深浅刚好说明节奏。"
+    >
 
       <div className="year-selector">
-        <button onClick={() => setYear(year - 1)}>← {year - 1}</button>
+        <Button variant="ghost" onClick={() => setYear(year - 1)}>← {year - 1}</Button>
         <span>{year}</span>
-        <button onClick={() => setYear(year + 1)}>{year + 1} →</button>
+        <Button variant="ghost" onClick={() => setYear(year + 1)}>{year + 1} →</Button>
       </div>
 
       <div className="custom-range">
@@ -123,10 +128,11 @@ export const Heatmap: React.FC = () => {
           value={end}
           onChange={(e) => setEnd(e.target.value)}
         />
-        <button onClick={loadHeatmap}>查询</button>
+        <Button onClick={loadHeatmap}>查询</Button>
       </div>
 
-      <div className="filter-section">
+      <Card className="filter-section">
+        <SectionHeader title="筛选" description="只看某个分类时，时间纹理会更清楚。" />
         <CategorySelect
           value={categoryId}
           onChange={setCategoryId}
@@ -134,12 +140,14 @@ export const Heatmap: React.FC = () => {
           showCreate={false}
           label="按分类查看（可选）"
         />
-      </div>
+      </Card>
 
       {loading ? (
-        <p>加载中...</p>
+        <LoadingState />
       ) : (
-        <HeatmapGrid start={start} end={end} data={data} onDayClick={handleDayClick} />
+        <Card className="heatmap-card">
+          <HeatmapGrid start={start} end={end} data={data} onDayClick={handleDayClick} />
+        </Card>
       )}
 
       {selectedDay && (
@@ -178,10 +186,10 @@ export const Heatmap: React.FC = () => {
               </table>
             )}
 
-            <button onClick={() => setSelectedDay(null)}>关闭</button>
+            <Button variant="ghost" onClick={() => setSelectedDay(null)}>关闭</Button>
           </div>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 };

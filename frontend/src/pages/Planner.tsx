@@ -17,7 +17,6 @@ import { useNavigate } from 'react-router-dom';
 import { Capacitor } from '@capacitor/core';
 import {
   Bell,
-  CalendarDays,
   CheckCircle2,
   ChevronLeft,
   ChevronRight,
@@ -37,6 +36,7 @@ import {
   Category,
 } from '../types';
 import { getRunningTimer } from '../utils/offlineTimer';
+import { Button, Card, EmptyState, LoadingState, PageShell, SectionHeader, StatCard } from '../components/ui';
 
 type PlannerView = 'month' | 'week' | 'day';
 
@@ -414,42 +414,31 @@ export const Planner: React.FC = () => {
   const daysToRender = view === 'month' ? monthDays : view === 'week' ? weekDays : [anchorDate];
 
   return (
-    <div className="planner-page">
-      <header className="planner-header">
-        <div>
-          <span>我的时间地图</span>
-          <h1>计划日历</h1>
-        </div>
-        <button type="button" onClick={() => openCreate()}>
+    <PageShell
+      className="planner-page"
+      eyebrow="我的时间地图"
+      title="计划日历"
+      description="把事情放到合适的位置，让一天自然展开。"
+      action={(
+        <Button onClick={() => openCreate()}>
           <Plus size={17} /> 新增事项
-        </button>
-      </header>
+        </Button>
+      )}
+    >
 
       {toast && (
         <div className="planner-toast">
           <Bell size={17} />
           <span>{toast}</span>
-          <button type="button" onClick={() => setToast('')}>知道了</button>
+          <Button variant="secondary" onClick={() => setToast('')}>知道了</Button>
         </div>
       )}
 
       <section className="planner-summary">
-        <div>
-          <span>今日事项</span>
-          <strong>{todaySummary.total}</strong>
-        </div>
-        <div>
-          <span>已完成</span>
-          <strong>{todaySummary.done}</strong>
-        </div>
-        <div>
-          <span>预计投入</span>
-          <strong>{formatTime(todaySummary.focusSeconds)}</strong>
-        </div>
-        <div>
-          <span>待安排池</span>
-          <strong>{unscheduledTasks.length}</strong>
-        </div>
+        <StatCard label="今日事项" value={todaySummary.total} hint="一件一件来" />
+        <StatCard label="已完成" value={todaySummary.done} hint="节奏正在形成" />
+        <StatCard label="预计投入" value={formatTime(todaySummary.focusSeconds)} hint="给时间一个边界" />
+        <StatCard label="待安排池" value={unscheduledTasks.length} hint="暂时放在这里" />
       </section>
 
       <div className="planner-toolbar">
@@ -472,7 +461,7 @@ export const Planner: React.FC = () => {
       <div className="planner-layout">
         <main className={`planner-calendar planner-${view}`}>
           {loading ? (
-            <div className="planner-loading">加载中...</div>
+            <LoadingState className="planner-loading" />
           ) : (
             <div className="planner-days">
               {daysToRender.map((day) => {
@@ -491,7 +480,7 @@ export const Planner: React.FC = () => {
                     </button>
                     <div className="planner-day-list">
                       {dayTasks.length === 0 ? (
-                        <p>留白</p>
+                        <p>留白也算计划</p>
                       ) : (
                         dayTasks.map((task) => renderTask(task, view === 'month'))
                       )}
@@ -503,18 +492,18 @@ export const Planner: React.FC = () => {
           )}
         </main>
 
-        <aside className="planner-pool">
-          <div className="planner-pool-head">
-            <div>
-              <CalendarDays size={18} />
-              <strong>待安排池</strong>
-            </div>
-            <button type="button" onClick={() => openCreate()}>
-              <Plus size={16} />
-            </button>
-          </div>
+        <Card as="aside" className="planner-pool">
+          <SectionHeader
+            title="待安排池"
+            description="还没有日期的想法，先温柔收纳。"
+            action={(
+              <Button variant="secondary" onClick={() => openCreate()}>
+                <Plus size={16} />
+              </Button>
+            )}
+          />
           {unscheduledTasks.length === 0 ? (
-            <div className="planner-empty">没有待安排事项</div>
+            <EmptyState compact className="planner-empty" title="没有待安排事项" description="当下很清爽。" />
           ) : (
             <div className="planner-pool-list">
               {unscheduledTasks.map((task) => (
@@ -523,12 +512,12 @@ export const Planner: React.FC = () => {
                     <strong>{task.title}</strong>
                     <span>{priorityLabels[task.priority]}优先级 · {formatTime(task.estimated_seconds)}</span>
                   </button>
-                  <button type="button" onClick={() => openEdit(task)}>安排时间</button>
+                  <Button onClick={() => openEdit(task)}>安排时间</Button>
                 </article>
               ))}
             </div>
           )}
-        </aside>
+        </Card>
       </div>
 
       {modalOpen && (
@@ -539,7 +528,7 @@ export const Planner: React.FC = () => {
                 <span>{editingTask ? statusLabels[editingTask.status] : '新事项'}</span>
                 <h2>{editingTask ? '编辑事项' : '新增事项'}</h2>
               </div>
-              <button type="button" onClick={() => setModalOpen(false)}>关闭</button>
+              <Button variant="ghost" onClick={() => setModalOpen(false)}>关闭</Button>
             </header>
 
             <div className="planner-form-grid">
@@ -614,18 +603,18 @@ export const Planner: React.FC = () => {
 
             <footer>
               {editingTask && editingTask.status !== 'done' && (
-                <button type="button" className="planner-dialog-complete" onClick={() => completeTask(editingTask)}>
+                <Button variant="secondary" className="planner-dialog-complete" onClick={() => completeTask(editingTask)}>
                   <CheckCircle2 size={17} /> 完成
-                </button>
+                </Button>
               )}
-              <button type="button" className="planner-dialog-secondary" onClick={() => setModalOpen(false)}>取消</button>
-              <button type="submit" className="planner-dialog-primary">
+              <Button variant="ghost" className="planner-dialog-secondary" onClick={() => setModalOpen(false)}>取消</Button>
+              <Button type="submit" className="planner-dialog-primary">
                 <Clock size={17} /> 保存
-              </button>
+              </Button>
             </footer>
           </form>
         </div>
       )}
-    </div>
+    </PageShell>
   );
 };

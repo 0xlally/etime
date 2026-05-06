@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Download, Image as ImageIcon, Share2, ShieldCheck } from 'lucide-react';
+import { Button, Card, LoadingState, PageShell, SectionHeader } from '../components/ui';
 import { apiClient } from '../api/client';
 import { ShareCard, ShareCardStyle } from '../components/ShareCard';
 import { ShareRange, ShareSummary } from '../types';
@@ -135,21 +136,22 @@ export const Share: React.FC = () => {
   };
 
   return (
-    <div className="share-page">
-      <div className="share-header">
-        <div>
-          <span>分享卡片</span>
-          <h1>复盘海报</h1>
-        </div>
-        <button onClick={loadSummary} disabled={loading}>
+    <PageShell
+      className="share-page"
+      eyebrow="分享卡片"
+      title="复盘海报"
+      description="把一段时间做成安静、克制、适合截图的卡片。"
+      action={(
+        <Button variant="secondary" onClick={loadSummary} disabled={loading}>
           <ImageIcon size={17} /> 刷新
-        </button>
-      </div>
+        </Button>
+      )}
+    >
 
       <div className="share-layout">
-        <aside className="share-controls">
+        <Card as="aside" className="share-controls">
           <section>
-            <h2>范围</h2>
+            <SectionHeader title="范围" />
             <div className="share-segment">
               {rangeOptions.map((item) => (
                 <button
@@ -164,7 +166,7 @@ export const Share: React.FC = () => {
           </section>
 
           <section>
-            <h2>样式</h2>
+            <SectionHeader title="样式" description="不炫耀，只把节奏讲清楚。" />
             <div className="share-segment">
               {styleOptions.map((item) => (
                 <button
@@ -199,21 +201,21 @@ export const Share: React.FC = () => {
           </section>
 
           <section className="share-actions">
-            <button onClick={handleDownload} disabled={loading || rendering || !summary}>
+            <Button onClick={handleDownload} disabled={loading || rendering || !summary}>
               <Download size={17} /> 下载 PNG
-            </button>
+            </Button>
             {isNative && (
-              <button onClick={handleNativeShare} disabled={loading || rendering || !summary}>
+              <Button variant="secondary" onClick={handleNativeShare} disabled={loading || rendering || !summary}>
                 <Share2 size={17} /> Android 分享
-              </button>
+              </Button>
             )}
             {status && <p>{status}</p>}
           </section>
-        </aside>
+        </Card>
 
-        <main className="share-preview-panel">
+        <Card as="main" className="share-preview-panel">
           {loading ? (
-            <div className="share-preview-loading">加载中...</div>
+            <LoadingState className="share-preview-loading" />
           ) : (
             <div className="share-preview-shell">
               <ShareCard
@@ -231,8 +233,8 @@ export const Share: React.FC = () => {
               <img src={generatedImageUrl} alt="生成的 ETime 复盘海报" />
             </div>
           )}
-        </main>
+        </Card>
       </div>
-    </div>
+    </PageShell>
   );
 };

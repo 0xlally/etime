@@ -36,11 +36,11 @@ const formatPercent = (value: number) => `${Math.round(value * 100)}%`;
 const categoryAlias = (index: number) => `分类 ${String.fromCharCode(65 + index)}`;
 
 const heatmapColor = (seconds: number) => {
-  if (seconds <= 0) return '#e5e7eb';
-  if (seconds < 1800) return '#bfdbfe';
-  if (seconds < 3600) return '#86efac';
-  if (seconds < 3 * 3600) return '#22c55e';
-  return '#166534';
+  if (seconds <= 0) return '#ece9df';
+  if (seconds < 1800) return '#d9ddcf';
+  if (seconds < 3600) return '#b8c2a9';
+  if (seconds < 3 * 3600) return '#879678';
+  return '#596d58';
 };
 
 const generatedLabel = (value?: string) => {
@@ -92,10 +92,10 @@ export const ShareCard = React.forwardRef<HTMLDivElement, ShareCardProps>(
 
         <section className="share-card-hero">
           <div>
-            <span>总投入</span>
+            <span>时间投入</span>
             <strong>{safeHideTotal ? '已隐藏' : formatDuration(totalSeconds)}</strong>
           </div>
-          <small>{styleLabels[styleType]}复盘</small>
+          <small>{styleLabels[styleType]}记录</small>
         </section>
 
         <section className="share-card-metrics">
@@ -112,7 +112,7 @@ export const ShareCard = React.forwardRef<HTMLDivElement, ShareCardProps>(
           <div>
             <span>连续记录</span>
             <strong>{summary?.streak_days ?? 0} 天</strong>
-            <small>{hasData ? '节奏稳定' : '等待开始'}</small>
+            <small>{hasData ? '节奏稳定' : '慢慢开始'}</small>
           </div>
         </section>
 
@@ -122,7 +122,7 @@ export const ShareCard = React.forwardRef<HTMLDivElement, ShareCardProps>(
             <span>{categories.length} 项</span>
           </div>
           {categories.length === 0 ? (
-            <div className="share-card-empty">暂无记录</div>
+            <div className="share-card-empty">还没有记录，开始和时间做朋友。</div>
           ) : (
             <div className="share-card-categories">
               {categories.slice(0, 5).map((item, index) => (

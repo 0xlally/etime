@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { StatsChart } from '../components/StatsChart';
+import { Card, EmptyState, LoadingState, PageShell, StatCard } from '../components/ui';
 import { apiClient } from '../api/client';
 import { StatsSummary } from '../types';
 
@@ -178,10 +179,12 @@ export const Classification: React.FC = () => {
 
   const rows = (summary?.by_category || []).slice().sort((a, b) => (b.seconds || 0) - (a.seconds || 0));
 
-  const chartData = rows.map((cat) => ({
+  const quietPalette = ['#6f7f72', '#9a8f78', '#7b8794', '#9c8c8c', '#8a9273', '#6f8388'];
+
+  const chartData = rows.map((cat, index) => ({
     name: cat.category_name || '未分类',
     value: cat.seconds,
-    color: cat.category_color || '#667eea',
+    color: cat.category_color || quietPalette[index % quietPalette.length],
   }));
 
   const percent = (seconds: number) => {
@@ -206,8 +209,12 @@ export const Classification: React.FC = () => {
   };
 
   return (
-    <div className="stats-page">
-      <h1>分类统计</h1>
+    <PageShell
+      className="stats-page"
+      eyebrow="时间复盘"
+      title="统计页"
+      description="这周的时间投入更稳定了，数据只负责轻轻提醒。"
+    >
 
       <div className="period-selector">
         <button className={period === 'today' ? 'active' : ''} onClick={() => setPeriod('today')}>
@@ -233,13 +240,14 @@ export const Classification: React.FC = () => {
         </div>
       )}
 
-      <div className="stats-current">
+      <Card className="stats-current">
         {loading ? (
-          <p>加载中...</p>
+          <LoadingState />
         ) : !summary || summary.total_seconds === 0 ? (
-          <p>暂无数据</p>
+          <EmptyState title="还没有记录" description="开始和时间做朋友，第一条记录会出现在这里。" />
         ) : (
           <>
+            <StatCard label="当前总投入" value={formatTime(summary.total_seconds)} hint="内容优先，数字靠后" />
             <StatsChart data={chartData} title="分类占比" />
             <div className="summary-table">
               <div className="summary-total">总计：{formatTime(summary.total_seconds)}</div>
@@ -276,13 +284,13 @@ export const Classification: React.FC = () => {
             </div>
           </>
         )}
-      </div>
+      </Card>
 
       {period !== 'custom' && (
-        <div className="history-panel">
+        <Card className="history-panel">
           <h2>{historyTitle}</h2>
           {historyLoading ? (
-            <p>加载中...</p>
+            <LoadingState />
           ) : (
             <table>
               <thead>
@@ -305,8 +313,8 @@ export const Classification: React.FC = () => {
               </tbody>
             </table>
           )}
-        </div>
+        </Card>
       )}
-    </div>
+    </PageShell>
   );
 };

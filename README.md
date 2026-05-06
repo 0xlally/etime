@@ -29,6 +29,58 @@
 ![计时器与模式切换](frontend/public/project/3d9f947c5ed5aa711ea7fbdcbae5d40b.png)
 ![统计与热力图](frontend/public/project/9a11cfbfea346c5d542d072a8da6c516.png)
 
+## UI 设计系统
+
+ETime 的界面定位为“安静、克制、清晰、有质感的个人时间工作台”，参考极简内容优先的审美策略，但不复制任何第三方 Logo、图标、品牌资产或具体设计。
+
+设计方向：
+- 黑白灰与纸张感 off-white 为主，少量低饱和强调色。
+- 卡片像可组合的时间积木，弱边框、轻阴影、大留白。
+- 页面适合截图传播，避免后台系统感、电商感、荧光色、大渐变和重玻璃拟态。
+- 文案保持温和克制：鼓励开始，但不制造压力。
+
+核心 design tokens 位于 `frontend/src/index.css` 与 `frontend/src/App.css`：
+- `--color-background`：应用纸张背景。
+- `--color-surface` / `--color-surface-soft`：主卡片与轻量区块表面。
+- `--color-border`：低对比边框。
+- `--color-text-primary` / `--color-text-secondary`：柔和深灰正文与辅助文字。
+- `--color-muted`：静态占位、空状态与分割背景。
+- `--color-accent` / `--color-accent-soft`：低饱和时间感强调色。
+- `--radius-sm` / `--radius-md` / `--radius-lg`：统一圆角层级。
+- `--shadow-card`：轻量卡片阴影。
+- `--spacing-page` / `--spacing-card`：页面与卡片留白。
+
+基础组件位于 `frontend/src/components/ui.tsx`：
+- `PageShell`：统一页面标题、说明与操作区。
+- `Card`：统一积木式卡片容器。
+- `Button`：统一 primary / secondary / ghost / danger 按钮。
+- `SectionHeader`：统一卡片区块标题。
+- `EmptyState`：统一温和空状态。
+- `StatCard`：统一指标卡。
+- `Tag`：统一状态标签。
+- `Progress`：统一低饱和进度条。
+- `LoadingState`：统一轻量 loading。
+
+本轮重点优化页面：
+- Timer 首页：个人时间工作台、快捷开始卡片、目标进度、实时/补录区域、离线同步状态。
+- 计划日历：月/周/日视图、待安排池、今日摘要、事项弹窗与移动端底部导航适配。
+- 统计页：分类占比、历史投入、空状态和轻量 loading。
+- 热力图：低饱和时间热力色阶、筛选卡片、日期详情弹窗。
+- 目标页：目标概览、进度卡、目标列表、评估与补回事件。
+- 分享卡片：复盘海报、隐私模式、Android 分享入口与截图友好的卡片样式。
+
+Web 验证步骤：
+- `cd frontend && npm run build`
+- `cd frontend && npm run dev -- --host --port 3000`
+- 登录后依次检查 `/timer`、`/planner`、`/classification`、`/heatmap`、`/targets`、`/share`。
+- 在浏览器 DevTools 切换移动端宽度，确认底部导航、卡片栅格、弹窗和分享卡片无横向挤压。
+
+Android 验证步骤：
+- 设置真实后端地址（如需要）：`$env:VITE_NATIVE_API_BASE_URL = 'https://your-domain.example/api/v1'`
+- `cd frontend && npm run android:sync`
+- `cd frontend && npm run android:build:debug`
+- 安装 `frontend/android/app/build/outputs/apk/debug/app-debug.apk`，登录后检查底部导航单手操作、Timer、计划日历、统计、热力图、目标页和分享卡片。
+
 ## 部署（Docker Compose）
 
 1) 依赖

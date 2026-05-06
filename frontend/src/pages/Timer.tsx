@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CategorySelect } from '../components/CategorySelect';
 import { QuickStartRequest, TimerControls, type TimerOfflineState } from '../components/TimerControls';
+import { Button, Card, EmptyState, LoadingState, PageShell, Progress, SectionHeader, Tag } from '../components/ui';
 import { apiClient } from '../api/client';
 import { Category, QuickStartTemplate, StatsSummary, WorkTarget } from '../types';
 import { getOfflineTimerSnapshot, isNetworkOnline, syncOfflineTimers } from '../utils/offlineTimer';
@@ -17,6 +18,7 @@ export const Timer: React.FC = () => {
   const [categoryId, setCategoryId] = useState<number | undefined>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<QuickStartTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
   const [templateFormOpen, setTemplateFormOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
   const [templateForm, setTemplateForm] = useState({
@@ -190,11 +192,14 @@ export const Timer: React.FC = () => {
   };
 
   const loadTemplates = async () => {
+    setTemplatesLoading(true);
     try {
       const data = await apiClient.get<QuickStartTemplate[]>('/quick-start-templates');
       setTemplates(data);
     } catch (error) {
       console.error('加载快捷模板失败', error);
+    } finally {
+      setTemplatesLoading(false);
     }
   };
 
@@ -469,40 +474,46 @@ export const Timer: React.FC = () => {
   }, []);
 
   return (
-    <div className="timer-page">
+    <PageShell
+      className="timer-page"
+      eyebrow="个人时间系统"
+      title="今天的时间工作台"
+      description="先从一个 25 分钟开始，慢慢把节奏安放好。"
+    >
       <div className="timer-shell">
-        <div className="timer-header">
-          <p className="timer-banner">运用认知的力量，保持耐心，和时间做朋友</p>
-        </div>
+        <p className="timer-banner">运用认知的力量，保持耐心，和时间做朋友。</p>
 
         <div className="timer-sync-bar">
-          <span className={`sync-pill ${offlineState.isOnline ? 'online' : 'offline'}`}>
+          <Tag tone={offlineState.isOnline ? 'success' : 'neutral'} className={`sync-pill ${offlineState.isOnline ? 'online' : 'offline'}`}>
             {offlineState.isOnline ? '在线' : '离线'}
-          </span>
+          </Tag>
           {offlineState.syncing && <span className="sync-text">正在同步</span>}
           {offlineState.pendingCount > 0 && (
             <span className="sync-text">有 {offlineState.pendingCount} 条待同步记录</span>
           )}
           {offlineState.failedCount > 0 && (
-            <button type="button" onClick={handleRetrySync} disabled={offlineState.syncing}>
+            <Button variant="secondary" onClick={handleRetrySync} disabled={offlineState.syncing}>
               重试同步
-            </button>
+            </Button>
           )}
           {restoreMessage && <strong>{restoreMessage}</strong>}
         </div>
 
-        <div className="ui-card quick-start-card">
-          <div className="card-head quick-start-head">
-            <div>
-              <div className="card-eyebrow">快捷开始</div>
-              <h3 className="card-title">常用计时卡片</h3>
-            </div>
-            <button type="button" onClick={handleOpenNewTemplate}>
-              新建模板
-            </button>
-          </div>
+        <Card className="quick-start-card">
+          <SectionHeader
+            eyebrow="快捷开始"
+            title="常用计时卡片"
+            description="把高频事项做成小积木，需要时轻轻点一下。"
+            action={(
+              <Button variant="secondary" onClick={handleOpenNewTemplate}>
+                新建模板
+              </Button>
+            )}
+          />
 
-          {templates.length > 0 ? (
+          {templatesLoading ? (
+            <LoadingState text="正在整理常用计时卡片..." />
+          ) : templates.length > 0 ? (
             <div className="quick-template-list">
               {templates.map((template, index) => (
                 <article
@@ -542,9 +553,12 @@ export const Timer: React.FC = () => {
               ))}
             </div>
           ) : (
-            <div className="quick-template-empty">
-              还没有快捷模板。可以先创建“英语 30 分钟”“阅读 25 分钟”等常用卡片。
-            </div>
+            <EmptyState
+              compact
+              className="quick-template-empty"
+              title="还没有常用卡片"
+              description="可以先创建“阅读 25 分钟”，把开始变得很轻。"
+            />
           )}
 
           {templateFormOpen && (
@@ -610,7 +624,8 @@ export const Timer: React.FC = () => {
                 />
               </div>
               <div className="quick-template-form-actions">
-                <button
+                <Button
+                  variant="ghost"
                   type="button"
                   onClick={() => {
                     resetTemplateForm();
@@ -619,22 +634,22 @@ export const Timer: React.FC = () => {
                   disabled={templateSaving}
                 >
                   取消
-                </button>
-                <button type="submit" disabled={templateSaving}>
+                </Button>
+                <Button type="submit" disabled={templateSaving}>
                   {templateSaving ? '保存中...' : editingTemplateId ? '保存模板' : '创建模板'}
-                </button>
+                </Button>
               </div>
             </form>
           )}
-        </div>
+        </Card>
 
         <div className="timer-grid">
-          {highlightTarget && progress && (
-            <div className="ui-card target-card">
+          {highlightTarget && progress ? (
+            <Card className="target-card">
               <div
                 className="target-ring"
                 style={{
-                  background: `conic-gradient(#27ae60 ${Math.min(100, (progress.actual / progress.target) * 100)}%, #e5e7eb 0)`,
+                  background: `conic-gradient(var(--color-accent) ${Math.min(100, (progress.actual / progress.target) * 100)}%, var(--color-muted) 0)`,
                 }}
               >
                 <div className="target-ring-inner">
@@ -647,7 +662,10 @@ export const Timer: React.FC = () => {
 
               <div className="target-meta">
                 <div className="target-title">
-                  待完成目标：
+                  今天还差 {formatTime(progress.target - progress.actual > 0 ? progress.target - progress.actual : 0)}
+                </div>
+                <div className="target-desc">
+                  已经很接近了。当前目标：
                   {(highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'tomorrow'
                     ? '明天'
                     : (highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'daily'
@@ -660,32 +678,31 @@ export const Timer: React.FC = () => {
                   目标 {formatTime(highlightTarget.target_seconds)} · 窗口 {progress.start.toLocaleDateString()} - {progress.end.toLocaleDateString()}
                 </div>
                 <div className="target-progress">已完成 {formatTime(progress.actual)} / {formatTime(progress.target)}</div>
+                <Progress value={progress.actual} max={progress.target} label="目标完成进度" />
               </div>
-            </div>
+            </Card>
+          ) : (
+            <Card className="target-card target-card-empty">
+              <EmptyState
+                compact
+                title="还没有正在追踪的目标"
+                description="可以先开始一段计时，或者去目标页设一个温和的小目标。"
+              />
+            </Card>
           )}
 
           <div className="category-split">
-            <div className="ui-card category-card">
-              <div className="card-head">
-                <div>
-                  <div className="card-eyebrow">分类</div>
-                  <h3 className="card-title">选择分类</h3>
-                </div>
-              </div>
+            <Card className="category-card">
+              <SectionHeader eyebrow="分类" title="选择分类" />
               <CategorySelect
                 value={categoryId}
                 onChange={setCategoryId}
                 showCreate={false}
               />
-            </div>
+            </Card>
 
-            <div className="ui-card category-card">
-              <div className="card-head">
-                <div>
-                  <div className="card-eyebrow">分类</div>
-                  <h3 className="card-title">新建分类</h3>
-                </div>
-              </div>
+            <Card className="category-card">
+              <SectionHeader eyebrow="分类" title="新建分类" />
               <CategorySelect
                 value={categoryId}
                 onChange={setCategoryId}
@@ -693,11 +710,11 @@ export const Timer: React.FC = () => {
                 showCreate
                 showEdit={false}
               />
-            </div>
+            </Card>
           </div>
         </div>
 
-        <div className="ui-card timer-card">
+        <Card className="timer-card">
           <div className="mode-toggle">
             <button className={!manualMode ? 'active' : ''} onClick={() => setManualMode(false)}>
               实时计时
@@ -780,11 +797,11 @@ export const Timer: React.FC = () => {
                 />
               </div>
 
-              <button type="submit">提交补录</button>
+              <Button type="submit">提交补录</Button>
             </form>
           )}
-        </div>
+        </Card>
       </div>
-    </div>
+    </PageShell>
   );
 };

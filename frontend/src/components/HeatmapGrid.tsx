@@ -15,11 +15,11 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({ start, end, data, onDa
   const days = eachDayOfInterval({ start: startDate, end: endDate });
 
   const getColorIntensity = (seconds: number): string => {
-    if (seconds === 0) return '#ebedf0';
-    if (seconds < 3600) return '#c6e48b'; // < 1h
-    if (seconds < 3 * 3600) return '#7bc96f'; // < 3h
-    if (seconds < 8 * 3600) return '#239a3b'; // < 8h
-    return '#196127'; // >= 8h
+    if (seconds === 0) return '#ece9df';
+    if (seconds < 3600) return '#d9ddcf';
+    if (seconds < 3 * 3600) return '#b8c2a9';
+    if (seconds < 8 * 3600) return '#879678';
+    return '#596d58';
   };
 
   const dataMap = new Map(data.map((d) => [d.date, d]));
@@ -60,11 +60,11 @@ export const HeatmapGrid: React.FC<HeatmapGridProps> = ({ start, end, data, onDa
       </div>
       <div className="legend">
         <span>少</span>
-        <div style={{ backgroundColor: '#ebedf0' }} />
-        <div style={{ backgroundColor: '#c6e48b' }} />
-        <div style={{ backgroundColor: '#7bc96f' }} />
-        <div style={{ backgroundColor: '#239a3b' }} />
-        <div style={{ backgroundColor: '#196127' }} />
+        <div style={{ backgroundColor: '#ece9df' }} />
+        <div style={{ backgroundColor: '#d9ddcf' }} />
+        <div style={{ backgroundColor: '#b8c2a9' }} />
+        <div style={{ backgroundColor: '#879678' }} />
+        <div style={{ backgroundColor: '#596d58' }} />
         <span>多</span>
       </div>
     </div>
