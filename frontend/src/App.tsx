@@ -5,7 +5,6 @@ import {
   CalendarClock,
   GitBranch,
   LogOut,
-  PieChart,
   Settings,
   ShieldCheck,
   Share2,
@@ -15,8 +14,6 @@ import {
 } from 'lucide-react';
 import { Login } from './pages/Login';
 import { Timer } from './pages/Timer';
-import { Classification } from './pages/Classification';
-import { Heatmap } from './pages/Heatmap';
 import { TimeTrace } from './pages/TimeTrace';
 import { Targets } from './pages/Targets';
 import { Review } from './pages/Review';
@@ -61,9 +58,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const role = apiClient.getUserRole();
   const navItems = [
     { to: '/timer', label: '计时', icon: TimerIcon },
-    { to: '/classification', label: '统计', icon: PieChart },
     { to: '/time-trace', label: '时痕', icon: GitBranch },
-    { to: '/heatmap', label: '热力', icon: CalendarDays },
     { to: '/planner', label: '计划', icon: CalendarClock },
     { to: '/targets', label: '目标', icon: Target },
     { to: '/review', label: '复盘', icon: CalendarDays },
@@ -120,28 +115,10 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/classification"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Classification />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
-        <Route path="/stats" element={<Navigate to="/classification" replace />} />
-        <Route path="/summary" element={<Navigate to="/classification" replace />} />
-        <Route
-          path="/heatmap"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Heatmap />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/classification" element={<Navigate to="/review" replace />} />
+        <Route path="/stats" element={<Navigate to="/review" replace />} />
+        <Route path="/summary" element={<Navigate to="/review" replace />} />
+        <Route path="/heatmap" element={<Navigate to="/review" replace />} />
         <Route
           path="/time-trace"
           element={

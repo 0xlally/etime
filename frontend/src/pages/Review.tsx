@@ -1,8 +1,9 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 import { Clipboard, CalendarDays, TrendingUp } from 'lucide-react';
+import { HeatmapGrid } from '../components/HeatmapGrid';
 import { apiClient } from '../api/client';
-import { DailyReview, ReviewCategoryItem, WeeklyReview } from '../types';
+import { DailyReview, HeatmapDay, ReviewCategoryItem, WeeklyReview } from '../types';
 
 type ReviewMode = 'daily' | 'weekly';
 
@@ -10,6 +11,21 @@ const toDateInputValue = (date: Date) => {
   const copy = new Date(date);
   copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
   return copy.toISOString().slice(0, 10);
+};
+
+const addLocalDays = (date: Date, days: number) => {
+  const copy = new Date(date);
+  copy.setDate(copy.getDate() + days);
+  return copy;
+};
+
+const getHeatmapRange = (anchorDate: string) => {
+  const end = new Date(`${anchorDate}T00:00:00`);
+  const start = addLocalDays(end, -55);
+  return {
+    start: toDateInputValue(start),
+    end: toDateInputValue(end),
+  };
 };
 
 const formatTime = (seconds: number) => {
@@ -48,12 +64,21 @@ export const Review: React.FC = () => {
   const [date, setDate] = useState(toDateInputValue(new Date()));
   const [daily, setDaily] = useState<DailyReview | null>(null);
   const [weekly, setWeekly] = useState<WeeklyReview | null>(null);
+  const [heatmapData, setHeatmapData] = useState<HeatmapDay[]>([]);
   const [loading, setLoading] = useState(false);
+  const [heatmapLoading, setHeatmapLoading] = useState(false);
+
+  const heatmapRange = useMemo(() => getHeatmapRange(date), [date]);
 
   useEffect(() => {
     loadReview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, date]);
+
+  useEffect(() => {
+    loadHeatmap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [heatmapRange.start, heatmapRange.end]);
 
   const loadReview = async () => {
     setLoading(true);
@@ -69,6 +94,19 @@ export const Review: React.FC = () => {
       console.error('加载复盘失败', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadHeatmap = async () => {
+    setHeatmapLoading(true);
+    try {
+      const data = await apiClient.get<HeatmapDay[]>('/heatmap', heatmapRange);
+      setHeatmapData(data);
+    } catch (error) {
+      console.error('加载热力预览失败', error);
+      setHeatmapData([]);
+    } finally {
+      setHeatmapLoading(false);
     }
   };
 
@@ -94,6 +132,27 @@ export const Review: React.FC = () => {
       hours: Number((item.total_seconds / 3600).toFixed(2)),
     }));
   }, [weekly]);
+
+  const handleHeatmapDayClick = (day: HeatmapDay) => {
+    setMode('daily');
+    setDate(day.date);
+  };
+
+  const renderHeatmapPreview = () => (
+    <section className="review-panel review-heatmap-panel">
+      <h2><CalendarDays size={18} /> 近 8 周热力</h2>
+      {heatmapLoading ? (
+        <p>加载中...</p>
+      ) : (
+        <HeatmapGrid
+          start={heatmapRange.start}
+          end={heatmapRange.end}
+          data={heatmapData}
+          onDayClick={handleHeatmapDayClick}
+        />
+      )}
+    </section>
+  );
 
   const renderDaily = () => {
     if (!daily) return null;
@@ -153,6 +212,8 @@ export const Review: React.FC = () => {
             </div>
           )}
         </section>
+
+        {renderHeatmapPreview()}
       </>
     );
   };
@@ -215,6 +276,8 @@ export const Review: React.FC = () => {
             </div>
           )}
         </section>
+
+        {renderHeatmapPreview()}
       </>
     );
   };
