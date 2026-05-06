@@ -1,7 +1,7 @@
 """add calendar tasks
 
-Revision ID: 20260506_add_calendar_tasks
-Revises: 20260506_add_quick_start_templates
+Revision ID: 20260506_calendar_tasks
+Revises: 20260506_quick_templates
 Create Date: 2026-05-06
 """
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "20260506_add_calendar_tasks"
-down_revision = "20260506_add_quick_start_templates"
+revision = "20260506_calendar_tasks"
+down_revision = "20260506_quick_templates"
 branch_labels = None
 depends_on = None
 

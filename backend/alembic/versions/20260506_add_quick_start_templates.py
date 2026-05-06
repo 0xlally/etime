@@ -1,7 +1,7 @@
 """add quick start templates
 
-Revision ID: 20260506_add_quick_start_templates
-Revises: 20260506_add_groups
+Revision ID: 20260506_quick_templates
+Revises: 20260506_groups
 Create Date: 2026-05-06
 """
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "20260506_add_quick_start_templates"
-down_revision = "20260506_add_groups"
+revision = "20260506_quick_templates"
+down_revision = "20260506_groups"
 branch_labels = None
 depends_on = None
 

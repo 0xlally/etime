@@ -1,7 +1,7 @@
 """add groups
 
-Revision ID: 20260506_add_groups
-Revises: 20260505_add_session_client_generated_id
+Revision ID: 20260506_groups
+Revises: 20260505_session_cgid
 Create Date: 2026-05-06
 """
 
@@ -9,8 +9,8 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "20260506_add_groups"
-down_revision = "20260505_add_session_client_generated_id"
+revision = "20260506_groups"
+down_revision = "20260505_session_cgid"
 branch_labels = None
 depends_on = None
 

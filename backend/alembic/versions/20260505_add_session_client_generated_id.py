@@ -1,6 +1,6 @@
 """add client generated id to sessions
 
-Revision ID: 20260505_add_session_client_generated_id
+Revision ID: 20260505_session_cgid
 Revises: 20260427_add_time_traces
 Create Date: 2026-05-05
 """
@@ -9,7 +9,7 @@ from alembic import op
 import sqlalchemy as sa
 
 
-revision = "20260505_add_session_client_generated_id"
+revision = "20260505_session_cgid"
 down_revision = "20260427_add_time_traces"
 branch_labels = None
 depends_on = None
