@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import {
   CalendarDays,
@@ -21,6 +21,7 @@ import { Discipline } from './pages/Discipline';
 import { Admin } from './pages/Admin';
 import { NotificationBell } from './components/NotificationBell';
 import { apiClient } from './api/client';
+import { isNetworkOnline, syncOfflineTimers } from './utils/offlineTimer';
 import './App.css';
 
 const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }) => {
@@ -31,6 +32,21 @@ const ProtectedRoute: React.FC<{ children: React.ReactElement }> = ({ children }
 };
 
 const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  useEffect(() => {
+    const runStartupSync = () => {
+      if (apiClient.isAuthenticated() && isNetworkOnline()) {
+        void syncOfflineTimers(apiClient);
+      }
+    };
+
+    runStartupSync();
+    window.addEventListener('online', runStartupSync);
+
+    return () => {
+      window.removeEventListener('online', runStartupSync);
+    };
+  }, []);
+
   const handleLogout = () => {
     apiClient.clearAuth();
     window.location.href = '/login';

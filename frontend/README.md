@@ -70,7 +70,7 @@ npm run android:build:debug
 - **自动 Token 管理**: 自动在请求头添加 Bearer token
 - **401 自动跳转**: 未认证时自动重定向到登录页
 - **统一错误处理**: 集中处理 HTTP 错误
-- **多端 API 地址**: 浏览器端默认使用 `/api/v1`，安卓原生端默认连接 `https://time.lally.top/api/v1`，也可通过 `VITE_API_BASE_URL` 覆盖。
+- **多端 API 地址**: 浏览器端和安卓端默认使用 `/api/v1`，也可通过 `VITE_API_BASE_URL` 覆盖；安卓专用地址可用 `VITE_NATIVE_API_BASE_URL` 覆盖。
 
 ### 页面功能
 
@@ -81,6 +81,7 @@ npm run android:build:debug
 
 #### 2. 计时器页 (`/timer`)
 - **实时计时**: 选择分类后开始/停止计时
+- **离线续计**: 本地保存正在计时和待同步记录，刷新、重开浏览器或 Android WebView 后可恢复
 - **手动补录**: 补录历史时间段
 - 显示实时计时器
 

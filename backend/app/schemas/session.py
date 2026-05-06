@@ -10,6 +10,8 @@ class SessionStart(BaseModel):
     """Start a new timer session"""
     category_id: Optional[int] = None
     note: Optional[str] = Field(None, max_length=500)
+    client_generated_id: Optional[str] = Field(None, max_length=100)
+    started_at: Optional[datetime] = None
 
 
 class SessionStop(BaseModel):
@@ -28,6 +30,7 @@ class SessionManual(BaseModel):
     minutes: Optional[int] = Field(None, ge=0, le=59)
     note: Optional[str] = Field(None, max_length=500)
     multiplier: Optional[float] = Field(None, ge=0, le=10, description="Efficiency multiplier applied to duration")
+    client_generated_id: Optional[str] = Field(None, max_length=100)
 
     @model_validator(mode="after")
     def validate_manual_time(self):
@@ -72,6 +75,7 @@ class SessionResponse(BaseModel):
     effective_seconds: Optional[int] = None
     effectiveness_multiplier: Optional[float] = None
     note: Optional[str] = None
+    client_generated_id: Optional[str] = None
     source: SessionSource
     created_at: datetime
     updated_at: datetime
@@ -86,6 +90,7 @@ class ActiveSessionResponse(BaseModel):
     category_id: Optional[int] = None
     start_time: datetime
     note: Optional[str] = None
+    client_generated_id: Optional[str] = None
     elapsed_seconds: int  # Calculated from start_time to now
     
     model_config = ConfigDict(from_attributes=True)

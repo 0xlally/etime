@@ -4,6 +4,7 @@ from datetime import datetime, time, timezone, timedelta
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.orm import Session as DBSession
 from sqlalchemy import and_
+from sqlalchemy.exc import IntegrityError
 from app.core.db import get_db
 from app.models.user import User
 from app.models.category import Category
@@ -77,6 +78,24 @@ def _get_active_session(user_id: int, db: DBSession) -> Optional[Session]:
     ).first()
 
 
+def _get_session_by_client_id(user_id: int, client_generated_id: Optional[str], db: DBSession) -> Optional[Session]:
+    """Return an existing session for an idempotent client-generated ID."""
+    if not client_generated_id:
+        return None
+
+    return db.query(Session).filter(
+        Session.user_id == user_id,
+        Session.client_generated_id == client_generated_id,
+    ).first()
+
+
+def _ensure_timezone(value: datetime) -> datetime:
+    """Treat naive client datetimes as UTC."""
+    if value.tzinfo is None:
+        return value.replace(tzinfo=timezone.utc)
+    return value
+
+
 def _next_day_start(value: datetime) -> datetime:
     """Return midnight at the start of the day after value, preserving tzinfo."""
     next_date = value.date() + timedelta(days=1)
@@ -105,6 +124,10 @@ def start_session(
     Raises:
         HTTPException: If user already has an active session or category doesn't belong to user
     """
+    existing_session = _get_session_by_client_id(current_user.id, session_data.client_generated_id, db)
+    if existing_session:
+        return existing_session
+
     # Check if user already has an active session
     active_session = _get_active_session(current_user.id, db)
     if active_session:
@@ -120,13 +143,21 @@ def start_session(
     new_session = Session(
         user_id=current_user.id,
         category_id=session_data.category_id,
-        start_time=datetime.now(timezone.utc),
+        start_time=_ensure_timezone(session_data.started_at) if session_data.started_at else datetime.now(timezone.utc),
         note=session_data.note,
+        client_generated_id=session_data.client_generated_id,
         source=SessionSource.TIMER.value
     )
     
     db.add(new_session)
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing_session = _get_session_by_client_id(current_user.id, session_data.client_generated_id, db)
+        if existing_session:
+            return existing_session
+        raise
     db.refresh(new_session)
     
     return new_session
@@ -210,14 +241,18 @@ def create_manual_session(
     Raises:
         HTTPException: If category doesn't belong to user or end_time <= start_time
     """
+    existing_session = _get_session_by_client_id(current_user.id, session_data.client_generated_id, db)
+    if existing_session:
+        return existing_session
+
     # Validate category ownership
     _validate_category_ownership(session_data.category_id, current_user.id, db)
     
     if session_data.start_time is not None and session_data.end_time is not None:
-        start = session_data.start_time
-        end = session_data.end_time
+        start = _ensure_timezone(session_data.start_time)
+        end = _ensure_timezone(session_data.end_time)
     else:
-        start = datetime.combine(session_data.entry_date, time.min)
+        start = datetime.combine(session_data.entry_date, time.min).replace(tzinfo=timezone.utc)
         end = start + timedelta(
             hours=session_data.hours or 0,
             minutes=session_data.minutes or 0,
@@ -241,6 +276,7 @@ def create_manual_session(
             effectiveness_multiplier=multiplier,
             effective_seconds=_round_to_minute(duration * multiplier),
             note=session_data.note,
+            client_generated_id=session_data.client_generated_id if not sessions_created else None,
             source=SessionSource.MANUAL.value
         )
         db.add(partial)
@@ -259,12 +295,20 @@ def create_manual_session(
             effectiveness_multiplier=multiplier,
             effective_seconds=_round_to_minute(duration_last * multiplier),
             note=session_data.note,
+            client_generated_id=session_data.client_generated_id if not sessions_created else None,
             source=SessionSource.MANUAL.value
         )
         db.add(last_segment)
         sessions_created.append(last_segment)
     
-    db.commit()
+    try:
+        db.commit()
+    except IntegrityError:
+        db.rollback()
+        existing_session = _get_session_by_client_id(current_user.id, session_data.client_generated_id, db)
+        if existing_session:
+            return existing_session
+        raise
     for s in sessions_created:
         db.refresh(s)
     
@@ -306,6 +350,7 @@ def get_active_session(
         category_id=active_session.category_id,
         start_time=active_session.start_time,
         note=active_session.note,
+        client_generated_id=active_session.client_generated_id,
         elapsed_seconds=int(elapsed)
     )
 

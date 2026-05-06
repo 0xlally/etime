@@ -27,6 +27,7 @@ export interface Session {
   effective_seconds?: number;
   effectiveness_multiplier?: number;
   note?: string;
+  client_generated_id?: string | null;
   created_at: string;
   category?: Category;
 }
@@ -37,6 +38,7 @@ export interface ActiveSession {
   category_id?: number | null;
   start_time: string;
   note?: string | null;
+  client_generated_id?: string | null;
   elapsed_seconds: number;
 }
 

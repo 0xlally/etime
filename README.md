@@ -3,7 +3,7 @@
 一个自托管的时间管理/目标跟踪工具，支持实时计时、手动补录、分类统计、目标进度提醒，前后端开源可自由部署。线上演示与自用地址：<http://time.lally.top>。
 
 ## 功能亮点
-- 计时模式：实时计时与手动补录双模式，支持系数折算与取整。
+- 计时模式：实时计时与手动补录双模式，支持系数折算与取整；实时计时支持离线启动/停止、刷新恢复和联网后自动同步。
 - 目标进度：按日/周/月（含“明天”）显示目标窗口、剩余时长、已完成时长。
 - 目标引擎 2.0：支持连胜、最佳连胜、完成率、时间债务、补偿记录和惩罚/奖励可视化。
 - 自动复盘：日报/周报串联统计、目标达成、分类趋势和时痕，并支持一键导出 Markdown。
@@ -85,12 +85,14 @@ POSTGRES_PASSWORD=replace-with-a-long-random-password
 - 打开 Android Studio：`cd frontend && npm run android:open`
 - 构建 debug APK：`cd frontend && npm run android:build:debug`
 
-默认情况下，浏览器端继续使用 `/api/v1`，安卓原生端会连接 `https://time.lally.top/api/v1`。如果需要打包到自己的后端，构建前设置：
+默认情况下，浏览器端和安卓端都使用构建产物中的 `/api/v1`。安卓端没有硬编码生产域名；打包到真实后端时，构建前显式设置 `VITE_API_BASE_URL` 或 `VITE_NATIVE_API_BASE_URL`：
 
 ```powershell
 $env:VITE_API_BASE_URL = 'https://your-domain.example/api/v1'
 npm run android:sync
 ```
+
+实时计时的离线记录会保存在本地，包含 `local_timer_id`、分类、开始/结束时间、状态和来源（Web 为 `web`，Capacitor Android 为 `android`）。应用启动、进入计时页和浏览器/ WebView 恢复在线时都会尝试同步；后端使用 `client_generated_id` 做幂等去重，重复提交同一条本地记录不会创建重复 session。
 
 debug APK 输出位置：
 

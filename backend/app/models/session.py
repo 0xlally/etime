@@ -1,5 +1,5 @@
 ﻿"""Session Model - Time tracking sessions"""
-from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, CheckConstraint, Index, Float
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, Enum, Index, Float
 from sqlalchemy.sql import func
 from app.core.db import Base
 import enum
@@ -18,6 +18,7 @@ class Session(Base):
         Index("ix_sessions_start_time", "start_time"),
         Index("ix_sessions_end_time", "end_time"),
         Index("ix_sessions_user_start_time", "user_id", "start_time"),
+        Index("uq_sessions_user_client_generated_id", "user_id", "client_generated_id", unique=True),
     )
     
     id = Column(Integer, primary_key=True, index=True)
@@ -33,6 +34,7 @@ class Session(Base):
     
     # Metadata
     note = Column(String(500), nullable=True)
+    client_generated_id = Column(String(100), nullable=True)
     source = Column(
         Enum(SessionSource, values_callable=lambda obj: [e.value for e in obj], name="sessionsource"),
         nullable=False,

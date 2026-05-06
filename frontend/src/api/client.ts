@@ -3,17 +3,21 @@ import { Capacitor } from '@capacitor/core';
 
 const TOKEN_KEY = 'etime_token';
 const REFRESH_TOKEN_KEY = 'etime_refresh_token';
-const DEFAULT_NATIVE_API_BASE_URL = 'https://time.lally.top/api/v1';
 
 const normalizeBaseUrl = (baseUrl: string) => baseUrl.replace(/\/+$/, '');
 
 const getApiBaseUrl = () => {
   const configuredBaseUrl = import.meta.env.VITE_API_BASE_URL?.trim();
+  const nativeBaseUrl = import.meta.env.VITE_NATIVE_API_BASE_URL?.trim();
+  if (Capacitor.isNativePlatform() && nativeBaseUrl) {
+    return normalizeBaseUrl(nativeBaseUrl);
+  }
+
   if (configuredBaseUrl) {
     return normalizeBaseUrl(configuredBaseUrl);
   }
 
-  return Capacitor.isNativePlatform() ? DEFAULT_NATIVE_API_BASE_URL : '/api/v1';
+  return '/api/v1';
 };
 
 const API_BASE_URL = getApiBaseUrl();

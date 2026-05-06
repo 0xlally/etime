@@ -1,8 +1,9 @@
-﻿import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CategorySelect } from '../components/CategorySelect';
-import { TimerControls } from '../components/TimerControls';
+import { TimerControls, type TimerOfflineState } from '../components/TimerControls';
 import { apiClient } from '../api/client';
 import { StatsSummary, WorkTarget } from '../types';
+import { getOfflineTimerSnapshot, isNetworkOnline, syncOfflineTimers } from '../utils/offlineTimer';
 
 const getLocalDateInputValue = () => {
   const now = new Date();
@@ -22,10 +23,37 @@ export const Timer: React.FC = () => {
   const [highlightTarget, setHighlightTarget] = useState<WorkTarget | null>(null);
   const [progress, setProgress] = useState<{ actual: number; target: number; start: Date; end: Date } | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [offlineState, setOfflineState] = useState<TimerOfflineState>({
+    ...getOfflineTimerSnapshot(),
+    isOnline: isNetworkOnline(),
+    syncing: false,
+  });
+  const [restoreMessage, setRestoreMessage] = useState('');
+  const [syncSignal, setSyncSignal] = useState(0);
   const intervalRef = useRef<number | null>(null);
+  const wasRunningRef = useRef(false);
 
   useEffect(() => {
     loadTargetsAndProgress();
+  }, []);
+
+  useEffect(() => {
+    const refreshNetworkState = () => {
+      setOfflineState((prev) => ({
+        ...prev,
+        ...getOfflineTimerSnapshot(),
+        isOnline: isNetworkOnline(),
+      }));
+    };
+
+    refreshNetworkState();
+    window.addEventListener('online', refreshNetworkState);
+    window.addEventListener('offline', refreshNetworkState);
+
+    return () => {
+      window.removeEventListener('online', refreshNetworkState);
+      window.removeEventListener('offline', refreshNetworkState);
+    };
   }, []);
 
   useEffect(() => {
@@ -68,7 +96,6 @@ export const Timer: React.FC = () => {
         const eff = t.effective_from ? new Date(t.effective_from) : now;
         if (!best) return t;
         const bestEff = best.effective_from ? new Date(best.effective_from) : now;
-        // pick the one starting soonest from now (future earliest), otherwise latest past
         const tFuture = eff.getTime() >= now.getTime();
         const bestFuture = bestEff.getTime() >= now.getTime();
         if (tFuture && bestFuture) {
@@ -76,7 +103,7 @@ export const Timer: React.FC = () => {
         }
         if (tFuture && !bestFuture) return t;
         if (!tFuture && bestFuture) return best;
-        return eff > bestEff ? t : best; // both past: choose most recent
+        return eff > bestEff ? t : best;
       }, null);
 
       if (!pick) return;
@@ -122,7 +149,7 @@ export const Timer: React.FC = () => {
 
     if (period === 'weekly') {
       const ref = eff > now ? eff : now;
-      const day = ref.getDay(); // 0 Sunday
+      const day = ref.getDay();
       const mondayOffset = day === 0 ? -6 : 1 - day;
       const monday = new Date(ref);
       monday.setHours(0, 0, 0, 0);
@@ -133,7 +160,6 @@ export const Timer: React.FC = () => {
       return { start: monday, end: sunday };
     }
 
-    // monthly
     const ref = eff > now ? eff : now;
     const first = new Date(ref.getFullYear(), ref.getMonth(), 1, 0, 0, 0, 0);
     const last = new Date(ref.getFullYear(), ref.getMonth() + 1, 0, 23, 59, 59, 999);
@@ -199,11 +225,59 @@ export const Timer: React.FC = () => {
     }
   };
 
+  const handleRetrySync = async () => {
+    setOfflineState((prev) => ({
+      ...prev,
+      isOnline: isNetworkOnline(),
+      syncing: true,
+    }));
+
+    const result = await syncOfflineTimers(apiClient);
+    setOfflineState({
+      ...result,
+      isOnline: isNetworkOnline(),
+      syncing: false,
+    });
+    setSyncSignal((value) => value + 1);
+    loadTargetsAndProgress();
+  };
+
+  const handleRunningChange = useCallback((running: boolean, initialElapsed = 0) => {
+    const wasRunning = wasRunningRef.current;
+    wasRunningRef.current = running;
+    setIsRunning(running);
+
+    if (running && !wasRunning && initialElapsed > 0) {
+      setProgress((prev) =>
+        prev ? { ...prev, actual: prev.actual + initialElapsed } : prev,
+      );
+    }
+    if (!running) {
+      setProgress((prev) => (prev ? { ...prev } : prev));
+    }
+  }, []);
+
   return (
     <div className="timer-page">
       <div className="timer-shell">
         <div className="timer-header">
           <p className="timer-banner">运用认知的力量，保持耐心，和时间做朋友</p>
+        </div>
+
+        <div className="timer-sync-bar">
+          <span className={`sync-pill ${offlineState.isOnline ? 'online' : 'offline'}`}>
+            {offlineState.isOnline ? '在线' : '离线'}
+          </span>
+          {offlineState.syncing && <span className="sync-text">正在同步</span>}
+          {offlineState.pendingCount > 0 && (
+            <span className="sync-text">有 {offlineState.pendingCount} 条待同步记录</span>
+          )}
+          {offlineState.failedCount > 0 && (
+            <button type="button" onClick={handleRetrySync} disabled={offlineState.syncing}>
+              重试同步
+            </button>
+          )}
+          {restoreMessage && <strong>{restoreMessage}</strong>}
         </div>
 
         <div className="timer-grid">
@@ -288,19 +362,13 @@ export const Timer: React.FC = () => {
           {!manualMode ? (
             <TimerControls
               categoryId={categoryId}
+              syncSignal={syncSignal}
               onSessionStart={loadTargetsAndProgress}
               onSessionEnd={loadTargetsAndProgress}
-              onRunningChange={(running, initialElapsed = 0) => {
-                setIsRunning(running);
-                if (running && initialElapsed > 0) {
-                  setProgress((prev) =>
-                    prev ? { ...prev, actual: prev.actual + initialElapsed } : prev,
-                  );
-                }
-                if (!running) {
-                  setProgress((prev) => (prev ? { ...prev } : prev));
-                }
-              }}
+              onRunningChange={handleRunningChange}
+              onCategoryRestore={setCategoryId}
+              onOfflineStateChange={setOfflineState}
+              onRecoveredRunning={setRestoreMessage}
             />
           ) : (
             <form onSubmit={handleManualSubmit} className="manual-form">

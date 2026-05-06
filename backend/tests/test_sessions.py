@@ -190,6 +190,82 @@ def test_session_manual_duration_creation(client: TestClient):
     assert response.status_code == 422
 
 
+def test_manual_session_client_generated_id_is_idempotent(client: TestClient):
+    register_data = {
+        "email": "manual_idempotent@example.com",
+        "username": "manualidempotent",
+        "password": "testpass123",
+    }
+    client.post("/api/v1/auth/register", json=register_data)
+
+    login_response = client.post("/api/v1/auth/login", json={
+        "username": register_data["username"],
+        "password": register_data["password"],
+    })
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    category_response = client.post(
+        "/api/v1/categories",
+        json={"name": "Offline Work"},
+        headers=headers,
+    )
+    category_id = category_response.json()["id"]
+
+    now = datetime.now(timezone.utc)
+    payload = {
+        "category_id": category_id,
+        "start_time": (now - timedelta(minutes=45)).isoformat(),
+        "end_time": now.isoformat(),
+        "note": "synced from offline queue",
+        "client_generated_id": "offline-session-001",
+    }
+
+    first = client.post("/api/v1/sessions/manual", json=payload, headers=headers)
+    second = client.post("/api/v1/sessions/manual", json=payload, headers=headers)
+
+    assert first.status_code == 201, first.text
+    assert second.status_code == 201, second.text
+    assert second.json()["id"] == first.json()["id"]
+    assert second.json()["client_generated_id"] == "offline-session-001"
+
+    sessions = client.get("/api/v1/sessions", headers=headers).json()
+    assert len(sessions) == 1
+
+
+def test_start_session_client_generated_id_is_idempotent(client: TestClient):
+    register_data = {
+        "email": "start_idempotent@example.com",
+        "username": "startidempotent",
+        "password": "testpass123",
+    }
+    client.post("/api/v1/auth/register", json=register_data)
+
+    login_response = client.post("/api/v1/auth/login", json={
+        "username": register_data["username"],
+        "password": register_data["password"],
+    })
+    token = login_response.json()["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    payload = {
+        "note": "started from client",
+        "client_generated_id": "running-session-001",
+        "started_at": (datetime.now(timezone.utc) - timedelta(minutes=5)).isoformat(),
+    }
+
+    first = client.post("/api/v1/sessions/start", json=payload, headers=headers)
+    second = client.post("/api/v1/sessions/start", json=payload, headers=headers)
+
+    assert first.status_code == 201, first.text
+    assert second.status_code == 201, second.text
+    assert second.json()["id"] == first.json()["id"]
+    assert second.json()["client_generated_id"] == "running-session-001"
+
+    sessions = client.get("/api/v1/sessions?include_active=true", headers=headers).json()
+    assert len(sessions) == 1
+
+
 def test_concurrent_session_prevention(client: TestClient):
     """
     Test that only one session can be active at a time
