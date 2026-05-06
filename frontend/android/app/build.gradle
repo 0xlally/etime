@@ -1,5 +1,14 @@
 apply plugin: 'com.android.application'
 
+def releaseKeystorePropertiesFile = file("${System.properties['user.home']}/.android/etime-release-keystore.properties")
+def releaseKeystoreProperties = new Properties()
+if (releaseKeystorePropertiesFile.exists()) {
+    releaseKeystoreProperties.load(new FileInputStream(releaseKeystorePropertiesFile))
+}
+def releaseKeystoreProperty = { key ->
+    releaseKeystoreProperties.getProperty(key) ?: releaseKeystoreProperties.getProperty("\uFEFF${key}")
+}
+
 android {
     namespace = "top.lally.etime"
     compileSdk = rootProject.ext.compileSdkVersion
@@ -16,9 +25,22 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        if (releaseKeystorePropertiesFile.exists()) {
+            release {
+                storeFile file(releaseKeystoreProperty('storeFile'))
+                storePassword releaseKeystoreProperty('storePassword')
+                keyAlias releaseKeystoreProperty('keyAlias')
+                keyPassword releaseKeystoreProperty('keyPassword')
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
+            if (releaseKeystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            }
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
