@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { CategorySelect } from '../components/CategorySelect';
 import { QuickStartRequest, TimerControls, type TimerOfflineState } from '../components/TimerControls';
 import { apiClient } from '../api/client';
@@ -12,6 +13,7 @@ const getLocalDateInputValue = () => {
 };
 
 export const Timer: React.FC = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
   const [categoryId, setCategoryId] = useState<number | undefined>();
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<QuickStartTemplate[]>([]);
@@ -46,12 +48,44 @@ export const Timer: React.FC = () => {
   const [syncSignal, setSyncSignal] = useState(0);
   const intervalRef = useRef<number | null>(null);
   const wasRunningRef = useRef(false);
+  const plannerStartHandledRef = useRef(false);
 
   useEffect(() => {
     loadTargetsAndProgress();
     loadCategories();
     loadTemplates();
   }, []);
+
+  useEffect(() => {
+    if (plannerStartHandledRef.current) return;
+
+    const rawCategoryId = searchParams.get('category_id');
+    const note = searchParams.get('note');
+    const autoStart = searchParams.get('auto_start') === '1';
+    const nextCategoryId = rawCategoryId ? Number(rawCategoryId) : undefined;
+
+    if (!nextCategoryId || Number.isNaN(nextCategoryId)) return;
+
+    plannerStartHandledRef.current = true;
+    setManualMode(false);
+    setCategoryId(nextCategoryId);
+
+    if (autoStart) {
+      setQuickStartRequest({
+        requestId: Date.now(),
+        categoryId: nextCategoryId,
+        title: '计划事项',
+        note,
+        durationSeconds: null,
+      });
+    }
+
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.delete('category_id');
+    nextParams.delete('note');
+    nextParams.delete('auto_start');
+    setSearchParams(nextParams, { replace: true });
+  }, [searchParams, setSearchParams]);
 
   useEffect(() => {
     const refreshNetworkState = () => {

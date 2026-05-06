@@ -166,3 +166,34 @@ debug APK 输出位置：
 ```text
 frontend/android/app/build/outputs/apk/debug/app-debug.apk
 ```
+
+## 分享卡片 / 复盘海报
+
+- 页面入口：`/share`，导航栏显示“分享”。
+- 后端接口：`GET /api/v1/share/summary?range=today|week|month`。
+- 分享卡片聚合当前登录用户的总时长、分类占比、目标完成状态、连续记录天数和热力图预览，不返回备注。
+- 隐私模式会把分类名替换为“分类 A / 分类 B”，并可隐藏总时长。
+- Web 端使用 `html-to-image` 生成并下载 PNG；Capacitor Android 前台使用同一套生成能力，若系统支持 Web Share 会尝试分享，否则降级为下载/长按保存。
+
+## 计划日历 / 待安排事项
+
+- 页面入口：`/planner`，`/calendar` 会重定向到 `/planner`。
+- 页面包含月/周/日视图、待安排池、新增/编辑事项弹窗、今日计划摘要和前台提醒。
+- 事项支持先进入待安排池，也可以安排到具体日期与时间段；已安排事项可完成、取消、开始计时或转成时间记录。
+- “开始计时”会检查当前 active session，然后跳转到 Timer 并携带分类和 note 自动开始。
+- Web 端使用 Notification API；无权限或 Android 前台场景使用站内提醒。后续若接入 Capacitor Local Notifications，可复用现有提醒字段。
+
+后端 API：
+
+- `GET /api/v1/calendar-tasks`
+- `POST /api/v1/calendar-tasks`
+- `PATCH /api/v1/calendar-tasks/{id}`
+- `DELETE /api/v1/calendar-tasks/{id}`
+- `POST /api/v1/calendar-tasks/{id}/complete?create_session=true|false`
+- `GET /api/v1/calendar-tasks/reminders/due`
+- `POST /api/v1/calendar-tasks/{id}/reminder-fired`
+
+数据库迁移：
+
+- `20260506_add_calendar_tasks`
+- 升级命令：`cd backend && alembic upgrade head`

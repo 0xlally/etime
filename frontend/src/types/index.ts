@@ -192,6 +192,49 @@ export interface TargetDashboard {
   events: PunishmentEvent[];
 }
 
+export type ShareRange = 'today' | 'week' | 'month';
+
+export interface ShareCategoryStats {
+  category_id: number | null;
+  category_name: string | null;
+  category_color: string | null;
+  seconds: number;
+  percent: number;
+}
+
+export interface ShareTargetItem {
+  target_id: number;
+  period: 'daily' | 'weekly' | 'monthly' | 'tomorrow' | string;
+  actual_seconds: number;
+  target_seconds: number;
+  progress_ratio: number;
+  is_completed: boolean;
+}
+
+export interface ShareTargetCompletion {
+  total_count: number;
+  completed_count: number;
+  status: 'no_target' | 'in_progress' | 'completed';
+  items: ShareTargetItem[];
+}
+
+export interface ShareHeatmapDay {
+  date: string;
+  total_seconds: number;
+}
+
+export interface ShareSummary {
+  range: ShareRange;
+  start: string;
+  end: string;
+  total_seconds: number;
+  by_category: ShareCategoryStats[];
+  target_completion: ShareTargetCompletion;
+  streak_days: number;
+  heatmap_preview: ShareHeatmapDay[];
+  generated_at: string;
+}
+
 export interface NotificationItem {
   id: number;
   user_id: number;
@@ -369,4 +412,41 @@ export interface AuthResponse {
   access_token: string;
   refresh_token: string;
   token_type: string;
+}
+
+export type CalendarTaskStatus = 'unscheduled' | 'scheduled' | 'done' | 'cancelled';
+export type CalendarTaskPriority = 'low' | 'medium' | 'high';
+
+export interface CalendarTask {
+  id: number;
+  user_id: number;
+  title: string;
+  description?: string | null;
+  category_id?: number | null;
+  category_name?: string | null;
+  category_color?: string | null;
+  status: CalendarTaskStatus;
+  priority: CalendarTaskPriority;
+  estimated_seconds?: number | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
+  reminder_enabled: boolean;
+  reminder_minutes_before?: number | null;
+  reminder_fired_at?: string | null;
+  converted_session_id?: number | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface CalendarTaskPayload {
+  title?: string;
+  description?: string | null;
+  category_id?: number | null;
+  status?: CalendarTaskStatus;
+  priority?: CalendarTaskPriority;
+  estimated_seconds?: number | null;
+  scheduled_start?: string | null;
+  scheduled_end?: string | null;
+  reminder_enabled?: boolean;
+  reminder_minutes_before?: number | null;
 }

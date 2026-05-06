@@ -2,11 +2,13 @@ import React, { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, NavLink, Navigate } from 'react-router-dom';
 import {
   CalendarDays,
+  CalendarClock,
   GitBranch,
   LogOut,
   PieChart,
   Settings,
   ShieldCheck,
+  Share2,
   Target,
   Timer as TimerIcon,
   Users,
@@ -21,6 +23,8 @@ import { Review } from './pages/Review';
 import { Discipline } from './pages/Discipline';
 import { Groups } from './pages/Groups';
 import { Admin } from './pages/Admin';
+import { Share } from './pages/Share';
+import { Planner } from './pages/Planner';
 import { NotificationBell } from './components/NotificationBell';
 import { apiClient } from './api/client';
 import { isNetworkOnline, syncOfflineTimers } from './utils/offlineTimer';
@@ -60,8 +64,10 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { to: '/classification', label: '统计', icon: PieChart },
     { to: '/time-trace', label: '时痕', icon: GitBranch },
     { to: '/heatmap', label: '热力', icon: CalendarDays },
+    { to: '/planner', label: '计划', icon: CalendarClock },
     { to: '/targets', label: '目标', icon: Target },
     { to: '/review', label: '复盘', icon: CalendarDays },
+    { to: '/share', label: '分享', icon: Share2 },
     { to: '/groups', label: '小组', icon: Users },
     { to: '/discipline', label: '自律', icon: ShieldCheck },
   ];
@@ -146,6 +152,17 @@ function App() {
             </ProtectedRoute>
           }
         />
+        <Route path="/calendar" element={<Navigate to="/planner" replace />} />
+        <Route
+          path="/planner"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Planner />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/targets"
           element={
@@ -162,6 +179,16 @@ function App() {
             <ProtectedRoute>
               <Layout>
                 <Review />
+              </Layout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/share"
+          element={
+            <ProtectedRoute>
+              <Layout>
+                <Share />
               </Layout>
             </ProtectedRoute>
           }

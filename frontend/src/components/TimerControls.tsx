@@ -26,7 +26,7 @@ export interface TimerOfflineState extends OfflineTimerSnapshot {
 
 export interface QuickStartRequest {
   requestId: number;
-  templateId: number;
+  templateId?: number;
   categoryId: number;
   title: string;
   durationSeconds?: number | null;
