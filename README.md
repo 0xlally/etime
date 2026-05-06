@@ -3,7 +3,8 @@
 一个自托管的时间管理/目标跟踪工具，支持实时计时、手动补录、分类统计、目标进度提醒，前后端开源可自由部署。线上演示与自用地址：<http://time.lally.top>。
 
 ## 功能亮点
-- 计时模式：实时计时与手动补录双模式，支持系数折算与取整；实时计时支持离线启动/停止、刷新恢复和联网后自动同步。
+- 计时模式：实时计时、快捷开始模板与手动补录，支持系数折算与取整；实时计时支持离线启动/停止、刷新恢复和联网后自动同步。
+- 快捷开始：可创建“英语 30 分钟”“阅读 25 分钟”等常用计时卡片，点击后自动选择分类并开始计时，固定时长到点会前台提醒继续或结束。
 - 目标进度：按日/周/月（含“明天”）显示目标窗口、剩余时长、已完成时长。
 - 目标引擎 2.0：支持连胜、最佳连胜、完成率、时间债务、补偿记录和惩罚/奖励可视化。
 - 自动复盘：日报/周报串联统计、目标达成、分类趋势和时痕，并支持一键导出 Markdown。
@@ -96,6 +97,29 @@ POSTGRES_PASSWORD=replace-with-a-long-random-password
 - MVP 阶段 owner 不能直接退出小组。
 - 文本消息限制为 1000 字以内。
 
+## 快捷开始模板
+
+计时器页面顶部提供“快捷开始”区域，适合高频任务：
+
+- 模板字段包括标题、分类、固定时长、备注模板、排序、颜色、图标和启用状态。
+- 点击模板卡片会自动选择对应分类并开始实时计时；若已有 active session，后端返回 409，前端会提示先停止当前计时。
+- 固定时长模板会展示剩余倒计时；到点后在 Web 和 Capacitor Android 前台弹窗询问“继续计时”或“结束”。
+- 模板管理支持新建、编辑、删除，以及简单上移/下移排序。
+- 快捷开始复用现有离线计时 localStorage 队列；模板启动会携带 `client_generated_id`，联网重试时可幂等恢复同一条 session。
+
+后端 API：
+
+- `GET /api/v1/quick-start-templates`
+- `POST /api/v1/quick-start-templates`
+- `PATCH /api/v1/quick-start-templates/{template_id}`
+- `DELETE /api/v1/quick-start-templates/{template_id}`
+- `POST /api/v1/quick-start-templates/{template_id}/start`
+
+数据库迁移：
+
+- 新增 Alembic migration：`20260506_add_quick_start_templates`
+- 升级命令：`cd backend && alembic upgrade head`
+
 ## 安全默认值
 
 - 不内置可登录的默认管理员；`admin/admin123` 不会被自动创建。
@@ -125,7 +149,7 @@ $env:VITE_API_BASE_URL = 'https://your-domain.example/api/v1'
 npm run android:sync
 ```
 
-实时计时的离线记录会保存在本地，包含 `local_timer_id`、分类、开始/结束时间、状态和来源（Web 为 `web`，Capacitor Android 为 `android`）。应用启动、进入计时页和浏览器/ WebView 恢复在线时都会尝试同步；后端使用 `client_generated_id` 做幂等去重，重复提交同一条本地记录不会创建重复 session。
+实时计时的离线记录会保存在本地，包含 `local_timer_id`、分类、开始/结束时间、状态和来源（Web 为 `web`，Capacitor Android 为 `android`）。应用启动、进入计时页和浏览器/ WebView 恢复在线时都会尝试同步；后端使用 `client_generated_id` 做幂等去重，重复提交同一条本地记录不会创建重复 session。快捷开始模板会额外保存模板 ID、固定时长和到点提醒状态，Android 前台与 Web 一样弹出到点提醒；后续接入 Capacitor Local Notifications 时可复用这组本地字段。
 
 小组功能 Android 手动验证建议：
 

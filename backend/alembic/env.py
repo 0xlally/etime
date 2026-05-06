@@ -20,6 +20,7 @@ from app.models.work_target import WorkTarget  # noqa: F401
 from app.models.work_evaluation import WorkEvaluation  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.punishment_event import PunishmentEvent  # noqa: F401
+from app.models.quick_start_template import QuickStartTemplate  # noqa: F401
 from app.models.admin_audit_log import AdminAuditLog  # noqa: F401
 from app.models.time_trace import TimeTrace  # noqa: F401
 from app.models.group import Group, GroupDailySnapshot, GroupMember, GroupMessage  # noqa: F401

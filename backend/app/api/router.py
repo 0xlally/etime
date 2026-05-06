@@ -1,6 +1,6 @@
 ﻿"""API Router - Aggregates all API routes"""
 from fastapi import APIRouter
-from .endpoints import health, auth, users, categories, sessions, stats, heatmap, targets, evaluations, notifications, admin, time_traces, reviews, groups
+from .endpoints import health, auth, users, categories, sessions, stats, heatmap, targets, evaluations, notifications, admin, time_traces, reviews, groups, quick_start_templates
 
 # Create main API router
 api_router = APIRouter()
@@ -19,6 +19,9 @@ api_router.include_router(categories.router, prefix="/categories", tags=["catego
 
 # Include session endpoints
 api_router.include_router(sessions.router, prefix="/sessions", tags=["sessions"])
+
+# Include quick start template endpoints
+api_router.include_router(quick_start_templates.router, prefix="/quick-start-templates", tags=["quick-start-templates"])
 
 # Include stats endpoints
 api_router.include_router(stats.router, prefix="/stats", tags=["stats"])

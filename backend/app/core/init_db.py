@@ -13,6 +13,7 @@ from app.models.category import Category  # noqa: F401
 from app.models.group import Group, GroupDailySnapshot, GroupMember, GroupMessage  # noqa: F401
 from app.models.notification import Notification  # noqa: F401
 from app.models.punishment_event import PunishmentEvent  # noqa: F401
+from app.models.quick_start_template import QuickStartTemplate  # noqa: F401
 from app.models.session import Session  # noqa: F401
 from app.models.time_trace import TimeTrace  # noqa: F401
 from app.models.user import User, UserRole

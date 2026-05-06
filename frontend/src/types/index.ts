@@ -42,6 +42,27 @@ export interface ActiveSession {
   elapsed_seconds: number;
 }
 
+export interface QuickStartTemplate {
+  id: number;
+  user_id: number;
+  title: string;
+  category_id: number;
+  category_name?: string | null;
+  duration_seconds?: number | null;
+  note_template?: string | null;
+  sort_order: number;
+  color?: string | null;
+  icon?: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface QuickStartStartResponse {
+  template: QuickStartTemplate;
+  session: Session;
+}
+
 export interface SessionListItem {
   id: number;
   user_id: number;

@@ -17,6 +17,9 @@ export interface OfflineTimerRecord {
   client_generated_id?: string;
   synced_session_id?: number;
   last_error?: string;
+  template_id?: number;
+  template_duration_seconds?: number;
+  template_completed_at?: string;
   updated_at: string;
 }
 
@@ -95,6 +98,9 @@ const normalizeRecord = (value: unknown): OfflineTimerRecord | null => {
     client_generated_id: typeof raw.client_generated_id === 'string' ? raw.client_generated_id : undefined,
     synced_session_id: normalizeNumber(raw.synced_session_id),
     last_error: typeof raw.last_error === 'string' ? raw.last_error : undefined,
+    template_id: normalizeNumber(raw.template_id),
+    template_duration_seconds: normalizeNumber(raw.template_duration_seconds),
+    template_completed_at: typeof raw.template_completed_at === 'string' ? raw.template_completed_at : undefined,
     updated_at: typeof raw.updated_at === 'string' ? raw.updated_at : raw.started_at,
   };
 };
@@ -143,6 +149,9 @@ export const createRunningTimerRecord = (input: {
   createdOffline?: boolean;
   serverSessionId?: number;
   clientGeneratedId?: string | null;
+  templateId?: number;
+  templateDurationSeconds?: number | null;
+  templateCompletedAt?: string | null;
 }): OfflineTimerRecord => {
   const source = getTimerSource();
   const localId = input.clientGeneratedId || (
@@ -159,6 +168,9 @@ export const createRunningTimerRecord = (input: {
     created_offline: input.createdOffline ?? !isNetworkOnline(),
     server_session_id: input.serverSessionId,
     client_generated_id: input.clientGeneratedId ?? localId,
+    template_id: input.templateId,
+    template_duration_seconds: input.templateDurationSeconds ?? undefined,
+    template_completed_at: input.templateCompletedAt ?? undefined,
     updated_at: nowIso(),
   };
 };
@@ -276,6 +288,21 @@ export const buildStartSessionPayload = (record: OfflineTimerRecord) => ({
   started_at: record.started_at,
   client_generated_id: record.client_generated_id ?? record.local_timer_id,
 });
+
+export const markTemplateDurationCompleted = (localTimerId: string, completedAt = nowIso()) => {
+  const records = readOfflineTimerRecords();
+  const index = records.findIndex((record) => record.local_timer_id === localTimerId);
+  if (index < 0) return null;
+
+  const updated: OfflineTimerRecord = {
+    ...records[index],
+    template_completed_at: completedAt,
+    updated_at: nowIso(),
+  };
+  records[index] = updated;
+  writeRecords(records);
+  return updated;
+};
 
 const getErrorMessage = (error: unknown) => {
   const apiError = error as { response?: { data?: { detail?: unknown } }; message?: string };
