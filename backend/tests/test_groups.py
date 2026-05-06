@@ -3,6 +3,9 @@ from datetime import datetime, timezone, timedelta
 
 from fastapi.testclient import TestClient
 
+from app.models.user import User, UserRole
+from app.utils.security import hash_password
+
 
 def _auth(client: TestClient, email: str, username: str) -> tuple[dict, int]:
     client.post(
@@ -60,6 +63,64 @@ def test_join_group_by_invite_code_and_members_list(client: TestClient):
     members = client.get(f"/api/v1/groups/{group['id']}/members", headers=member_headers)
     assert members.status_code == 200
     assert any(item["user_id"] == member_id and item["username"] == "joinmember" for item in members.json())
+
+
+def test_public_exam_group_invite_is_visible_and_joinable(client: TestClient):
+    viewer_headers, _ = _auth(client, "group_public_viewer@example.com", "publicviewer")
+    public_response = client.get("/api/v1/groups/public", headers=viewer_headers)
+    assert public_response.status_code == 200, public_response.text
+    public_groups = public_response.json()
+    exam_group = next(item for item in public_groups if item["name"] == "考研小组")
+    assert exam_group["visibility"] == "public"
+    assert exam_group["invite_code"]
+    assert exam_group["my_role"] == "owner"
+
+    member_headers, _ = _auth(client, "group_public_member@example.com", "publicmember")
+    visible_to_member = client.get("/api/v1/groups/public", headers=member_headers)
+    assert visible_to_member.status_code == 200
+    member_exam_group = next(item for item in visible_to_member.json() if item["name"] == "考研小组")
+    assert member_exam_group["my_role"] is None
+
+    join = client.post(
+        "/api/v1/groups/join",
+        json={"invite_code": member_exam_group["invite_code"]},
+        headers=member_headers,
+    )
+    assert join.status_code == 200, join.text
+    assert join.json()["name"] == "考研小组"
+    assert join.json()["my_role"] == "member"
+
+
+def test_public_group_request_notifies_admin(client: TestClient, db_session):
+    admin = User(
+        email="group_admin@example.com",
+        username="groupadmin",
+        password_hash=hash_password("testpass123"),
+        role=UserRole.ADMIN.value,
+        is_active=True,
+    )
+    db_session.add(admin)
+    db_session.commit()
+
+    headers, _ = _auth(client, "group_request_user@example.com", "requestuser")
+    response = client.post(
+        "/api/v1/groups/public-requests",
+        json={"name": "政治冲刺小组", "description": "希望公开给考研同学"},
+        headers=headers,
+    )
+    assert response.status_code == 202, response.text
+
+    admin_login = client.post(
+        "/api/v1/auth/login",
+        json={"username": "groupadmin", "password": "testpass123"},
+    )
+    admin_headers = {"Authorization": f"Bearer {admin_login.json()['access_token']}"}
+    notifications = client.get("/api/v1/notifications", headers=admin_headers)
+    assert notifications.status_code == 200
+    assert any(
+        item["type"] == "group_public_request" and "政治冲刺小组" in (item["content"] or "")
+        for item in notifications.json()
+    )
 
 
 def test_non_member_cannot_read_messages(client: TestClient):

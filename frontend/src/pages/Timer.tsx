@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { CategorySelect } from '../components/CategorySelect';
 import { QuickStartRequest, TimerControls, type TimerOfflineState } from '../components/TimerControls';
-import { Button, Card, EmptyState, LoadingState, PageShell, Progress, SectionHeader, Tag } from '../components/ui';
+import { Button, Card, EmptyState, LoadingState, PageShell, Progress, SectionHeader } from '../components/ui';
 import { apiClient } from '../api/client';
 import { Category, QuickStartTemplate, StatsSummary, WorkTarget } from '../types';
 import { getOfflineTimerSnapshot, isNetworkOnline, syncOfflineTimers } from '../utils/offlineTimer';
@@ -473,31 +473,32 @@ export const Timer: React.FC = () => {
     }
   }, []);
 
+  const showSyncBar = offlineState.syncing
+    || offlineState.pendingCount > 0
+    || offlineState.failedCount > 0
+    || Boolean(restoreMessage);
+
   return (
     <PageShell
       className="timer-page"
-      eyebrow="个人时间系统"
       title="今天的时间工作台"
       description="先从一个 25 分钟开始，慢慢把节奏安放好。"
     >
       <div className="timer-shell">
-        <p className="timer-banner">运用认知的力量，保持耐心，和时间做朋友。</p>
-
-        <div className="timer-sync-bar">
-          <Tag tone={offlineState.isOnline ? 'success' : 'neutral'} className={`sync-pill ${offlineState.isOnline ? 'online' : 'offline'}`}>
-            {offlineState.isOnline ? '在线' : '离线'}
-          </Tag>
-          {offlineState.syncing && <span className="sync-text">正在同步</span>}
-          {offlineState.pendingCount > 0 && (
-            <span className="sync-text">有 {offlineState.pendingCount} 条待同步记录</span>
-          )}
-          {offlineState.failedCount > 0 && (
-            <Button variant="secondary" onClick={handleRetrySync} disabled={offlineState.syncing}>
-              重试同步
-            </Button>
-          )}
-          {restoreMessage && <strong>{restoreMessage}</strong>}
-        </div>
+        {showSyncBar && (
+          <div className="timer-sync-bar">
+            {offlineState.syncing && <span className="sync-text">正在同步</span>}
+            {offlineState.pendingCount > 0 && (
+              <span className="sync-text">有 {offlineState.pendingCount} 条待同步记录</span>
+            )}
+            {offlineState.failedCount > 0 && (
+              <Button variant="secondary" onClick={handleRetrySync} disabled={offlineState.syncing}>
+                重试同步
+              </Button>
+            )}
+            {restoreMessage && <strong>{restoreMessage}</strong>}
+          </div>
+        )}
 
         <Card className="quick-start-card">
           <SectionHeader

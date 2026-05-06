@@ -5,7 +5,7 @@ from typing import Any, Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
-GroupVisibility = Literal["private", "invite_code"]
+GroupVisibility = Literal["private", "invite_code", "public"]
 GroupRole = Literal["owner", "admin", "member"]
 GroupMessageType = Literal["text", "status_share", "card_share", "system"]
 
@@ -24,6 +24,11 @@ class GroupUpdate(BaseModel):
 
 class GroupJoin(BaseModel):
     invite_code: str = Field(..., min_length=8, max_length=32)
+
+
+class GroupPublicRequestCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
 
 
 class GroupResponse(BaseModel):

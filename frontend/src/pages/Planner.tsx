@@ -34,11 +34,15 @@ import {
   CalendarTaskPriority,
   CalendarTaskStatus,
   Category,
+  TargetDashboard,
+  WorkEvaluation,
+  WorkTarget,
 } from '../types';
 import { getRunningTimer } from '../utils/offlineTimer';
 import { Button, Card, EmptyState, LoadingState, PageShell, SectionHeader, StatCard } from '../components/ui';
 
 type PlannerView = 'month' | 'week' | 'day';
+type TargetPeriod = 'daily' | 'weekly' | 'monthly' | 'tomorrow';
 
 interface TaskFormState {
   title: string;
@@ -96,8 +100,8 @@ const combineLocalDateTime = (date: string, time: string) => {
 };
 
 const formatTime = (seconds?: number | null) => {
-  const total = Math.max(0, Math.floor(seconds || 0));
-  if (total === 0) return '未估算';
+  if (seconds === undefined || seconds === null) return '未估算';
+  const total = Math.max(0, Math.floor(seconds));
   const hours = Math.floor(total / 3600);
   const minutes = Math.floor((total % 3600) / 60);
   if (hours === 0) return `${minutes} 分钟`;
@@ -114,6 +118,27 @@ const taskTimeLabel = (task: CalendarTask) => {
   return `${format(new Date(task.scheduled_start), 'HH:mm')} - ${format(new Date(task.scheduled_end), 'HH:mm')}`;
 };
 
+const toLocalInputValue = (date: Date) => {
+  const copy = new Date(date);
+  copy.setMinutes(copy.getMinutes() - copy.getTimezoneOffset());
+  return copy.toISOString().slice(0, 16);
+};
+
+const tomorrowStartInputValue = () => {
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  tomorrow.setHours(0, 0, 0, 0);
+  return toLocalInputValue(tomorrow);
+};
+
+const periodLabel = (period: string) => {
+  if (period === 'tomorrow') return '明日计划';
+  if (period === 'daily') return '每日';
+  if (period === 'weekly') return '每周';
+  if (period === 'monthly') return '每月';
+  return period;
+};
+
 export const Planner: React.FC = () => {
   const navigate = useNavigate();
   const nativePlatform = Capacitor.isNativePlatform();
@@ -122,10 +147,21 @@ export const Planner: React.FC = () => {
   const [anchorDate, setAnchorDate] = useState(new Date());
   const [tasks, setTasks] = useState<CalendarTask[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [targets, setTargets] = useState<WorkTarget[]>([]);
+  const [evaluations, setEvaluations] = useState<WorkEvaluation[]>([]);
+  const [targetDashboard, setTargetDashboard] = useState<TargetDashboard | null>(null);
   const [loading, setLoading] = useState(false);
+  const [targetLoading, setTargetLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [targetFormOpen, setTargetFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<CalendarTask | null>(null);
   const [form, setForm] = useState<TaskFormState>(emptyForm());
+  const [targetForm, setTargetForm] = useState({
+    target_type: 'daily' as TargetPeriod,
+    target_seconds: 3600,
+    category_ids: [] as number[],
+    effective_from: toLocalInputValue(new Date()),
+  });
   const [toast, setToast] = useState('');
 
   const range = useMemo(() => {
@@ -148,6 +184,10 @@ export const Planner: React.FC = () => {
     loadData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [range.start, range.end]);
+
+  useEffect(() => {
+    loadTargetData();
+  }, []);
 
   useEffect(() => {
     void checkDueReminders();
@@ -177,6 +217,25 @@ export const Planner: React.FC = () => {
       setToast('计划加载失败，请稍后重试');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadTargetData = async () => {
+    setTargetLoading(true);
+    try {
+      const [targetData, evaluationData, dashboardData] = await Promise.all([
+        apiClient.get<WorkTarget[]>('/targets'),
+        apiClient.get<WorkEvaluation[]>('/evaluations'),
+        apiClient.get<TargetDashboard>('/targets/dashboard'),
+      ]);
+      setTargets(targetData);
+      setEvaluations(evaluationData);
+      setTargetDashboard(dashboardData);
+    } catch (error) {
+      console.error('加载目标数据失败', error);
+      setToast('目标数据加载失败');
+    } finally {
+      setTargetLoading(false);
     }
   };
 
@@ -238,10 +297,42 @@ export const Planner: React.FC = () => {
     focusSeconds: todayTasks.reduce((sum, task) => sum + (task.estimated_seconds || 0), 0),
   };
 
+  const metricByTarget = useMemo(() => {
+    const map = new Map<number, TargetDashboard['metrics'][number]>();
+    targetDashboard?.metrics.forEach((metric) => map.set(metric.target_id, metric));
+    return map;
+  }, [targetDashboard]);
+
+  const targetById = useMemo(() => {
+    const map = new Map<number, WorkTarget>();
+    targets.forEach((target) => map.set(target.id, target));
+    return map;
+  }, [targets]);
+
+  const targetOverview = useMemo(() => {
+    const metrics = targetDashboard?.metrics ?? [];
+    const totalEvaluations = metrics.reduce((sum, item) => sum + item.total_evaluations, 0);
+    const metEvaluations = metrics.reduce((sum, item) => sum + item.met_evaluations, 0);
+    return {
+      currentStreak: Math.max(0, ...metrics.map((item) => item.current_streak)),
+      bestStreak: Math.max(0, ...metrics.map((item) => item.best_streak)),
+      completionRate: totalEvaluations === 0 ? 0 : metEvaluations / totalEvaluations,
+      activeDebt: metrics.reduce((sum, item) => sum + item.active_debt_seconds, 0),
+    };
+  }, [targetDashboard]);
+
   const openCreate = (date = anchorDate) => {
     setEditingTask(null);
     setForm(emptyForm(format(date, 'yyyy-MM-dd')));
     setModalOpen(true);
+  };
+
+  const handleTargetPeriodChange = (period: TargetPeriod) => {
+    setTargetForm((prev) => ({
+      ...prev,
+      target_type: period,
+      effective_from: period === 'tomorrow' ? tomorrowStartInputValue() : prev.effective_from,
+    }));
   };
 
   const openEdit = (task: CalendarTask) => {
@@ -323,6 +414,53 @@ export const Planner: React.FC = () => {
     }
   };
 
+  const handleTargetSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    try {
+      const effective = targetForm.effective_from.includes(':')
+        ? `${targetForm.effective_from}:00`
+        : targetForm.effective_from;
+
+      await apiClient.post<WorkTarget>('/targets', {
+        period: targetForm.target_type,
+        target_seconds: targetForm.target_seconds,
+        include_category_ids: targetForm.category_ids.length > 0 ? targetForm.category_ids : null,
+        effective_from: effective,
+      });
+      setTargetFormOpen(false);
+      setTargetForm({
+        target_type: 'daily',
+        target_seconds: 3600,
+        category_ids: [],
+        effective_from: toLocalInputValue(new Date()),
+      });
+      await loadTargetData();
+      setToast('目标创建成功');
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+      setToast(typeof detail === 'string' ? detail : '创建目标失败');
+    }
+  };
+
+  const toggleTarget = async (id: number, isActive: boolean) => {
+    try {
+      await apiClient.patch(`/targets/${id}`, { is_active: !isActive });
+      await loadTargetData();
+    } catch (error: any) {
+      setToast(error?.response?.data?.detail || '更新目标失败');
+    }
+  };
+
+  const deleteTarget = async (id: number) => {
+    if (!window.confirm('确认删除该目标吗？')) return;
+    try {
+      await apiClient.delete(`/targets/${id}`);
+      await loadTargetData();
+    } catch (error: any) {
+      setToast(error?.response?.data?.detail || '删除目标失败');
+    }
+  };
+
   const updateTaskStatus = async (task: CalendarTask, statusValue: CalendarTaskStatus) => {
     try {
       await apiClient.patch(`/calendar-tasks/${task.id}`, { status: statusValue });
@@ -367,6 +505,14 @@ export const Planner: React.FC = () => {
     if (view === 'month') setAnchorDate((date) => direction > 0 ? addMonths(date, 1) : subMonths(date, 1));
     if (view === 'week') setAnchorDate((date) => direction > 0 ? addWeeks(date, 1) : subWeeks(date, 1));
     if (view === 'day') setAnchorDate((date) => addDays(date, direction));
+  };
+
+  const categoryNames = (ids: number[]) => {
+    if (ids.length === 0) return '全部';
+    return ids
+      .map((id) => categories.find((category) => category.id === id)?.name)
+      .filter(Boolean)
+      .join(', ') || '全部';
   };
 
   const renderTask = (task: CalendarTask, compact = false) => (
@@ -418,7 +564,7 @@ export const Planner: React.FC = () => {
       className="planner-page"
       eyebrow="我的时间地图"
       title="计划日历"
-      description="把事情放到合适的位置，让一天自然展开。"
+      description="把事项、目标和完成节奏放在同一张时间地图里。"
       action={(
         <Button onClick={() => openCreate()}>
           <Plus size={17} /> 新增事项
@@ -439,6 +585,8 @@ export const Planner: React.FC = () => {
         <StatCard label="已完成" value={todaySummary.done} hint="节奏正在形成" />
         <StatCard label="预计投入" value={formatTime(todaySummary.focusSeconds)} hint="给时间一个边界" />
         <StatCard label="待安排池" value={unscheduledTasks.length} hint="暂时放在这里" />
+        <StatCard label="目标完成率" value={`${Math.round(targetOverview.completionRate * 100)}%`} hint="当前目标趋势" />
+        <StatCard label="当前连胜" value={targetOverview.currentStreak} hint={`最佳 ${targetOverview.bestStreak}`} />
       </section>
 
       <div className="planner-toolbar">
@@ -519,6 +667,189 @@ export const Planner: React.FC = () => {
           )}
         </Card>
       </div>
+
+      <section className="planner-target-section">
+        <div className="planner-target-head">
+          <div>
+            <span>目标机制</span>
+            <h2>目标与完成率</h2>
+            <p>日程负责安排，目标负责衡量。完成率和连胜会跟随评估结果更新。</p>
+          </div>
+          <Button variant={targetFormOpen ? 'ghost' : 'primary'} onClick={() => setTargetFormOpen(!targetFormOpen)}>
+            {targetFormOpen ? '收起' : '新建目标'}
+          </Button>
+        </div>
+
+        <div className="target-overview planner-target-overview">
+          <StatCard label="当前连胜" value={targetOverview.currentStreak} hint="连续达标周期" />
+          <StatCard label="最佳连胜" value={targetOverview.bestStreak} hint="历史最好状态" />
+          <StatCard label="完成率" value={`${Math.round(targetOverview.completionRate * 100)}%`} hint="全部评估统计" />
+          <StatCard label="时间债务" value={formatTime(targetOverview.activeDebt)} hint="慢慢补回" />
+        </div>
+
+        {targetDashboard?.progress && targetDashboard.progress.length > 0 && (
+          <div className="target-progress-grid">
+            {targetDashboard.progress.map((item) => (
+              <article key={`${item.target_id}-${item.period_start}`} className="target-progress-card">
+                <div>
+                  <span>{periodLabel(item.period)}</span>
+                  <strong>{Math.round(item.progress_ratio * 100)}%</strong>
+                </div>
+                <div className="target-progress-bar">
+                  <span style={{ width: `${Math.min(100, Math.max(0, item.progress_ratio * 100))}%` }} />
+                </div>
+                <p>
+                  已完成 {formatTime(item.actual_seconds)}，还差 {formatTime(item.remaining_seconds)}
+                </p>
+              </article>
+            ))}
+          </div>
+        )}
+
+        {targetFormOpen && (
+          <Card as="form" onSubmit={handleTargetSubmit} className="target-form planner-target-form">
+            <div className="form-group">
+              <label>周期</label>
+              <select value={targetForm.target_type} onChange={(e) => handleTargetPeriodChange(e.target.value as TargetPeriod)}>
+                <option value="tomorrow">明日计划</option>
+                <option value="daily">每日</option>
+                <option value="weekly">每周</option>
+                <option value="monthly">每月</option>
+              </select>
+            </div>
+            <div className="form-group">
+              <label>生效时间</label>
+              <input
+                type="datetime-local"
+                step="60"
+                value={targetForm.effective_from}
+                onChange={(e) => setTargetForm({ ...targetForm, effective_from: e.target.value })}
+                required
+              />
+            </div>
+            <div className="form-group">
+              <label>目标时长（小时）</label>
+              <input
+                type="number"
+                min="0.5"
+                step="0.5"
+                value={targetForm.target_seconds / 3600}
+                onChange={(e) => setTargetForm({ ...targetForm, target_seconds: Number(e.target.value) * 3600 })}
+              />
+            </div>
+            <div className="form-group">
+              <label>包含分类</label>
+              <div className="category-checkboxes">
+                {categories.map((category) => (
+                  <label key={category.id}>
+                    <input
+                      type="checkbox"
+                      checked={targetForm.category_ids.includes(category.id)}
+                      onChange={(e) => {
+                        const categoryIds = e.target.checked
+                          ? [...targetForm.category_ids, category.id]
+                          : targetForm.category_ids.filter((id) => id !== category.id);
+                        setTargetForm({ ...targetForm, category_ids: categoryIds });
+                      }}
+                    />
+                    {category.name}
+                  </label>
+                ))}
+              </div>
+            </div>
+            <Button type="submit">创建目标</Button>
+          </Card>
+        )}
+
+        <Card className="targets-list planner-target-list">
+          <h2>目标列表</h2>
+          {targetLoading ? (
+            <LoadingState text="正在整理目标进度..." />
+          ) : targets.length === 0 ? (
+            <EmptyState title="还没有目标" description="可以先设一个很小的每日目标。" />
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>周期</th>
+                  <th>目标时长</th>
+                  <th>分类</th>
+                  <th>连胜</th>
+                  <th>完成率</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                {targets.map((target) => {
+                  const isActive = target.is_active ?? target.is_enabled ?? true;
+                  const period = target.period ?? target.target_type ?? 'daily';
+                  const categoryIds = target.include_category_ids ?? target.category_ids ?? [];
+                  const metric = metricByTarget.get(target.id);
+
+                  return (
+                    <tr key={target.id}>
+                      <td>{periodLabel(period)}</td>
+                      <td>{formatTime(target.target_seconds)}</td>
+                      <td>{categoryNames(categoryIds)}</td>
+                      <td>{metric ? `${metric.current_streak} / ${metric.best_streak}` : '0 / 0'}</td>
+                      <td>{metric ? `${Math.round(metric.completion_rate * 100)}%` : '0%'}</td>
+                      <td>{isActive ? '启用' : '停用'}</td>
+                      <td>
+                        <Button variant="ghost" onClick={() => toggleTarget(target.id, isActive)}>
+                          {isActive ? '停用' : '启用'}
+                        </Button>
+                        <Button variant="danger" style={{ marginLeft: 8 }} onClick={() => deleteTarget(target.id)}>
+                          删除
+                        </Button>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </Card>
+
+        <Card className="evaluations-list planner-evaluation-list">
+          <h2>最近评估</h2>
+          {targetLoading ? (
+            <LoadingState text="正在查看最近评估..." />
+          ) : evaluations.length === 0 ? (
+            <EmptyState title="暂无评估记录" description="目标走过一个周期后，这里会出现结果。" />
+          ) : (
+            <table>
+              <thead>
+                <tr>
+                  <th>周期</th>
+                  <th>范围</th>
+                  <th>目标</th>
+                  <th>实际</th>
+                  <th>结果</th>
+                </tr>
+              </thead>
+              <tbody>
+                {evaluations.slice(0, 8).map((evaluation) => {
+                  const target = targetById.get(evaluation.target_id);
+                  return (
+                    <tr key={evaluation.id}>
+                      <td>{periodLabel(target?.period ?? 'daily')}</td>
+                      <td>
+                        {new Date(evaluation.period_start).toLocaleDateString()} - {new Date(evaluation.period_end).toLocaleDateString()}
+                      </td>
+                      <td>{formatTime(evaluation.target_seconds)}</td>
+                      <td>{formatTime(evaluation.actual_seconds)}</td>
+                      <td className={evaluation.status === 'met' ? 'pass' : 'fail'}>
+                        {evaluation.status === 'met' ? '达标' : `未达标，差 ${formatTime(evaluation.deficit_seconds)}`}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </Card>
+      </section>
 
       {modalOpen && (
         <div className="planner-modal" role="dialog" aria-modal="true">

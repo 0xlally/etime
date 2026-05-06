@@ -3,9 +3,9 @@ import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxi
 import { Clipboard, CalendarDays, TrendingUp } from 'lucide-react';
 import { HeatmapGrid } from '../components/HeatmapGrid';
 import { apiClient } from '../api/client';
-import { DailyReview, HeatmapDay, ReviewCategoryItem, WeeklyReview } from '../types';
+import { DailyReview, HeatmapDay, MonthlyReview, ReviewCategoryItem, WeeklyReview } from '../types';
 
-type ReviewMode = 'daily' | 'weekly';
+type ReviewMode = 'daily' | 'weekly' | 'monthly';
 
 const toDateInputValue = (date: Date) => {
   const copy = new Date(date);
@@ -64,6 +64,7 @@ export const Review: React.FC = () => {
   const [date, setDate] = useState(toDateInputValue(new Date()));
   const [daily, setDaily] = useState<DailyReview | null>(null);
   const [weekly, setWeekly] = useState<WeeklyReview | null>(null);
+  const [monthly, setMonthly] = useState<MonthlyReview | null>(null);
   const [heatmapData, setHeatmapData] = useState<HeatmapDay[]>([]);
   const [loading, setLoading] = useState(false);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
@@ -86,9 +87,12 @@ export const Review: React.FC = () => {
       if (mode === 'daily') {
         const data = await apiClient.get<DailyReview>('/reviews/daily', { date });
         setDaily(data);
-      } else {
+      } else if (mode === 'weekly') {
         const data = await apiClient.get<WeeklyReview>('/reviews/weekly', { date });
         setWeekly(data);
+      } else {
+        const data = await apiClient.get<MonthlyReview>('/reviews/monthly', { date });
+        setMonthly(data);
       }
     } catch (error) {
       console.error('加载复盘失败', error);
@@ -110,7 +114,7 @@ export const Review: React.FC = () => {
     }
   };
 
-  const currentMarkdown = mode === 'daily' ? daily?.markdown : weekly?.markdown;
+  const currentMarkdown = mode === 'daily' ? daily?.markdown : mode === 'weekly' ? weekly?.markdown : monthly?.markdown;
 
   const handleCopy = async () => {
     if (!currentMarkdown) return;
@@ -127,11 +131,12 @@ export const Review: React.FC = () => {
   }, [daily]);
 
   const weeklyChartData = useMemo(() => {
-    return (weekly?.daily_totals ?? []).map((item) => ({
+    const period = mode === 'monthly' ? monthly : weekly;
+    return (period?.daily_totals ?? []).map((item) => ({
       date: item.date.slice(5),
       hours: Number((item.total_seconds / 3600).toFixed(2)),
     }));
-  }, [weekly]);
+  }, [mode, monthly, weekly]);
 
   const handleHeatmapDayClick = (day: HeatmapDay) => {
     setMode('daily');
@@ -218,34 +223,37 @@ export const Review: React.FC = () => {
     );
   };
 
-  const renderWeekly = () => {
-    if (!weekly) return null;
+  const renderPeriod = () => {
+    const period = mode === 'monthly' ? monthly : weekly;
+    if (!period) return null;
+    const label = mode === 'monthly' ? '本月' : '本周';
+    const traceTitle = mode === 'monthly' ? '月内时痕' : '周内时痕';
 
     return (
       <>
         <div className="review-metric-grid">
           <div>
-            <span>本周总时长</span>
-            <strong>{formatTime(weekly.total_seconds)}</strong>
+            <span>{label}总时长</span>
+            <strong>{formatTime(period.total_seconds)}</strong>
           </div>
           <div>
             <span>平均每天</span>
-            <strong>{formatTime(weekly.average_daily_seconds)}</strong>
+            <strong>{formatTime(period.average_daily_seconds)}</strong>
           </div>
           <div>
             <span>最高效一天</span>
-            <strong>{weekly.best_day ? weekly.best_day.date.slice(5) : '无'}</strong>
+            <strong>{period.best_day ? period.best_day.date.slice(5) : '无'}</strong>
           </div>
           <div>
             <span>断档天数</span>
-            <strong>{weekly.gap_days}</strong>
+            <strong>{period.gap_days}</strong>
           </div>
         </div>
 
         <div className="review-grid">
           <section className="review-panel">
             <h2><TrendingUp size={18} /> 分类趋势</h2>
-            <CategoryRows items={weekly.by_category} />
+            <CategoryRows items={period.by_category} />
           </section>
           <section className="review-panel">
             <h2><CalendarDays size={18} /> 每日节奏</h2>
@@ -262,12 +270,12 @@ export const Review: React.FC = () => {
         </div>
 
         <section className="review-panel">
-          <h2>周内时痕</h2>
-          {weekly.time_traces.length === 0 ? (
+          <h2>{traceTitle}</h2>
+          {period.time_traces.length === 0 ? (
             <p>暂无时痕</p>
           ) : (
             <div className="review-traces">
-              {weekly.time_traces.slice(0, 12).map((trace) => (
+              {period.time_traces.slice(0, mode === 'monthly' ? 20 : 12).map((trace) => (
                 <article key={trace.id}>
                   <time>{new Date(trace.created_at).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</time>
                   <p>{trace.content}</p>
@@ -287,7 +295,7 @@ export const Review: React.FC = () => {
       <div className="review-header">
         <div>
           <h1>复盘</h1>
-          <p>{mode === 'daily' ? '日报' : '周报'}把统计、目标和时痕串在一起。</p>
+          <p>{mode === 'daily' ? '日报' : mode === 'weekly' ? '周报' : '月报'}把统计、目标和时痕串在一起。</p>
         </div>
         <button onClick={handleCopy} disabled={!currentMarkdown}>
           <Clipboard size={17} /> 导出 Markdown
@@ -297,12 +305,13 @@ export const Review: React.FC = () => {
       <div className="review-toolbar">
         <div className="period-selector">
           <button className={mode === 'daily' ? 'active' : ''} onClick={() => setMode('daily')}>每日复盘</button>
-          <button className={mode === 'weekly' ? 'active' : ''} onClick={() => setMode('weekly')}>周报</button>
+          <button className={mode === 'weekly' ? 'active' : ''} onClick={() => setMode('weekly')}>每周复盘</button>
+          <button className={mode === 'monthly' ? 'active' : ''} onClick={() => setMode('monthly')}>每月复盘</button>
         </div>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
 
-      {loading ? <p>加载中...</p> : mode === 'daily' ? renderDaily() : renderWeekly()}
+      {loading ? <p>加载中...</p> : mode === 'daily' ? renderDaily() : renderPeriod()}
 
       {currentMarkdown && (
         <section className="review-panel markdown-panel">

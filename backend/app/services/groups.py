@@ -33,6 +33,35 @@ def generate_invite_code(db: DBSession) -> str:
     raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="Could not generate invite code")
 
 
+def ensure_public_exam_group(owner: User, db: DBSession) -> Group:
+    group = db.query(Group).filter(
+        Group.name == "考研小组",
+        Group.visibility == "public",
+    ).first()
+    if group is not None:
+        return group
+
+    group = Group(
+        name="考研小组",
+        description="公开考研学习小组，所有成员都可以通过邀请码申请加入。",
+        owner_id=owner.id,
+        invite_code=generate_invite_code(db),
+        visibility="public",
+    )
+    db.add(group)
+    db.flush()
+    db.add(GroupMember(
+        group_id=group.id,
+        user_id=owner.id,
+        role="owner",
+        is_active=True,
+    ))
+    create_group_message(group.id, owner.id, "system", "考研小组已向全体成员公开。", None, db)
+    db.commit()
+    db.refresh(group)
+    return group
+
+
 def serialize_metadata(value: Optional[dict[str, Any]]) -> Optional[str]:
     if value is None:
         return None

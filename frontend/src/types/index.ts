@@ -246,7 +246,7 @@ export interface NotificationItem {
 }
 
 export type GroupRole = 'owner' | 'admin' | 'member';
-export type GroupVisibility = 'private' | 'invite_code';
+export type GroupVisibility = 'private' | 'invite_code' | 'public';
 export type GroupMessageType = 'text' | 'status_share' | 'card_share' | 'system';
 
 export interface Group {
@@ -356,6 +356,8 @@ export interface WeeklyReview {
   time_traces: TimeTraceEntry[];
   markdown: string;
 }
+
+export interface MonthlyReview extends WeeklyReview {}
 
 export interface AdminUser {
   id: number;

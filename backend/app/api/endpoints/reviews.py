@@ -1,4 +1,4 @@
-"""Review endpoints - daily and weekly retrospectives."""
+"""Review endpoints - daily, weekly, and monthly retrospectives."""
 from datetime import date as DateType
 from datetime import datetime, time as TimeType, timedelta, timezone
 from typing import Iterable, List, Optional
@@ -17,6 +17,7 @@ from app.models.work_evaluation import EvaluationStatus, WorkEvaluation
 from app.models.work_target import TargetPeriod, WorkTarget
 from app.schemas.review import (
     DailyReviewResponse,
+    MonthlyReviewResponse,
     ReviewCategoryItem,
     ReviewDayTotal,
     ReviewEvaluationItem,
@@ -37,6 +38,18 @@ def _date_bounds(value: DateType) -> tuple[datetime, datetime]:
 def _week_bounds(value: DateType) -> tuple[DateType, DateType, datetime, datetime]:
     start_date = value - timedelta(days=value.weekday())
     end_date = start_date + timedelta(days=6)
+    start_dt, _ = _date_bounds(start_date)
+    _, end_dt = _date_bounds(end_date)
+    return start_date, end_date, start_dt, end_dt
+
+
+def _month_bounds(value: DateType) -> tuple[DateType, DateType, datetime, datetime]:
+    start_date = value.replace(day=1)
+    if value.month == 12:
+        next_month = value.replace(year=value.year + 1, month=1, day=1)
+    else:
+        next_month = value.replace(month=value.month + 1, day=1)
+    end_date = next_month - timedelta(days=1)
     start_dt, _ = _date_bounds(start_date)
     _, end_dt = _date_bounds(end_date)
     return start_date, end_date, start_dt, end_dt
@@ -304,6 +317,7 @@ def _daily_markdown(
 
 
 def _weekly_markdown(
+    title: str,
     start_date: DateType,
     end_date: DateType,
     total_seconds: int,
@@ -316,9 +330,9 @@ def _weekly_markdown(
 ) -> str:
     best_day_text = f"{best_day.date}（{_format_seconds(best_day.total_seconds)}）" if best_day else "无"
     lines = [
-        f"# 周报复盘 {start_date.isoformat()} - {end_date.isoformat()}",
+        f"# {title} {start_date.isoformat()} - {end_date.isoformat()}",
         "",
-        f"- 本周总时长：{_format_seconds(total_seconds)}",
+        f"- 总时长：{_format_seconds(total_seconds)}",
         f"- 平均每天：{_format_seconds(average_daily_seconds)}",
         f"- 最高效的一天：{best_day_text}",
         f"- 断档天数：{gap_days}",
@@ -414,6 +428,7 @@ def get_weekly_review(
     )
     traces = _time_traces(current_user.id, start_dt, end_dt, db)
     markdown = _weekly_markdown(
+        "周报复盘",
         start_date,
         end_date,
         total_seconds,
@@ -426,6 +441,64 @@ def get_weekly_review(
     )
 
     return WeeklyReviewResponse(
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat(),
+        total_seconds=total_seconds,
+        average_daily_seconds=average_daily_seconds,
+        best_day=best_day,
+        gap_days=gap_days,
+        by_category=categories,
+        daily_totals=daily_totals,
+        target_summary=target_summary,
+        time_traces=traces,
+        markdown=markdown,
+    )
+
+
+@router.get("/monthly", response_model=MonthlyReviewResponse)
+def get_monthly_review(
+    date: Optional[DateType] = Query(None, description="Any date in the month (YYYY-MM-DD)"),
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db),
+):
+    """Get a monthly retrospective with trends and Markdown export."""
+    anchor = date or datetime.now(timezone.utc).date()
+    start_date, end_date, start_dt, end_dt = _month_bounds(anchor)
+    previous_anchor = start_date - timedelta(days=1)
+    previous_start_date, previous_end_date, previous_start_dt, previous_end_dt = _month_bounds(previous_anchor)
+
+    categories = _with_trends(
+        _category_totals(current_user.id, start_dt, end_dt, db),
+        _category_totals(current_user.id, previous_start_dt, previous_end_dt, db),
+    )
+    total_seconds = _total_seconds(categories)
+    daily_totals = _daily_totals(current_user.id, start_date, end_date, db)
+    best_day_candidates = [item for item in daily_totals if item.total_seconds > 0]
+    best_day = max(best_day_candidates, key=lambda item: item.total_seconds) if best_day_candidates else None
+    gap_days = sum(1 for item in daily_totals if item.total_seconds == 0)
+    average_daily_seconds = total_seconds // len(daily_totals) if daily_totals else 0
+    target_summary = _target_summary(
+        current_user.id,
+        start_dt,
+        end_dt,
+        [TargetPeriod.MONTHLY.value],
+        db,
+    )
+    traces = _time_traces(current_user.id, start_dt, end_dt, db)
+    markdown = _weekly_markdown(
+        "月报复盘",
+        start_date,
+        end_date,
+        total_seconds,
+        average_daily_seconds,
+        best_day,
+        gap_days,
+        categories,
+        target_summary,
+        traces,
+    )
+
+    return MonthlyReviewResponse(
         start_date=start_date.isoformat(),
         end_date=end_date.isoformat(),
         total_seconds=total_seconds,

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Copy, LogOut, MessageCircle, Plus, Send, Share2, Users } from 'lucide-react';
+import { Copy, LogOut, MessageCircle, Send, Share2, Users } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { Group, GroupMember, GroupMessage, GroupStatusMetadata } from '../types';
 
@@ -76,13 +76,14 @@ const MessageBubble: React.FC<{ message: GroupMessage }> = ({ message }) => {
 
 export const Groups: React.FC = () => {
   const [groups, setGroups] = useState<Group[]>([]);
+  const [publicGroups, setPublicGroups] = useState<Group[]>([]);
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
   const [members, setMembers] = useState<GroupMember[]>([]);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [messageText, setMessageText] = useState('');
-  const [createName, setCreateName] = useState('');
-  const [createDescription, setCreateDescription] = useState('');
   const [inviteCode, setInviteCode] = useState('');
+  const [requestName, setRequestName] = useState('');
+  const [requestDescription, setRequestDescription] = useState('');
   const [loadingGroups, setLoadingGroups] = useState(false);
   const [loadingMessages, setLoadingMessages] = useState(false);
   const [posting, setPosting] = useState(false);
@@ -155,8 +156,12 @@ export const Groups: React.FC = () => {
   const loadGroups = async () => {
     setLoadingGroups(true);
     try {
-      const data = await apiClient.get<Group[]>('/groups');
+      const [data, publicData] = await Promise.all([
+        apiClient.get<Group[]>('/groups'),
+        apiClient.get<Group[]>('/groups/public'),
+      ]);
       setGroups(data);
+      setPublicGroups(publicData);
     } catch (error) {
       console.error('加载小组失败', error);
       setNotice('加载小组失败');
@@ -177,33 +182,28 @@ export const Groups: React.FC = () => {
     setMessages(messageData);
   };
 
-  const handleCreateGroup = async (event: React.FormEvent) => {
+  const handleRequestPublicGroup = async (event: React.FormEvent) => {
     event.preventDefault();
-    const name = createName.trim();
+    const name = requestName.trim();
     if (!name) {
       setNotice('请输入小组名称');
       return;
     }
 
     try {
-      const group = await apiClient.post<Group>('/groups', {
+      await apiClient.post('/groups/public-requests', {
         name,
-        description: createDescription.trim() || null,
-        visibility: 'invite_code',
+        description: requestDescription.trim() || null,
       });
-      setGroups((prev) => [group, ...prev]);
-      setSelectedGroupId(group.id);
-      setCreateName('');
-      setCreateDescription('');
-      setNotice('小组已创建');
+      setRequestName('');
+      setRequestDescription('');
+      setNotice('申请已提交给管理员');
     } catch (error: any) {
-      setNotice(error?.response?.data?.detail || '创建小组失败');
+      setNotice(error?.response?.data?.detail || '提交申请失败');
     }
   };
 
-  const handleJoinGroup = async (event: React.FormEvent) => {
-    event.preventDefault();
-    const code = inviteCode.trim();
+  const joinByInviteCode = async (code: string) => {
     if (!code) {
       setNotice('请输入邀请码');
       return;
@@ -215,12 +215,22 @@ export const Groups: React.FC = () => {
         const exists = prev.some((item) => item.id === group.id);
         return exists ? prev.map((item) => (item.id === group.id ? group : item)) : [group, ...prev];
       });
+      setPublicGroups((prev) => prev.map((item) => (item.id === group.id ? group : item)));
       setSelectedGroupId(group.id);
       setInviteCode('');
       setNotice('已加入小组');
     } catch (error: any) {
       setNotice(error?.response?.data?.detail || '加入小组失败');
     }
+  };
+
+  const handleJoinGroup = async (event: React.FormEvent) => {
+    event.preventDefault();
+    await joinByInviteCode(inviteCode.trim());
+  };
+
+  const handleJoinPublicGroup = async (group: Group) => {
+    await joinByInviteCode(group.invite_code);
   };
 
   const handleSendMessage = async (event: React.FormEvent) => {
@@ -305,31 +315,31 @@ export const Groups: React.FC = () => {
       <aside className="groups-sidebar">
         <div className="groups-sidebar-head">
           <div>
-            <span>学习共同体</span>
+            <span>轻量学习群</span>
             <h1>小组</h1>
           </div>
           <Users size={24} />
         </div>
 
-        <form className="group-mini-form" onSubmit={handleCreateGroup}>
-          <strong>创建小组</strong>
-          <input
-            value={createName}
-            onChange={(event) => setCreateName(event.target.value)}
-            maxLength={100}
-            placeholder="例如：英语晨读"
-          />
-          <textarea
-            value={createDescription}
-            onChange={(event) => setCreateDescription(event.target.value)}
-            maxLength={500}
-            rows={2}
-            placeholder="小组说明，可选"
-          />
-          <button type="submit">
-            <Plus size={16} /> 创建
-          </button>
-        </form>
+        <div className="public-groups">
+          <strong>公开邀请码</strong>
+          {publicGroups.length === 0 ? (
+            <p>暂无公开小组</p>
+          ) : (
+            publicGroups.map((group) => (
+              <article key={group.id} className="public-group-card">
+                <div>
+                  <span>{group.name}</span>
+                  <code>{group.invite_code}</code>
+                  <small>{group.member_count} 人 · {group.my_role ? '已加入' : '公开'}</small>
+                </div>
+                <button type="button" onClick={() => handleJoinPublicGroup(group)} disabled={Boolean(group.my_role)}>
+                  {group.my_role ? '已加入' : '申请加入'}
+                </button>
+              </article>
+            ))
+          )}
+        </div>
 
         <form className="group-mini-form" onSubmit={handleJoinGroup}>
           <strong>加入小组</strong>
@@ -342,13 +352,31 @@ export const Groups: React.FC = () => {
           <button type="submit">加入</button>
         </form>
 
+        <form className="group-mini-form" onSubmit={handleRequestPublicGroup}>
+          <strong>申请公开小组</strong>
+          <input
+            value={requestName}
+            onChange={(event) => setRequestName(event.target.value)}
+            maxLength={100}
+            placeholder="想公开的小组名"
+          />
+          <textarea
+            value={requestDescription}
+            onChange={(event) => setRequestDescription(event.target.value)}
+            maxLength={500}
+            rows={2}
+            placeholder="申请说明，可选"
+          />
+          <button type="submit">提交申请</button>
+        </form>
+
         <div className="groups-list">
           {loadingGroups ? (
             <p>加载中...</p>
           ) : groups.length === 0 ? (
             <div className="groups-empty">
               <MessageCircle size={26} />
-              <p>暂无小组。创建一个自律小组，或用邀请码加入同伴。</p>
+              <p>暂无小组。可以加入左侧公开考研小组，或输入邀请码加入同伴。</p>
             </div>
           ) : (
             groups.map((group) => (
@@ -370,8 +398,8 @@ export const Groups: React.FC = () => {
         {!selectedGroup ? (
           <div className="group-chat-empty">
             <MessageCircle size={40} />
-            <h2>先创建或加入一个小组</h2>
-            <p>第一版支持轻量聊天、成员列表、今日状态和复盘卡片摘要分享。</p>
+            <h2>先加入一个小组</h2>
+            <p>公开的考研小组已经放在左侧，可以直接申请加入。</p>
           </div>
         ) : (
           <>
@@ -405,6 +433,13 @@ export const Groups: React.FC = () => {
                 <span>成员预览</span>
               </div>
             </div>
+
+            <aside className="group-member-list">
+              <strong>成员列表</strong>
+              {members.map((member) => (
+                <span key={member.id}>{member.username} · {roleLabel(member.role)}</span>
+              ))}
+            </aside>
 
             {notice && <div className="group-notice">{notice}</div>}
 

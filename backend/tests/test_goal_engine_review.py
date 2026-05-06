@@ -207,3 +207,11 @@ def test_daily_and_weekly_reviews_include_stats_targets_traces_and_markdown(clie
     assert weekly_data["best_day"]["date"] == "2025-12-08"
     assert weekly_data["gap_days"] == 6
     assert "# 周报复盘 2025-12-08 - 2025-12-14" in weekly_data["markdown"]
+
+    monthly = client.get("/api/v1/reviews/monthly?date=2025-12-08", headers=headers)
+    assert monthly.status_code == 200, monthly.text
+    monthly_data = monthly.json()
+    assert monthly_data["total_seconds"] == 10800
+    assert monthly_data["best_day"]["date"] == "2025-12-08"
+    assert monthly_data["gap_days"] == 30
+    assert "# 月报复盘 2025-12-01 - 2025-12-31" in monthly_data["markdown"]

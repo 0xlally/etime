@@ -8,6 +8,7 @@ from sqlalchemy.orm import Session as DBSession
 from app.api.deps import get_current_active_user
 from app.core.db import get_db
 from app.models.group import Group, GroupMember, GroupMessage
+from app.models.notification import Notification
 from app.models.user import User
 from app.schemas.group import (
     GroupCardShareCreate,
@@ -16,6 +17,7 @@ from app.schemas.group import (
     GroupMemberResponse,
     GroupMessageCreate,
     GroupMessageResponse,
+    GroupPublicRequestCreate,
     GroupResponse,
     GroupUpdate,
 )
@@ -23,6 +25,7 @@ from app.services.groups import (
     active_member_count,
     build_today_status,
     create_group_message,
+    ensure_public_exam_group,
     generate_invite_code,
     get_active_membership,
     get_group_for_member,
@@ -48,6 +51,22 @@ def _group_response(group: Group, member: GroupMember, db: DBSession) -> GroupRe
         updated_at=group.updated_at,
         member_count=active_member_count(group.id, db),
         my_role=member.role,
+    )
+
+
+def _public_group_response(group: Group, current_user_id: int, db: DBSession) -> GroupResponse:
+    member = get_active_membership(group.id, current_user_id, db)
+    return GroupResponse(
+        id=group.id,
+        name=group.name,
+        description=group.description,
+        owner_id=group.owner_id,
+        invite_code=group.invite_code,
+        visibility=group.visibility,
+        created_at=group.created_at,
+        updated_at=group.updated_at,
+        member_count=active_member_count(group.id, db),
+        my_role=member.role if member else None,
     )
 
 
@@ -78,6 +97,41 @@ def list_groups(
         GroupMember.is_active == True,
     ).order_by(Group.updated_at.desc(), Group.id.desc()).all()
     return [_group_response(group, member, db) for group, member in rows]
+
+
+@router.get("/public", response_model=list[GroupResponse])
+def list_public_groups(
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db),
+):
+    ensure_public_exam_group(current_user, db)
+    groups = db.query(Group).filter(
+        Group.visibility == "public",
+    ).order_by(Group.updated_at.desc(), Group.id.desc()).all()
+    return [_public_group_response(group, current_user.id, db) for group in groups]
+
+
+@router.post("/public-requests", status_code=status.HTTP_202_ACCEPTED)
+def request_public_group(
+    payload: GroupPublicRequestCreate,
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db),
+):
+    name = payload.name.strip()
+    if not name:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Group name is required")
+
+    admins = db.query(User).filter(User.role == "admin", User.is_active == True).all()
+    for admin in admins:
+        db.add(Notification(
+            user_id=admin.id,
+            type="group_public_request",
+            title="公开小组申请",
+            content=f"{current_user.username} 申请公开小组「{name}」。{payload.description or ''}",
+        ))
+    if admins:
+        db.commit()
+    return {"detail": "公开小组申请已提交给管理员"}
 
 
 @router.post("", response_model=GroupResponse, status_code=status.HTTP_201_CREATED)
@@ -157,7 +211,7 @@ def join_group(
     db: DBSession = Depends(get_db),
 ):
     group = db.query(Group).filter(Group.invite_code == payload.invite_code.strip().upper()).first()
-    if group is None or group.visibility != "invite_code":
+    if group is None or group.visibility not in {"invite_code", "public"}:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Group not found")
 
     member = db.query(GroupMember).filter(

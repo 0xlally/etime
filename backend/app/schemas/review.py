@@ -1,4 +1,4 @@
-"""Review schemas for daily and weekly retrospectives."""
+"""Review schemas for daily, weekly, and monthly retrospectives."""
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -60,3 +60,7 @@ class WeeklyReviewResponse(BaseModel):
     target_summary: ReviewTargetSummary
     time_traces: List[TimeTraceResponse]
     markdown: str
+
+
+class MonthlyReviewResponse(WeeklyReviewResponse):
+    pass

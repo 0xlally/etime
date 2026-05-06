@@ -8,14 +8,12 @@ import {
   Settings,
   ShieldCheck,
   Share2,
-  Target,
   Timer as TimerIcon,
   Users,
 } from 'lucide-react';
 import { Login } from './pages/Login';
 import { Timer } from './pages/Timer';
 import { TimeTrace } from './pages/TimeTrace';
-import { Targets } from './pages/Targets';
 import { Review } from './pages/Review';
 import { Discipline } from './pages/Discipline';
 import { Groups } from './pages/Groups';
@@ -59,8 +57,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navItems = [
     { to: '/timer', label: '计时', icon: TimerIcon },
     { to: '/time-trace', label: '时痕', icon: GitBranch },
-    { to: '/planner', label: '计划', icon: CalendarClock },
-    { to: '/targets', label: '目标', icon: Target },
+    { to: '/planner', label: '计划目标', icon: CalendarClock },
     { to: '/review', label: '复盘', icon: CalendarDays },
     { to: '/share', label: '分享', icon: Share2 },
     { to: '/groups', label: '小组', icon: Users },
@@ -140,16 +137,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/targets"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Targets />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/targets" element={<Navigate to="/planner" replace />} />
         <Route
           path="/review"
           element={
