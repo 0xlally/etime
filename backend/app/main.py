@@ -10,6 +10,21 @@ from app.core.db import SessionLocal
 from app.core.init_db import init_database
 from app.services.evaluation import evaluate_targets_for_date
 
+
+def mask_database_url(database_url: str) -> str:
+    """Hide credentials before writing a database URL to logs."""
+    if "://" not in database_url or "@" not in database_url:
+        return database_url
+
+    scheme, rest = database_url.split("://", 1)
+    credentials, host_and_path = rest.split("@", 1)
+    if ":" not in credentials:
+        return database_url
+
+    username, _password = credentials.split(":", 1)
+    return f"{scheme}://{username}:***@{host_and_path}"
+
+
 # Create FastAPI application
 app = FastAPI(
     title=settings.APP_NAME,
@@ -71,7 +86,7 @@ async def startup_event():
     """Execute on application startup"""
     print(f"Starting {settings.APP_NAME} v{settings.APP_VERSION}")
     print(f"Debug mode: {settings.DEBUG}")
-    print(f"Database: {settings.DATABASE_URL}")
+    print(f"Database: {mask_database_url(settings.DATABASE_URL)}")
 
     # Ensure tables and default admin exist for dev/first boot
     init_database()
