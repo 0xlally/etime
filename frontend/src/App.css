@@ -5624,3 +5624,1125 @@ body {
     grid-template-columns: 1fr;
   }
 }
+
+/* Visual proportion pass: calmer tablet/mobile rhythm after screenshot review */
+@media (max-width: 1100px) {
+  .app-layout {
+    display: flex;
+    min-height: 100vh;
+  }
+
+  .navbar {
+    position: sticky;
+    top: 0;
+    width: auto;
+    min-height: calc(58px + env(safe-area-inset-top));
+    height: auto;
+    margin: 0;
+    padding: calc(0.48rem + env(safe-area-inset-top)) clamp(0.85rem, 2.4vw, 1.35rem) 0.48rem;
+    border: 0;
+    border-bottom: 1px solid var(--color-border);
+    border-radius: 0;
+    background: rgba(255, 255, 255, 0.98);
+    color: var(--color-text-primary);
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: nowrap;
+    gap: 0.75rem;
+    z-index: 90;
+    overflow: visible;
+  }
+
+  .nav-brand {
+    min-height: 38px;
+    padding: 0;
+    border: 0;
+    color: var(--color-text-primary);
+    font-size: 1.2rem;
+  }
+
+  .nav-actions {
+    margin-left: auto;
+    padding: 0;
+    border: 0;
+    gap: 0.45rem;
+  }
+
+  .logout-btn,
+  .bell-button {
+    width: 38px;
+    height: 38px;
+    min-height: 38px;
+    padding: 0;
+    justify-content: center;
+  }
+
+  .logout-btn span {
+    display: none;
+  }
+
+  .logout-btn {
+    font-size: 0;
+  }
+
+  .logout-btn svg,
+  .bell-button svg {
+    flex: 0 0 auto;
+  }
+
+  .nav-links {
+    position: fixed;
+    left: clamp(0.6rem, 2vw, 1.2rem);
+    right: clamp(0.6rem, 2vw, 1.2rem);
+    top: auto;
+    bottom: calc(0.65rem + env(safe-area-inset-bottom));
+    width: auto;
+    max-width: none;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.15rem;
+    padding: 0.38rem;
+    border: 1px solid var(--color-border);
+    border-radius: 24px;
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 12px 44px rgba(43, 38, 31, 0.16);
+    overflow: visible;
+  }
+
+  .nav-links a {
+    width: auto;
+    min-width: 0;
+    min-height: 52px;
+    padding: 0.32rem 0.12rem;
+    border-radius: 18px;
+    color: var(--color-text-secondary);
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.12rem;
+    font-size: 0.74rem;
+    line-height: 1.12;
+    text-align: center;
+    white-space: normal;
+  }
+
+  .nav-links a svg {
+    display: block;
+    width: 19px;
+    height: 19px;
+  }
+
+  .nav-links a:hover,
+  .nav-links a.active {
+    background: #111111;
+    color: #ffffff;
+  }
+
+  .main-content {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: clamp(0.95rem, 2.6vw, 1.55rem) clamp(0.85rem, 2.6vw, 1.4rem) calc(6.4rem + env(safe-area-inset-bottom));
+  }
+
+  .ui-page-header h1 {
+    font-size: clamp(2rem, 6vw, 2.7rem);
+    letter-spacing: 0;
+  }
+
+  .timer-shell {
+    max-width: 760px;
+    margin: 0 auto;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.9rem;
+  }
+
+  .timer-card {
+    order: 1;
+  }
+
+  .quick-start-card {
+    order: 2;
+  }
+
+  .timer-grid {
+    order: 3;
+    grid-template-columns: 1fr;
+    gap: 0.9rem;
+  }
+
+  .category-split,
+  .share-layout,
+  .planner-layout,
+  .review-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .share-page,
+  .planner-page,
+  .review-page,
+  .groups-page,
+  .discipline-page,
+  .time-trace-page {
+    max-width: 760px;
+    margin: 0 auto;
+  }
+
+  .share-controls {
+    position: static;
+  }
+
+  .share-preview-panel {
+    min-height: 0;
+    padding: 1rem;
+  }
+
+  .groups-page {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.95rem;
+    min-height: auto;
+  }
+
+  .group-chat-panel {
+    min-height: 460px;
+  }
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    padding: 0.32rem 0.22rem calc(0.36rem + env(safe-area-inset-bottom));
+    border-width: 1px 0 0;
+    border-radius: 22px 22px 0 0;
+  }
+
+  .nav-links a {
+    min-height: 49px;
+    border-radius: 16px;
+    font-size: 0.62rem;
+  }
+
+  .timer-page .ui-page-header h1,
+  .planner-page .ui-page-header h1 {
+    font-size: 2.2rem;
+    line-height: 1.14;
+  }
+
+  .timer-display {
+    font-size: clamp(3rem, 18vw, 4rem);
+  }
+
+  .planner-summary,
+  .target-overview,
+  .review-metric-grid,
+  .planner-target-overview {
+    grid-template-columns: 1fr;
+  }
+
+  .planner-toolbar {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.7rem;
+  }
+
+  .planner-view-switch,
+  .planner-range-nav {
+    width: 100%;
+  }
+
+  .planner-view-switch {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .planner-range-nav {
+    justify-content: space-between;
+  }
+
+  .planner-range-nav strong {
+    min-width: 0;
+  }
+
+  .planner-month .planner-days,
+  .planner-week .planner-days {
+    min-width: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planner-day {
+    min-height: 118px;
+    padding: 0.62rem;
+  }
+
+  .planner-day-list p {
+    min-height: 58px;
+    display: grid;
+    place-items: center;
+  }
+
+  .planner-day .planner-task {
+    grid-template-columns: 1fr;
+  }
+
+  .planner-task-actions {
+    justify-content: flex-start;
+  }
+
+  .share-card {
+    width: min(330px, 100%);
+  }
+
+  .time-trace-form button[type='submit'] {
+    width: 100%;
+    justify-self: stretch;
+  }
+
+  .time-trace-tree {
+    padding-left: 1.55rem;
+  }
+
+  .time-trace-dot {
+    left: -1.45rem;
+  }
+}
+
+@media (min-width: 701px) and (max-width: 1100px) {
+  .planner-month .planner-days {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .planner-week .planner-days {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* Pure black/white pass */
+:root {
+  --color-background: #ffffff;
+  --color-surface: #ffffff;
+  --color-surface-soft: #ffffff;
+  --color-border: #000000;
+  --color-text-primary: #000000;
+  --color-text-secondary: #000000;
+  --color-muted: #ffffff;
+  --color-accent: #000000;
+  --color-accent-strong: #000000;
+  --color-accent-soft: #ffffff;
+  --color-danger: #000000;
+  --shadow-card: none;
+}
+
+html,
+body,
+#root {
+  background: #ffffff;
+  color: #000000;
+}
+
+body,
+.main-content,
+.app-layout,
+.ui-page-shell,
+.timer-shell,
+.login-bg {
+  background: #ffffff;
+  background-image: none;
+  color: #000000;
+}
+
+.navbar {
+  background: #000000;
+  color: #ffffff;
+  border-color: #000000;
+  box-shadow: none;
+}
+
+.nav-brand,
+.nav-links a {
+  color: #ffffff;
+}
+
+.nav-links a:hover,
+.nav-links a.active {
+  background: #ffffff;
+  color: #000000;
+}
+
+.nav-actions {
+  border-color: #ffffff;
+}
+
+.ui-card,
+.stats-current,
+.history-panel,
+.planner-calendar,
+.planner-pool,
+.share-controls,
+.share-preview-panel,
+.targets-list,
+.evaluations-list,
+.target-events,
+.filter-section,
+.heatmap-card,
+.review-panel,
+.review-metric-grid div,
+.target-overview div,
+.discipline-panel,
+.category-card,
+.time-trace-form,
+.time-trace-card,
+.time-trace-empty,
+.notification-bell .dropdown,
+.modal-content,
+.planner-dialog,
+.template-duration-dialog,
+.groups-sidebar,
+.group-chat-panel,
+.group-mini-form,
+.public-groups,
+.public-group-card,
+.group-member-list,
+.group-messages,
+.group-chat-header,
+.group-composer,
+.group-status-card,
+.planner-target-head,
+.share-card,
+.share-card-minimal,
+.share-card-data,
+.share-card-heatmap,
+.share-card-hero,
+.share-card-metrics div,
+.share-card-empty,
+.login-bg .rounded-2xl {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+  color: #000000;
+}
+
+.ui-empty-state,
+.ui-loading,
+.planner-loading,
+.share-preview-loading,
+.timer-banner,
+.timer-sync-bar,
+.quick-template-form,
+.mode-toggle,
+.period-selector,
+.planner-view-switch,
+.planner-range-nav,
+.share-segment,
+.tabs,
+.planner-day,
+.planner-empty,
+.share-privacy,
+.category-checkboxes label,
+.quick-template-item,
+.group-card-share,
+.groups-empty,
+.group-chat-empty,
+.group-messages-empty,
+.planner-day-list p,
+.share-output img {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+  color: #000000;
+}
+
+.timer-controls,
+.timer-card,
+.quick-start-card,
+.target-card,
+.planner-day.today,
+.target-progress-card {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+}
+
+.groups-sidebar-head {
+  background: #000000;
+  background-image: none;
+  color: #ffffff;
+}
+
+.groups-sidebar-head span,
+.groups-sidebar-head h1,
+.groups-sidebar-head svg {
+  color: #ffffff;
+}
+
+.ui-button,
+button.primary,
+button[type='submit'],
+.timer-buttons button,
+.manual-form button[type='submit'],
+.planner-page .ui-button,
+.share-page .ui-button,
+.targets-page .ui-button,
+.heatmap-page .ui-button,
+.review-header button,
+.targets-header button,
+.planner-dialog .planner-dialog-primary,
+.planner-pool-item > .ui-button:last-child,
+.group-mini-form button,
+.group-share-row button,
+.group-header-actions button,
+.group-composer button,
+.public-group-card button,
+.discipline-head button,
+.discipline-permissions button,
+.discipline-form button {
+  background: #000000;
+  background-image: none;
+  border: 1px solid #000000;
+  box-shadow: none;
+  color: #ffffff;
+}
+
+.ui-button-secondary,
+.planner-page .ui-button-secondary,
+.share-page .ui-button-secondary,
+.heatmap-page .ui-button-secondary,
+.planner-dialog .planner-dialog-complete,
+.timer-buttons button.stop,
+.ui-button-ghost,
+.planner-page .ui-button-ghost,
+.share-page .ui-button-ghost,
+.targets-page .ui-button-ghost,
+.heatmap-page .ui-button-ghost,
+.quick-template-actions button,
+.quick-template-form-actions button,
+.category-current button,
+.category-edit-actions button,
+.planner-task-actions button,
+.logout-btn,
+.bell-button {
+  background: #ffffff;
+  border: 1px solid #000000;
+  color: #000000;
+}
+
+button:disabled,
+.ui-button:disabled,
+.group-mini-form button:disabled,
+.group-share-row button:disabled,
+.group-header-actions button:disabled,
+.group-composer button:disabled,
+.public-group-card button:disabled {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+  opacity: 1;
+}
+
+.mode-toggle button.active,
+.period-selector button.active,
+.planner-view-switch button.active,
+.share-segment button.active,
+.tabs button.active,
+.nav-links a.active {
+  background: #000000;
+  color: #ffffff;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.planner-form-grid input,
+.planner-form-grid select,
+.planner-form-grid textarea,
+.custom-range input,
+.category-card .category-select select,
+.multiplier-control input,
+.time-trace-form textarea,
+.search-bar input,
+.filters input,
+.group-mini-form input,
+.group-mini-form textarea,
+.group-composer input,
+.discipline-form input {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+  box-shadow: none;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus,
+.planner-form-grid input:focus,
+.planner-form-grid select:focus,
+.planner-form-grid textarea:focus,
+.custom-range input:focus,
+.time-trace-form textarea:focus,
+.group-mini-form input:focus,
+.group-mini-form textarea:focus,
+.group-composer input:focus,
+.discipline-form input:focus {
+  border-color: #000000;
+  box-shadow: none;
+  outline: 2px solid #000000;
+  outline-offset: 2px;
+}
+
+.form-group label,
+.ui-page-header p,
+.ui-eyebrow,
+.ui-section-header p,
+.ui-section-header h2,
+.ui-stat-card span,
+.ui-stat-card small,
+.review-header p,
+.review-category-row small,
+.review-category-row em,
+.planner-target-head span,
+.planner-target-head p,
+.planner-day-head,
+.planner-day-head small,
+.planner-task-main span,
+.planner-task-main small,
+.planner-pool-item span,
+.groups-list span,
+.group-muted,
+.group-chat-header p,
+.group-chat-header span,
+.group-meta-row span,
+.group-message time,
+.groups-empty p,
+.group-chat-empty p,
+.public-groups p,
+.public-group-card small,
+.group-member-list span,
+.discipline-head p,
+.discipline-message,
+.time-trace-card time,
+.share-card-head span,
+.share-card-hero span,
+.share-card-metrics span,
+.share-card-section-head span,
+.share-card-foot span,
+.share-actions p {
+  color: #000000;
+}
+
+.ui-tag,
+.sync-pill,
+.ui-tag-success,
+.sync-pill.online,
+.ui-tag-warning,
+.ui-tag-danger,
+.sync-pill.offline,
+.share-card-hero small,
+.group-member-list span {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+}
+
+.ui-progress,
+.target-progress-bar,
+.share-card-category progress,
+.share-card-category progress::-webkit-progress-bar {
+  background: #ffffff;
+  border: 1px solid #000000;
+}
+
+.ui-progress span,
+.target-progress-bar span,
+.share-card-category progress::-webkit-progress-value,
+.share-card-category progress::-moz-progress-bar {
+  background: #000000;
+}
+
+.grid-cell,
+.legend div {
+  background: #ffffff;
+  border-color: #000000;
+}
+
+.grid-cell:hover {
+  box-shadow: none;
+}
+
+.time-trace-line,
+.time-trace-tree::before,
+.target-progress-bar span {
+  filter: none;
+}
+
+table thead,
+table tbody,
+table tr,
+table th,
+table td {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+}
+
+.markdown-panel pre {
+  background: #000000;
+  color: #ffffff;
+}
+
+.recharts-cartesian-grid line,
+.recharts-cartesian-axis line,
+.recharts-cartesian-axis-tick line {
+  stroke: #000000;
+}
+
+.recharts-text,
+.recharts-label,
+.recharts-tooltip-label {
+  fill: #000000;
+  color: #000000;
+}
+
+@media (max-width: 1100px) {
+  .navbar,
+  .nav-links {
+    background: #ffffff;
+    color: #000000;
+    border-color: #000000;
+    box-shadow: none;
+  }
+
+  .nav-brand,
+  .nav-links a {
+    color: #000000;
+  }
+
+  .nav-links a:hover,
+  .nav-links a.active {
+    background: #000000;
+    color: #ffffff;
+  }
+}
+
+/* Final black/white correction: keep encoded data colors intact */
+html,
+body,
+#root,
+.app-layout,
+.main-content,
+.ui-page-shell,
+.timer-shell,
+.share-page,
+.planner-page,
+.targets-page,
+.heatmap-page,
+.review-page,
+.groups-page,
+.discipline-page {
+  background: #ffffff;
+  background-image: none;
+  color: #000000;
+}
+
+.ui-card,
+.timer-controls,
+.timer-card,
+.quick-start-card,
+.quick-template-form,
+.quick-template-item,
+.stats-current,
+.history-panel,
+.planner-calendar,
+.planner-pool,
+.planner-day,
+.planner-empty,
+.planner-dialog,
+.planner-target-head,
+.target-card,
+.target-progress-card,
+.targets-list,
+.target-events,
+.evaluations-list,
+.share-controls,
+.share-preview-panel,
+.share-card,
+.share-card-minimal,
+.share-card-data,
+.share-card-heatmap,
+.share-card-hero,
+.share-card-metrics div,
+.share-card-empty,
+.heatmap-card,
+.review-panel,
+.review-metric-grid div,
+.target-overview div,
+.category-card,
+.filter-section,
+.time-trace-form,
+.time-trace-card,
+.time-trace-empty,
+.groups-sidebar,
+.group-chat-panel,
+.group-mini-form,
+.group-card-share,
+.group-chat-header,
+.group-messages,
+.group-composer,
+.group-status-card,
+.public-groups,
+.public-group-card,
+.group-member-list,
+.discipline-panel,
+.notification-bell .dropdown,
+.modal-content,
+.template-duration-dialog,
+.ui-empty-state,
+.ui-loading,
+.planner-loading,
+.share-preview-loading,
+.timer-banner,
+.timer-sync-bar,
+.mode-toggle,
+.period-selector,
+.planner-view-switch,
+.planner-range-nav,
+.share-segment,
+.tabs,
+.share-privacy,
+.category-checkboxes label,
+.groups-empty,
+.group-chat-empty,
+.group-messages-empty,
+.planner-day-list p,
+.share-output img {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+  color: #000000;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea,
+.planner-form-grid input,
+.planner-form-grid select,
+.planner-form-grid textarea,
+.custom-range input,
+.category-card .category-select select,
+.multiplier-control input,
+.time-trace-form textarea,
+.search-bar input,
+.filters input,
+.group-mini-form input,
+.group-mini-form textarea,
+.group-composer input,
+.discipline-form input {
+  background: #ffffff;
+  border-color: #000000;
+  box-shadow: none;
+  color: #000000;
+}
+
+::placeholder {
+  color: #000000;
+  opacity: 1;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: #000000 !important;
+  opacity: 1;
+}
+
+.ui-button,
+button.primary,
+button[type='submit'],
+.timer-buttons button,
+.manual-form button[type='submit'],
+.planner-page .ui-button,
+.share-page .ui-button,
+.targets-page .ui-button,
+.heatmap-page .ui-button,
+.review-header button,
+.targets-header button,
+.planner-dialog .planner-dialog-primary,
+.planner-pool-item > .ui-button:last-child,
+.group-mini-form button,
+.group-share-row button,
+.group-header-actions button,
+.group-composer button,
+.public-group-card button,
+.discipline-head button,
+.discipline-permissions button,
+.discipline-form button,
+.groups-sidebar-head {
+  background: #000000;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+  color: #ffffff;
+}
+
+.ui-button-secondary,
+.planner-page .ui-button-secondary,
+.share-page .ui-button-secondary,
+.targets-page .ui-button-secondary,
+.heatmap-page .ui-button-secondary,
+.planner-dialog .planner-dialog-complete,
+.timer-buttons button.stop,
+.ui-button-ghost,
+.planner-page .ui-button-ghost,
+.share-page .ui-button-ghost,
+.targets-page .ui-button-ghost,
+.heatmap-page .ui-button-ghost,
+.quick-template-actions button,
+.quick-template-form-actions button,
+.category-current button,
+.category-edit-actions button,
+.planner-task-actions button,
+.logout-btn,
+.bell-button,
+button:disabled,
+.ui-button:disabled {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+  color: #000000;
+  opacity: 1;
+}
+
+.nav-links a:hover,
+.nav-links a.active,
+.mode-toggle button.active,
+.period-selector button.active,
+.planner-view-switch button.active,
+.share-segment button.active,
+.tabs button.active {
+  background: #000000;
+  color: #ffffff;
+}
+
+.mode-toggle button,
+.period-selector button,
+.planner-view-switch button,
+.share-segment button,
+.tabs button,
+.quick-start-card .ui-button-secondary,
+.quick-start-card .ui-button-ghost,
+.quick-template-actions button,
+.quick-template-form-actions button,
+.quick-template-actions button.danger,
+.ui-button-danger,
+.targets-page .ui-button-danger,
+.discipline-form.danger button,
+.timer-buttons button.stop,
+.template-duration-dialog button.stop {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+  color: #000000;
+}
+
+.quick-template-actions button:disabled,
+.quick-template-form-actions button:disabled,
+.mode-toggle button:disabled,
+.period-selector button:disabled,
+.planner-view-switch button:disabled,
+.share-segment button:disabled,
+.tabs button:disabled {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+  opacity: 1;
+}
+
+.ui-tag,
+.sync-pill,
+.sync-pill.online,
+.sync-pill.offline,
+.ui-tag-success,
+.ui-tag-warning,
+.ui-tag-danger,
+.share-card-hero small,
+.group-member-list span,
+.ui-progress,
+.target-progress-bar,
+.share-card-category progress,
+.share-card-category progress::-webkit-progress-bar,
+.legend div {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+}
+
+.ui-progress span,
+.target-progress-bar span,
+.share-card-category progress::-webkit-progress-value,
+.share-card-category progress::-moz-progress-bar {
+  background: #000000;
+}
+
+.grid-cell {
+  border-color: #ffffff;
+  filter: none;
+}
+
+.grid-cell:not([style]) {
+  background: #ffffff;
+  border-color: #000000;
+}
+
+.grid-cell[style],
+.share-card-heatmap span[style],
+.category-color-dot,
+.quick-template-icon,
+.review-category-row > span,
+.recharts-bar-rectangle path,
+.recharts-sector,
+.recharts-pie-sector path {
+  filter: none;
+}
+
+.quick-template-icon {
+  color: #ffffff;
+  border-color: #ffffff;
+}
+
+.quick-template-item[style] {
+  border-right-color: #000000;
+  border-bottom-color: #000000;
+  border-left-color: #000000;
+}
+
+.planner-task,
+.planner-pool-item,
+.target-event {
+  background: #ffffff;
+  background-image: none;
+  border-top-color: #000000;
+  border-right-color: #000000;
+  border-bottom-color: #000000;
+  box-shadow: none;
+  color: #000000;
+}
+
+.planner-task-main,
+.planner-pool-item > button:first-child {
+  background: transparent;
+  border-color: transparent;
+  box-shadow: none;
+  color: #000000;
+}
+
+.planner-task-actions button,
+.planner-pool-item > .ui-button:last-child {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  color: #000000;
+}
+
+.groups-list button,
+.groups-list button.active,
+.public-group-card,
+.group-status-card,
+.group-card-share,
+.group-notice,
+.group-messages,
+.group-system-message,
+.group-member-list span {
+  background: #ffffff;
+  background-image: none;
+  border-color: #000000;
+  box-shadow: none;
+  color: #000000;
+}
+
+.groups-list button.active {
+  box-shadow: inset 4px 0 0 #000000;
+}
+
+.group-status-card span,
+.group-card-share span,
+.group-status-card strong,
+.group-status-grid span,
+.public-group-card code,
+.share-header span {
+  color: #000000;
+}
+
+.group-share-row button:first-child,
+.group-header-actions button:nth-child(2) {
+  background: #000000;
+  background-image: none;
+  border-color: #000000;
+  color: #ffffff;
+}
+
+.group-meta-row div,
+.group-member-list span {
+  border-color: #000000;
+}
+
+.target-ring {
+  background: conic-gradient(#000000 0%, #ffffff 0) !important;
+  border: 1px solid #000000;
+}
+
+.target-ring-inner {
+  background: #ffffff;
+  color: #000000;
+}
+
+.target-progress,
+.target-desc,
+.quick-template-start small,
+.quick-template-start em {
+  color: #000000;
+}
+
+table,
+table thead,
+table tbody,
+table tr,
+table th,
+table td {
+  background: #ffffff;
+  border-color: #000000;
+  color: #000000;
+}
+
+.markdown-panel pre {
+  background: #000000;
+  color: #ffffff;
+}
+
+@media (max-width: 1100px) {
+  .navbar,
+  .nav-links {
+    background: #ffffff;
+    border-color: #000000;
+    box-shadow: none;
+    color: #000000;
+  }
+
+  .nav-brand,
+  .nav-links a {
+    color: #000000;
+  }
+
+  .nav-links a:hover,
+  .nav-links a.active {
+    background: #000000;
+    color: #ffffff;
+  }
+}
