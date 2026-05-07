@@ -4,7 +4,7 @@ import { CategorySelect } from '../components/CategorySelect';
 import { QuickStartRequest, TimerControls, type TimerOfflineState } from '../components/TimerControls';
 import { Button, Card, EmptyState, LoadingState, PageShell, Progress, SectionHeader } from '../components/ui';
 import { apiClient } from '../api/client';
-import { Category, QuickStartTemplate, StatsSummary, WorkTarget } from '../types';
+import { Category, CategoryStatsSummaryItem, QuickStartTemplate, StatsSummary, WorkTarget } from '../types';
 import { getOfflineTimerSnapshot, isNetworkOnline, syncOfflineTimers } from '../utils/offlineTimer';
 
 const getLocalDateInputValue = () => {
@@ -12,6 +12,8 @@ const getLocalDateInputValue = () => {
   now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
   return now.toISOString().slice(0, 10);
 };
+
+const asArray = <T,>(value: T[] | unknown): T[] => (Array.isArray(value) ? value : []);
 
 export const Timer: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -134,7 +136,7 @@ export const Timer: React.FC = () => {
 
   const loadTargetsAndProgress = async () => {
     try {
-      const targetList = await apiClient.get<WorkTarget[]>('/targets');
+      const targetList = asArray<WorkTarget>(await apiClient.get<WorkTarget[]>('/targets'));
 
       const activeTargets = targetList.filter((t) => (t.is_active ?? t.is_enabled ?? true));
       if (activeTargets.length === 0) {
@@ -168,8 +170,9 @@ export const Timer: React.FC = () => {
       });
 
       const includeIds = pick.include_category_ids ?? pick.category_ids ?? [];
+      const byCategory = asArray<CategoryStatsSummaryItem>(stats.by_category);
       const actual = includeIds.length > 0
-        ? stats.by_category
+        ? byCategory
             .filter((c) => includeIds.includes(c.category_id ?? -1))
             .reduce((sum, c) => sum + c.seconds, 0)
         : stats.total_seconds;
@@ -185,7 +188,7 @@ export const Timer: React.FC = () => {
   const loadCategories = async () => {
     try {
       const data = await apiClient.get<Category[]>('/categories');
-      setCategories(data);
+      setCategories(asArray<Category>(data));
     } catch (error) {
       console.error('加载分类失败', error);
     }
@@ -195,7 +198,7 @@ export const Timer: React.FC = () => {
     setTemplatesLoading(true);
     try {
       const data = await apiClient.get<QuickStartTemplate[]>('/quick-start-templates');
-      setTemplates(data);
+      setTemplates(asArray<QuickStartTemplate>(data));
     } catch (error) {
       console.error('加载快捷模板失败', error);
     } finally {
@@ -481,8 +484,8 @@ export const Timer: React.FC = () => {
   return (
     <PageShell
       className="timer-page"
-      title="今天的时间工作台"
-      description="先从一个 25 分钟开始，慢慢把节奏安放好。"
+      title="计时"
+      description="选一个分类，开始一段安静的时间。"
     >
       <div className="timer-shell">
         {showSyncBar && (
@@ -500,11 +503,115 @@ export const Timer: React.FC = () => {
           </div>
         )}
 
+        <Card className="timer-card">
+          <div className="mode-toggle">
+            <button className={!manualMode ? 'active' : ''} onClick={() => setManualMode(false)}>
+              计时
+            </button>
+            <button className={manualMode ? 'active' : ''} onClick={() => setManualMode(true)}>
+              补录
+            </button>
+          </div>
+
+          {!manualMode ? (
+            <>
+              <div className="timer-focus-top">
+                <div className="timer-category-inline">
+                  <span>分类</span>
+                  <CategorySelect
+                    value={categoryId}
+                    onChange={setCategoryId}
+                    showCreate={false}
+                  />
+                </div>
+                <button type="button" className="timer-create-category" onClick={() => document.querySelector<HTMLElement>('.timer-category-create input')?.focus()}>
+                  新建
+                </button>
+              </div>
+
+              <TimerControls
+                categoryId={categoryId}
+                quickStartRequest={quickStartRequest}
+                syncSignal={syncSignal}
+                onSessionStart={loadTargetsAndProgress}
+                onSessionEnd={loadTargetsAndProgress}
+                onRunningChange={handleRunningChange}
+                onCategoryRestore={setCategoryId}
+                onOfflineStateChange={setOfflineState}
+                onRecoveredRunning={setRestoreMessage}
+                onQuickStartHandled={() => setQuickStartRequest(null)}
+              />
+            </>
+          ) : (
+            <form onSubmit={handleManualSubmit} className="manual-form">
+              <div className="manual-category-field">
+                <CategorySelect
+                  value={categoryId}
+                  onChange={setCategoryId}
+                  showCreate={false}
+                  label="分类"
+                />
+              </div>
+
+              <div className="form-group">
+                <label>日期</label>
+                <input
+                  type="date"
+                  value={manualData.entry_date}
+                  onChange={(e) =>
+                    setManualData({ ...manualData, entry_date: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>小时</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="1"
+                  placeholder="0"
+                  value={manualData.hours}
+                  onChange={(e) =>
+                    setManualData({ ...manualData, hours: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="form-group">
+                <label>分钟</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  step="1"
+                  placeholder="0"
+                  value={manualData.minutes}
+                  onChange={(e) => setManualData({ ...manualData, minutes: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>备注（可选）</label>
+                <textarea
+                  value={manualData.note}
+                  onChange={(e) => setManualData({ ...manualData, note: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <Button type="submit">提交补录</Button>
+            </form>
+          )}
+        </Card>
+
         <Card className="quick-start-card">
           <SectionHeader
             eyebrow="快捷开始"
-            title="常用计时卡片"
-            description="把高频事项做成小积木，需要时轻轻点一下。"
+                title="常用卡片"
+                description="高频事项，一点即开始。"
             action={(
               <Button variant="secondary" onClick={handleOpenNewTemplate}>
                 新建模板
@@ -693,16 +800,7 @@ export const Timer: React.FC = () => {
           )}
 
           <div className="category-split">
-            <Card className="category-card">
-              <SectionHeader eyebrow="分类" title="选择分类" />
-              <CategorySelect
-                value={categoryId}
-                onChange={setCategoryId}
-                showCreate={false}
-              />
-            </Card>
-
-            <Card className="category-card">
+            <Card className="category-card timer-category-create">
               <SectionHeader eyebrow="分类" title="新建分类" />
               <CategorySelect
                 value={categoryId}
@@ -714,94 +812,6 @@ export const Timer: React.FC = () => {
             </Card>
           </div>
         </div>
-
-        <Card className="timer-card">
-          <div className="mode-toggle">
-            <button className={!manualMode ? 'active' : ''} onClick={() => setManualMode(false)}>
-              实时计时
-            </button>
-            <button className={manualMode ? 'active' : ''} onClick={() => setManualMode(true)}>
-              手动补录
-            </button>
-          </div>
-
-          {!manualMode ? (
-            <TimerControls
-              categoryId={categoryId}
-              quickStartRequest={quickStartRequest}
-              syncSignal={syncSignal}
-              onSessionStart={loadTargetsAndProgress}
-              onSessionEnd={loadTargetsAndProgress}
-              onRunningChange={handleRunningChange}
-              onCategoryRestore={setCategoryId}
-              onOfflineStateChange={setOfflineState}
-              onRecoveredRunning={setRestoreMessage}
-              onQuickStartHandled={() => setQuickStartRequest(null)}
-            />
-          ) : (
-            <form onSubmit={handleManualSubmit} className="manual-form">
-              <div className="manual-category-field">
-                <CategorySelect
-                  value={categoryId}
-                  onChange={setCategoryId}
-                  showCreate={false}
-                  label="分类"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>日期</label>
-                <input
-                  type="date"
-                  value={manualData.entry_date}
-                  onChange={(e) =>
-                    setManualData({ ...manualData, entry_date: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>小时</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="24"
-                  step="1"
-                  placeholder="0"
-                  value={manualData.hours}
-                  onChange={(e) =>
-                    setManualData({ ...manualData, hours: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>分钟</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  step="1"
-                  placeholder="0"
-                  value={manualData.minutes}
-                  onChange={(e) => setManualData({ ...manualData, minutes: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>备注（可选）</label>
-                <textarea
-                  value={manualData.note}
-                  onChange={(e) => setManualData({ ...manualData, note: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <Button type="submit">提交补录</Button>
-            </form>
-          )}
-        </Card>
       </div>
     </PageShell>
   );

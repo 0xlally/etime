@@ -522,28 +522,30 @@ export const Planner: React.FC = () => {
         <strong>{task.title}</strong>
         {!compact && <small>{task.category_name || '未分类'} · {formatTime(task.estimated_seconds)}</small>}
       </button>
-      <div className="planner-task-actions">
-        {task.status !== 'done' && (
-          <button type="button" title="完成" onClick={() => completeTask(task)}>
-            <CheckCircle2 size={16} />
-          </button>
-        )}
-        {task.status === 'scheduled' && (
-          <button type="button" title="开始计时" onClick={() => startTimerFromTask(task)}>
-            <Play size={16} />
-          </button>
-        )}
-        {task.status === 'scheduled' && !task.converted_session_id && (
-          <button type="button" title="转时间记录" onClick={() => completeTask(task, true)}>
-            <RotateCcw size={16} />
-          </button>
-        )}
-        {task.status !== 'cancelled' && task.status !== 'done' && (
-          <button type="button" title="取消" onClick={() => updateTaskStatus(task, 'cancelled')}>
-            <XCircle size={16} />
-          </button>
-        )}
-      </div>
+      {!compact && (
+        <div className="planner-task-actions">
+          {task.status !== 'done' && (
+            <button type="button" title="完成" onClick={() => completeTask(task)}>
+              <CheckCircle2 size={16} />
+            </button>
+          )}
+          {task.status === 'scheduled' && (
+            <button type="button" title="开始计时" onClick={() => startTimerFromTask(task)}>
+              <Play size={16} />
+            </button>
+          )}
+          {task.status === 'scheduled' && !task.converted_session_id && (
+            <button type="button" title="转时间记录" onClick={() => completeTask(task, true)}>
+              <RotateCcw size={16} />
+            </button>
+          )}
+          {task.status !== 'cancelled' && task.status !== 'done' && (
+            <button type="button" title="取消" onClick={() => updateTaskStatus(task, 'cancelled')}>
+              <XCircle size={16} />
+            </button>
+          )}
+        </div>
+      )}
     </article>
   );
 
@@ -562,12 +564,12 @@ export const Planner: React.FC = () => {
   return (
     <PageShell
       className="planner-page"
-      eyebrow="我的时间地图"
-      title="计划日历"
-      description="把事项、目标和完成节奏放在同一张时间地图里。"
+      eyebrow="今天"
+      title="计划"
+      description="把要做的事排清楚。"
       action={(
         <Button onClick={() => openCreate()}>
-          <Plus size={17} /> 新增事项
+          <Plus size={17} /> 新增
         </Button>
       )}
     >
@@ -581,12 +583,10 @@ export const Planner: React.FC = () => {
       )}
 
       <section className="planner-summary">
-        <StatCard label="今日事项" value={todaySummary.total} hint="一件一件来" />
-        <StatCard label="已完成" value={todaySummary.done} hint="节奏正在形成" />
-        <StatCard label="预计投入" value={formatTime(todaySummary.focusSeconds)} hint="给时间一个边界" />
-        <StatCard label="待安排池" value={unscheduledTasks.length} hint="暂时放在这里" />
-        <StatCard label="目标完成率" value={`${Math.round(targetOverview.completionRate * 100)}%`} hint="当前目标趋势" />
-        <StatCard label="当前连胜" value={targetOverview.currentStreak} hint={`最佳 ${targetOverview.bestStreak}`} />
+        <StatCard label="今日" value={todaySummary.total} hint="待做事项" />
+        <StatCard label="完成" value={todaySummary.done} hint="已经收尾" />
+        <StatCard label="预计" value={formatTime(todaySummary.focusSeconds)} hint="投入时间" />
+        <StatCard label="待排" value={unscheduledTasks.length} hint="稍后安排" />
       </section>
 
       <div className="planner-toolbar">
@@ -628,7 +628,7 @@ export const Planner: React.FC = () => {
                     </button>
                     <div className="planner-day-list">
                       {dayTasks.length === 0 ? (
-                        <p>留白也算计划</p>
+                        <p>空</p>
                       ) : (
                         dayTasks.map((task) => renderTask(task, view === 'month'))
                       )}
@@ -642,8 +642,8 @@ export const Planner: React.FC = () => {
 
         <Card as="aside" className="planner-pool">
           <SectionHeader
-            title="待安排池"
-            description="还没有日期的想法，先温柔收纳。"
+            title="待安排"
+            description="还没决定时间的事项。"
             action={(
               <Button variant="secondary" onClick={() => openCreate()}>
                 <Plus size={16} />
@@ -671,12 +671,12 @@ export const Planner: React.FC = () => {
       <section className="planner-target-section">
         <div className="planner-target-head">
           <div>
-            <span>目标机制</span>
-            <h2>目标与完成率</h2>
-            <p>日程负责安排，目标负责衡量。完成率和连胜会跟随评估结果更新。</p>
+            <span>目标</span>
+            <h2>完成节奏</h2>
+            <p>只保留几个关键数字，方便看趋势。</p>
           </div>
           <Button variant={targetFormOpen ? 'ghost' : 'primary'} onClick={() => setTargetFormOpen(!targetFormOpen)}>
-            {targetFormOpen ? '收起' : '新建目标'}
+            {targetFormOpen ? '收起' : '新增目标'}
           </Button>
         </div>
 
@@ -762,7 +762,7 @@ export const Planner: React.FC = () => {
         )}
 
         <Card className="targets-list planner-target-list">
-          <h2>目标列表</h2>
+          <h2>目标</h2>
           {targetLoading ? (
             <LoadingState text="正在整理目标进度..." />
           ) : targets.length === 0 ? (
@@ -812,7 +812,7 @@ export const Planner: React.FC = () => {
         </Card>
 
         <Card className="evaluations-list planner-evaluation-list">
-          <h2>最近评估</h2>
+          <h2>记录</h2>
           {targetLoading ? (
             <LoadingState text="正在查看最近评估..." />
           ) : evaluations.length === 0 ? (

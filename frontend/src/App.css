@@ -1,4 +1,4 @@
-﻿body {
+body {
   margin: 0;
   font-family: Inter, 'Noto Sans SC', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #eef1f4;
@@ -2239,12 +2239,12 @@ table button {
 }
 
 .group-card-share {
-  background: #fff7ed;
-  border-color: #fed7aa;
+  background: #ffffff;
+  border-color: #000000;
 }
 
 .group-card-share span {
-  color: #9a3412;
+  color: #000000;
 }
 
 .group-composer {
@@ -5944,6 +5944,25 @@ body,
   color: #000000;
 }
 
+.timer-sync-bar,
+.timer-sync-bar strong,
+.timer-sync-bar .sync-text,
+.timer-sync-bar .ui-button,
+.timer-sync-bar .ui-button-secondary {
+  background: #ffffff !important;
+  background-image: none !important;
+  border-color: #000000 !important;
+  box-shadow: none !important;
+  color: #000000 !important;
+}
+
+.timer-banner,
+.timer-banner *,
+.restore-message,
+.sync-text {
+  color: #000000 !important;
+}
+
 body,
 .main-content,
 .app-layout,
@@ -6330,6 +6349,600 @@ table td {
   }
 }
 
+/* Final usability pass after Android scroll review. */
+.timer-page .ui-page-header h1,
+.planner-page .ui-page-header h1 {
+  font-size: clamp(3rem, 12vw, 5.2rem);
+}
+
+.timer-page .ui-page-header p,
+.planner-page .ui-page-header p {
+  max-width: 34rem;
+  color: #000000 !important;
+}
+
+.timer-card {
+  border-width: 0;
+  padding-top: clamp(1rem, 2.6vw, 1.5rem);
+}
+
+.timer-focus-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 0.9rem;
+}
+
+.timer-category-inline {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.timer-category-inline > span {
+  color: #000000;
+  font-weight: 900;
+}
+
+.timer-create-category {
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border: 1px solid #000000;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 900;
+}
+
+.timer-controls {
+  border: 0;
+  background: #ffffff;
+  padding: clamp(1rem, 2.4vw, 1.4rem) 0 0;
+}
+
+.timer-display {
+  letter-spacing: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  font-weight: 800;
+}
+
+.timer-footer {
+  align-items: stretch;
+}
+
+.multiplier-control {
+  border: 1px solid #000000;
+  border-radius: 18px;
+  padding: 0.85rem;
+}
+
+.multiplier-control label {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.multiplier-control input {
+  max-width: 9rem;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.multiplier-hint,
+.ui-stat-card span,
+.ui-stat-card small,
+.review-metric-grid div span,
+.review-metric-grid div small,
+.target-overview div span,
+.target-overview div small {
+  color: #000000 !important;
+}
+
+.quick-start-card,
+.target-card,
+.timer-category-create {
+  border-width: 1px;
+}
+
+.quick-template-item {
+  border-top-width: 0;
+  border-left-width: 6px;
+}
+
+.quick-template-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.target-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.target-ring {
+  width: clamp(92px, 24vw, 132px);
+  height: clamp(92px, 24vw, 132px);
+}
+
+.target-ring-inner {
+  border: 1px solid #000000;
+}
+
+.planner-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.planner-target-section {
+  margin-top: clamp(1rem, 3vw, 1.6rem);
+}
+
+.planner-page .ui-stat-card {
+  min-height: 94px;
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  .nav-links a {
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    height: auto;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    place-items: center;
+    gap: 0.08rem;
+    padding: 0.22rem 0.04rem;
+    border-radius: 18px;
+    line-height: 1;
+  }
+
+  .nav-links a svg {
+    align-self: end;
+    margin: 0;
+  }
+
+  .nav-links a span {
+    display: block;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .timer-page .ui-page-header {
+    margin-bottom: 1rem;
+  }
+
+  .timer-focus-top {
+    grid-template-columns: 1fr;
+  }
+
+  .timer-create-category {
+    width: fit-content;
+  }
+
+  .timer-display {
+    font-size: clamp(4rem, 22vw, 6.4rem);
+  }
+
+  .timer-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .timer-buttons,
+  .multiplier-control {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .timer-buttons button {
+    min-width: 0;
+  }
+
+  .target-card {
+    grid-template-columns: 1fr;
+  }
+
+  .target-ring {
+    display: none;
+  }
+
+  .planner-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planner-page .ui-page-header h1 {
+    font-size: clamp(3.4rem, 15vw, 5rem);
+  }
+
+  .planner-page .ui-page-action .ui-button {
+    min-height: 48px;
+    padding-inline: 1rem;
+  }
+}
+
+/* Final timer balance pass. */
+.timer-card {
+  overflow: hidden;
+}
+
+.timer-card .mode-toggle {
+  width: min(100%, 520px);
+  margin-inline: auto;
+}
+
+.timer-card .mode-toggle button {
+  border-radius: 999px;
+}
+
+.timer-card .timer-controls {
+  width: min(100%, 680px);
+  margin-inline: auto;
+}
+
+.timer-card .timer-display {
+  width: 100%;
+  overflow: hidden;
+  font-size: clamp(3.8rem, 15vw, 7.2rem);
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.timer-card .timer-footer {
+  display: grid;
+  grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr);
+  gap: 0.85rem;
+  align-items: stretch;
+}
+
+.timer-card .multiplier-control {
+  min-width: 0;
+}
+
+.timer-card .timer-buttons {
+  min-width: 0;
+}
+
+.timer-card .timer-buttons button {
+  min-width: 0;
+}
+
+.timer-focus-top {
+  width: min(100%, 680px);
+  margin: 1rem auto 0;
+  padding-top: 1rem;
+  border-top: 1px solid #000000;
+}
+
+.timer-category-inline .category-select {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.65rem;
+  align-items: center;
+}
+
+.timer-category-inline .category-select > label {
+  margin: 0;
+  font-weight: 900;
+}
+
+.timer-category-inline .category-select select {
+  min-width: 0;
+  width: 100%;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border: 1px solid #000000 !important;
+  border-radius: 999px;
+  box-shadow: none !important;
+  font-weight: 800;
+}
+
+@media (max-width: 700px) {
+  .timer-card {
+    padding: 1rem 0;
+    border-width: 0;
+  }
+
+  .timer-card .timer-display {
+    font-size: clamp(3.35rem, 17vw, 5.2rem);
+  }
+
+  .timer-card .timer-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .timer-card .multiplier-control {
+    padding: 0.75rem;
+    border-radius: 16px;
+  }
+
+  .timer-card .multiplier-control label {
+    display: grid;
+    grid-template-columns: auto minmax(5rem, 8rem);
+  }
+
+  .timer-focus-top {
+    padding-inline: 0.2rem;
+  }
+
+  .timer-category-inline .category-select {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Final real-device touch-up: keep the Android gesture bar clear and remove residual gray copy. */
+.ui-page-header p,
+.form-group small,
+.sync-pill small,
+.timer-hint,
+.manual-form p,
+.quick-template-start small,
+.quick-template-start em,
+.quick-template-card p,
+.quick-template-card small,
+.multiplier-hint,
+.history-item small,
+.planner-day-empty,
+.planner-task-main small,
+.planner-pool-item span,
+.planner-target-head p,
+.target-desc,
+.target-progress,
+.review-header p,
+.review-category-row small,
+.review-category-row em,
+.share-actions p,
+.share-card-foot span,
+.group-muted,
+.discipline-message {
+  color: #000000 !important;
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    left: 0.55rem;
+    right: 0.55rem;
+    bottom: calc(1.45rem + env(safe-area-inset-bottom));
+    padding: 0.3rem;
+    border: 1px solid #000000;
+    border-radius: 20px;
+  }
+
+  .nav-links a {
+    min-height: 43px;
+    padding: 0.22rem 0.06rem;
+    font-size: 0.56rem;
+    line-height: 1.05;
+  }
+
+  .nav-links a svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .main-content {
+    padding-bottom: calc(8.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Mobile refinement pass: simpler black/white shell with softer emphasis where it helps scanning. */
+.timer-page .ui-page-header h1 {
+  font-size: clamp(3rem, 15vw, 5.4rem);
+}
+
+.timer-page .ui-page-header p,
+.planner-page .ui-page-header p {
+  max-width: 32rem;
+}
+
+.timer-focus-top {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 0.9rem;
+}
+
+.timer-category-inline {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.timer-category-inline > span {
+  font-weight: 900;
+  color: #000000;
+}
+
+.timer-create-category {
+  min-height: 44px;
+  padding: 0 0.85rem;
+  border: 1px solid #000000;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-weight: 900;
+}
+
+.timer-card {
+  border-width: 0;
+}
+
+.timer-controls {
+  border: 0;
+  background: #ffffff;
+  padding: clamp(1rem, 2.4vw, 1.4rem) 0 0;
+}
+
+.timer-display {
+  letter-spacing: 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+  font-weight: 800;
+}
+
+.timer-footer {
+  align-items: stretch;
+}
+
+.multiplier-control {
+  border: 1px solid #000000;
+  border-radius: 18px;
+  padding: 0.85rem;
+}
+
+.multiplier-control label {
+  width: 100%;
+  justify-content: space-between;
+}
+
+.multiplier-control input {
+  max-width: 9rem;
+  border-radius: 14px;
+  text-align: center;
+}
+
+.multiplier-hint,
+.ui-stat-card span,
+.ui-stat-card small,
+.review-metric-grid div span,
+.review-metric-grid div small,
+.target-overview div span,
+.target-overview div small {
+  color: #000000 !important;
+}
+
+.quick-start-card,
+.target-card,
+.timer-category-create {
+  border-width: 1px;
+}
+
+.quick-template-item {
+  border-top-width: 0;
+  border-left-width: 6px;
+}
+
+.quick-template-actions {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.target-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 1rem;
+}
+
+.target-ring {
+  width: clamp(92px, 24vw, 132px);
+  height: clamp(92px, 24vw, 132px);
+}
+
+.target-ring-inner {
+  border: 1px solid #000000;
+}
+
+.planner-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.planner-target-section {
+  margin-top: clamp(1rem, 3vw, 1.6rem);
+}
+
+.planner-page .ui-stat-card {
+  min-height: 94px;
+}
+
+@media (max-width: 700px) {
+  .nav-links {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    align-items: center;
+  }
+
+  .nav-links a {
+    aspect-ratio: 1 / 1;
+    min-height: 0;
+    height: auto;
+    display: grid;
+    grid-template-rows: 1fr auto;
+    place-items: center;
+    gap: 0.08rem;
+    padding: 0.22rem 0.04rem;
+    border-radius: 18px;
+    line-height: 1;
+  }
+
+  .nav-links a svg {
+    align-self: end;
+    margin: 0;
+  }
+
+  .nav-links a span {
+    display: block;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+  }
+
+  .timer-page .ui-page-header {
+    margin-bottom: 1rem;
+  }
+
+  .timer-focus-top {
+    grid-template-columns: 1fr;
+  }
+
+  .timer-create-category {
+    width: fit-content;
+  }
+
+  .timer-display {
+    font-size: clamp(4rem, 22vw, 6.4rem);
+  }
+
+  .timer-footer {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .timer-buttons,
+  .multiplier-control {
+    min-width: 0;
+    width: 100%;
+  }
+
+  .timer-buttons button {
+    min-width: 0;
+  }
+
+  .target-card {
+    grid-template-columns: 1fr;
+  }
+
+  .target-ring {
+    display: none;
+  }
+
+  .planner-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .planner-page .ui-page-header h1 {
+    font-size: clamp(3.4rem, 15vw, 5rem);
+  }
+
+  .planner-page .ui-page-action .ui-button {
+    min-height: 48px;
+    padding-inline: 1rem;
+  }
+}
+
 /* Final black/white correction: keep encoded data colors intact */
 html,
 body,
@@ -6693,6 +7306,48 @@ button:disabled,
   border-color: #000000;
 }
 
+.login-bg,
+.login-bg.relative {
+  background: #ffffff !important;
+  background-image: none !important;
+  color: #000000;
+}
+
+.login-bg .rounded-2xl {
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  color: #000000;
+}
+
+.login-bg h1,
+.login-bg label,
+.login-bg p,
+.login-bg span,
+.login-bg button {
+  color: #000000;
+}
+
+.login-bg input {
+  background: #ffffff !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  color: #000000 !important;
+}
+
+.login-bg button[type='submit'] {
+  background: #000000 !important;
+  border: 1px solid #000000 !important;
+  box-shadow: none !important;
+  color: #ffffff !important;
+}
+
+.login-bg button[type='button'] {
+  background: transparent;
+  border: 0;
+  color: #000000 !important;
+}
+
 .target-ring {
   background: conic-gradient(#000000 0%, #ffffff 0) !important;
   border: 1px solid #000000;
@@ -6744,5 +7399,527 @@ table td {
   .nav-links a.active {
     background: #000000;
     color: #ffffff;
+  }
+}
+
+/* Runtime-polish override: keep this last. */
+.nav-actions {
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.45rem;
+}
+
+.notification-bell {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+}
+
+.bell-button,
+.logout-btn {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  min-height: 38px;
+  padding: 0 !important;
+  display: inline-grid !important;
+  place-items: center;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.bell-button svg,
+.logout-btn svg,
+.nav-links a svg,
+.planner-task-actions button svg,
+.planner-range-nav button svg,
+.planner-page .ui-button svg,
+.timer-buttons button svg {
+  display: block;
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.bell-button .badge {
+  top: -5px;
+  right: -5px;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  display: grid;
+  place-items: center;
+  border: 1px solid #000000;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #000000;
+  font-size: 0.68rem;
+  font-weight: 900;
+  line-height: 1;
+}
+
+.notification-empty,
+.notification-summary,
+.notification-summary div {
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.timer-page .ui-page-header,
+.planner-page .ui-page-header {
+  gap: 1rem;
+  margin-bottom: clamp(0.75rem, 2vw, 1.1rem);
+}
+
+.timer-page .ui-page-header h1,
+.planner-page .ui-page-header h1 {
+  font-size: clamp(2.45rem, 8vw, 4.6rem);
+  line-height: 0.95;
+}
+
+.timer-shell {
+  gap: 0.9rem;
+}
+
+.timer-card {
+  padding: clamp(1rem, 2.5vw, 1.45rem);
+  border: 1px solid #000000;
+  border-radius: 8px;
+  overflow: visible;
+}
+
+.timer-card .mode-toggle {
+  width: min(100%, 360px);
+  margin: 0 auto 1rem;
+  padding: 3px;
+  border-radius: 999px;
+}
+
+.timer-card .mode-toggle button {
+  min-height: 38px;
+  display: grid;
+  place-items: center;
+}
+
+.timer-focus-top {
+  width: min(100%, 520px);
+  margin: 0 auto 0.85rem;
+  padding: 0;
+  border: 0;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0.65rem;
+}
+
+.timer-category-inline .category-select > label {
+  display: none;
+}
+
+.timer-category-inline .category-select select,
+.manual-category-field .category-select select {
+  min-height: 44px;
+  border-radius: 8px !important;
+  font-weight: 800;
+}
+
+.timer-create-category {
+  width: auto;
+  min-height: 44px;
+  border-radius: 8px;
+}
+
+.timer-card .timer-controls {
+  width: min(100%, 600px);
+  gap: 1rem;
+  padding: 0;
+}
+
+.timer-card .timer-display {
+  padding: clamp(0.9rem, 3vw, 1.4rem) 0;
+  border-block: 1px solid #000000;
+  font-size: clamp(3.4rem, 13vw, 6.6rem);
+  line-height: 0.95;
+}
+
+.timer-card .timer-footer {
+  width: 100%;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 0.75rem;
+}
+
+.multiplier-control {
+  min-height: 54px;
+  padding: 0.65rem 0.75rem;
+  border-radius: 8px;
+  justify-content: center;
+}
+
+.multiplier-hint {
+  display: none;
+}
+
+.timer-buttons button {
+  min-height: 62px;
+  border-radius: 8px;
+}
+
+.planner-summary {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.planner-page .ui-stat-card {
+  min-height: auto;
+  gap: 0.3rem;
+  padding: 0.85rem;
+  border-radius: 8px;
+}
+
+.planner-calendar {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.planner-month .planner-days,
+.planner-week .planner-days {
+  min-width: 760px;
+}
+
+.planner-day-list p {
+  min-height: 48px;
+  display: grid;
+  place-items: center;
+  padding: 0.35rem;
+  border: 1px dashed #000000;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.planner-task-actions {
+  flex-wrap: nowrap;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.planner-task-actions button {
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 6px;
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    min-height: calc(50px + env(safe-area-inset-top));
+    padding: calc(0.45rem + env(safe-area-inset-top)) 0.75rem 0.45rem;
+  }
+
+  .nav-brand {
+    font-size: 1.08rem;
+    line-height: 1;
+  }
+
+  .notification-bell,
+  .bell-button,
+  .logout-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    min-height: 36px;
+    flex-basis: 36px;
+  }
+
+  .nav-links {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    left: 0.55rem;
+    right: 0.55rem;
+    bottom: calc(1rem + env(safe-area-inset-bottom));
+    gap: 0.15rem;
+    padding: 0.25rem;
+    border-radius: 16px;
+  }
+
+  .nav-links a {
+    min-width: 0;
+    min-height: 42px;
+    aspect-ratio: auto;
+    padding: 0.18rem 0.04rem;
+    display: grid;
+    grid-template-rows: 19px auto;
+    place-items: center;
+    gap: 0.12rem;
+    border-radius: 12px;
+    font-size: 0.56rem;
+    line-height: 1;
+  }
+
+  .nav-links a svg {
+    width: 18px;
+    height: 18px;
+    align-self: center;
+  }
+
+  .notification-bell .dropdown {
+    position: fixed;
+    top: calc(3.35rem + env(safe-area-inset-top));
+    left: 0.75rem;
+    right: 0.75rem;
+    width: auto;
+    margin-top: 0;
+  }
+
+  .main-content {
+    padding: 0.85rem 0.85rem calc(6.4rem + env(safe-area-inset-bottom));
+  }
+
+  .timer-page .ui-page-header,
+  .planner-page .ui-page-header {
+    padding: 0;
+    margin-bottom: 0.75rem;
+  }
+
+  .timer-page .ui-page-header h1,
+  .planner-page .ui-page-header h1 {
+    font-size: 2.1rem;
+    line-height: 1;
+  }
+
+  .timer-card {
+    padding: 0.85rem;
+  }
+
+  .timer-focus-top {
+    grid-template-columns: minmax(0, 1fr) auto;
+    margin-bottom: 0.75rem;
+  }
+
+  .timer-card .timer-display {
+    padding: 0.95rem 0;
+    font-size: clamp(3.25rem, 16vw, 4.15rem);
+  }
+
+  .timer-card .timer-footer {
+    grid-template-columns: 1fr;
+  }
+
+  .manual-form {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+  }
+
+  .manual-category-field,
+  .manual-form .form-group:nth-of-type(4),
+  .manual-form button[type='submit'] {
+    grid-column: 1 / -1;
+  }
+
+  .planner-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem;
+  }
+
+  .planner-month .planner-days,
+  .planner-week .planner-days {
+    min-width: 690px;
+    grid-template-columns: repeat(7, minmax(86px, 1fr));
+  }
+}
+
+/* Android proportion correction after real-device review. */
+.logout-btn {
+  gap: 0 !important;
+  overflow: hidden;
+  font-size: 0;
+}
+
+.logout-btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+.timer-card .timer-display {
+  letter-spacing: 0;
+}
+
+@media (max-width: 700px) {
+  .navbar {
+    min-height: calc(46px + env(safe-area-inset-top));
+    padding: calc(0.38rem + env(safe-area-inset-top)) 0.7rem 0.38rem;
+  }
+
+  .nav-actions {
+    gap: 0.38rem;
+  }
+
+  .notification-bell,
+  .bell-button,
+  .logout-btn {
+    width: 34px;
+    height: 34px;
+    min-width: 34px;
+    min-height: 34px;
+    flex-basis: 34px;
+  }
+
+  .bell-button svg,
+  .logout-btn svg {
+    width: 18px;
+    height: 18px;
+  }
+
+  .nav-links {
+    left: 0.5rem;
+    right: 0.5rem;
+    bottom: calc(0.55rem + env(safe-area-inset-bottom));
+    padding: 0.22rem;
+    border-radius: 14px;
+  }
+
+  .nav-links a {
+    min-height: 38px;
+    grid-template-rows: 17px auto;
+    gap: 0.1rem;
+    border-radius: 10px;
+    font-size: 0.54rem;
+  }
+
+  .nav-links a svg {
+    width: 17px;
+    height: 17px;
+  }
+
+  .main-content {
+    padding: 0.65rem 0.72rem calc(5.8rem + env(safe-area-inset-bottom));
+  }
+
+  .timer-shell {
+    gap: 0.65rem;
+    padding: 0;
+  }
+
+  .timer-page .ui-page-header,
+  .planner-page .ui-page-header {
+    margin-bottom: 0.55rem;
+  }
+
+  .timer-page .ui-page-header h1,
+  .planner-page .ui-page-header h1 {
+    font-size: 1.75rem;
+    line-height: 1.05;
+  }
+
+  .timer-page .ui-page-header p,
+  .planner-page .ui-page-header p {
+    font-size: 0.9rem;
+    line-height: 1.35;
+  }
+
+  .timer-card {
+    padding: 0.7rem;
+  }
+
+  .timer-card .mode-toggle {
+    width: min(100%, 280px);
+    margin-bottom: 0.65rem;
+  }
+
+  .timer-card .mode-toggle button {
+    min-height: 34px;
+    font-size: 0.92rem;
+  }
+
+  .timer-focus-top {
+    gap: 0.5rem;
+    margin-bottom: 0.55rem;
+  }
+
+  .timer-category-inline > span {
+    font-size: 0.88rem;
+    margin-bottom: 0.3rem;
+  }
+
+  .timer-category-inline .category-select select,
+  .manual-category-field .category-select select,
+  .timer-create-category {
+    min-height: 40px;
+    padding: 0.5rem 0.58rem;
+    font-size: 0.92rem;
+  }
+
+  .timer-create-category {
+    min-width: 64px;
+  }
+
+  .timer-card .timer-controls {
+    gap: 0.65rem;
+  }
+
+  .timer-card .timer-display {
+    padding: 0.72rem 0;
+    font-size: clamp(2.55rem, 14vw, 3.55rem);
+  }
+
+  .timer-card .timer-footer {
+    gap: 0.55rem;
+  }
+
+  .multiplier-control {
+    min-height: 46px;
+    padding: 0.5rem 0.65rem;
+  }
+
+  .multiplier-control label {
+    width: 100%;
+    justify-content: space-between;
+    font-size: 0.9rem;
+  }
+
+  .multiplier-control input {
+    width: 96px;
+    padding: 0.42rem 0.5rem;
+    text-align: center;
+  }
+
+  .timer-buttons button {
+    min-height: 52px;
+    padding: 0.72rem 0.9rem;
+    font-size: 1rem;
+  }
+
+  .quick-start-card,
+  .timer-category-create {
+    padding: 0.82rem;
+  }
+
+  .quick-start-card .ui-section-header {
+    gap: 0.65rem;
+  }
+
+  .quick-start-card .ui-section-header h2 {
+    font-size: 1.2rem;
+  }
+
+  .quick-start-card .ui-section-header p {
+    font-size: 0.86rem;
+  }
+
+  .planner-summary {
+    gap: 0.48rem;
+  }
+
+  .planner-page .ui-stat-card {
+    padding: 0.68rem;
+  }
+
+  .planner-toolbar {
+    gap: 0.55rem;
   }
 }

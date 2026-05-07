@@ -57,7 +57,7 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const navItems = [
     { to: '/timer', label: '计时', icon: TimerIcon },
     { to: '/time-trace', label: '时痕', icon: GitBranch },
-    { to: '/planner', label: '计划目标', icon: CalendarClock },
+    { to: '/planner', label: '计划', icon: CalendarClock },
     { to: '/review', label: '复盘', icon: CalendarDays },
     { to: '/share', label: '分享', icon: Share2 },
     { to: '/groups', label: '小组', icon: Users },
@@ -87,8 +87,14 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         </div>
         <div className="nav-actions">
           <NotificationBell />
-          <button onClick={handleLogout} className="logout-btn">
-            <LogOut size={18} /> 退出
+          <button
+            type="button"
+            onClick={handleLogout}
+            className="logout-btn"
+            aria-label="退出登录"
+            title="退出登录"
+          >
+            <LogOut size={18} />
           </button>
         </div>
       </nav>

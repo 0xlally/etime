@@ -1,4 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { NotificationItem, TargetDashboard } from '../types';
@@ -12,6 +13,8 @@ const formatTime = (seconds: number) => {
 };
 
 export const NotificationBell: React.FC = () => {
+  const location = useLocation();
+  const rootRef = useRef<HTMLDivElement | null>(null);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [dashboard, setDashboard] = useState<TargetDashboard | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -21,6 +24,34 @@ export const NotificationBell: React.FC = () => {
     const interval = setInterval(loadNotifications, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    setShowDropdown(false);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    if (!showDropdown) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) {
+        setShowDropdown(false);
+      }
+    };
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [showDropdown]);
 
   const loadNotifications = async () => {
     try {
@@ -59,8 +90,14 @@ export const NotificationBell: React.FC = () => {
   };
 
   return (
-    <div className="notification-bell">
-      <button onClick={() => setShowDropdown(!showDropdown)} className="bell-button" aria-label="通知">
+    <div className="notification-bell" ref={rootRef}>
+      <button
+        type="button"
+        onClick={() => setShowDropdown(!showDropdown)}
+        className="bell-button"
+        aria-label="通知"
+        aria-expanded={showDropdown}
+      >
         <Bell size={20} />
         {unreadCount > 0 && <span className="badge">{unreadCount}</span>}
       </button>
