@@ -8756,3 +8756,257 @@ table td {
     max-height: 82vh;
   }
 }
+
+/* Timer home layout pass */
+.timer-page {
+  width: 100%;
+  padding-top: 0;
+}
+
+.timer-page .ui-page-header {
+  width: min(100%, 1480px);
+  justify-self: center;
+  min-height: auto;
+  margin: 0 auto clamp(0.95rem, 1.8vw, 1.45rem);
+  padding: 0;
+}
+
+.timer-page .ui-page-header h1 {
+  font-size: clamp(3.7rem, 5.4vw, 5.2rem);
+  line-height: 0.9;
+}
+
+.timer-page .ui-page-header p {
+  margin-top: 0.65rem;
+  font-size: clamp(1rem, 1vw, 1.12rem);
+}
+
+.timer-shell {
+  width: min(100%, 1480px);
+  max-width: none;
+  justify-self: center;
+  padding: 0;
+  display: grid;
+  grid-template-columns: minmax(620px, 1.08fr) minmax(520px, 0.92fr);
+  gap: clamp(1rem, 1.6vw, 1.35rem);
+  align-items: start;
+}
+
+.timer-sync-bar {
+  grid-column: 1 / -1;
+}
+
+.timer-page .timer-grid {
+  grid-column: 2;
+  width: 100%;
+  display: block;
+}
+
+.timer-card {
+  min-height: 466px;
+  justify-content: center;
+  padding: clamp(1.45rem, 2vw, 1.9rem);
+}
+
+.timer-card .mode-toggle {
+  width: min(100%, 372px);
+  margin-bottom: clamp(1.25rem, 2.2vw, 1.75rem);
+}
+
+.timer-focus-top {
+  width: min(100%, 560px);
+  margin-bottom: 1.05rem;
+}
+
+.timer-card .timer-controls {
+  width: min(100%, 610px);
+  margin: 0 auto;
+  gap: 1.05rem;
+}
+
+.timer-card .timer-display {
+  padding: clamp(1rem, 2.2vw, 1.25rem) 0;
+  font-size: clamp(4.45rem, 5.5vw, 6rem);
+}
+
+.timer-card .timer-footer {
+  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+}
+
+.quick-start-card,
+.target-card {
+  padding: clamp(1.2rem, 1.6vw, 1.45rem);
+}
+
+.quick-start-card {
+  min-height: 286px;
+}
+
+.quick-start-card .ui-section-header {
+  align-items: start;
+}
+
+.quick-start-card .ui-section-header h2 {
+  font-size: clamp(1.5rem, 1.9vw, 1.85rem);
+}
+
+.quick-template-list {
+  gap: 0.75rem;
+}
+
+.quick-template-item {
+  padding: 0.9rem;
+}
+
+.quick-template-start {
+  min-height: 76px;
+}
+
+.quick-template-actions {
+  gap: 0.5rem;
+}
+
+.target-card {
+  grid-template-columns: 128px minmax(0, 1fr);
+  min-height: 178px;
+  gap: 1rem;
+  width: 100%;
+  justify-self: stretch;
+}
+
+.target-ring {
+  width: 126px;
+  height: 126px;
+}
+
+.target-ring-inner {
+  width: 104px;
+  height: 104px;
+}
+
+.target-meta {
+  gap: 0.38rem;
+}
+
+.target-title {
+  font-size: clamp(1.1rem, 1.35vw, 1.35rem);
+}
+
+@media (max-width: 1500px) {
+  .timer-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .timer-page .timer-grid,
+  .target-card {
+    grid-column: auto;
+  }
+}
+
+@media (max-width: 700px) {
+  .timer-page .ui-page-header {
+    margin-bottom: 0.7rem;
+  }
+
+  .timer-page .ui-page-header h1 {
+    font-size: 2rem;
+    line-height: 1;
+  }
+
+  .timer-page .ui-page-header p {
+    margin-top: 0.35rem;
+    font-size: 0.92rem;
+  }
+
+  .timer-shell {
+    gap: 0.7rem;
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .timer-card {
+    min-height: 0;
+    padding: 0.78rem;
+  }
+
+  .timer-card .mode-toggle {
+    width: min(100%, 284px);
+    margin-bottom: 0.7rem;
+  }
+
+  .timer-focus-top {
+    margin-bottom: 0.6rem;
+  }
+
+  .timer-card .timer-controls {
+    gap: 0.7rem;
+  }
+
+  .timer-card .timer-display {
+    padding: 0.76rem 0;
+    font-size: clamp(2.65rem, 14vw, 3.65rem);
+  }
+
+  .quick-start-card,
+  .target-card {
+    padding: 0.82rem;
+  }
+
+  .quick-start-card {
+    min-height: 0;
+  }
+
+  .quick-start-card .ui-section-header {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  .quick-start-card .ui-section-header h2 {
+    font-size: 1.7rem;
+    line-height: 1;
+  }
+
+  .quick-start-card .ui-section-header p {
+    margin-top: 0.45rem;
+  }
+
+  .quick-start-card .ui-section-action {
+    align-self: start;
+  }
+
+  .quick-start-card .ui-button-secondary {
+    width: auto;
+    min-height: 42px;
+    padding: 0.55rem 0.75rem;
+    white-space: nowrap;
+  }
+
+  .quick-template-item {
+    padding: 0.72rem;
+  }
+
+  .quick-template-start {
+    min-height: 62px;
+    gap: 0.65rem;
+  }
+
+  .quick-template-icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .quick-template-start strong {
+    font-size: 1rem;
+  }
+
+  .quick-template-start em {
+    font-size: 0.95rem;
+  }
+
+  .target-card {
+    grid-template-columns: 112px minmax(0, 1fr);
+    min-height: 0;
+  }
+}
