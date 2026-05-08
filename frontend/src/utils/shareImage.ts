@@ -5,16 +5,28 @@ const TARGET_WIDTH = 1080;
 
 export const isNativeShareEnvironment = () => Capacitor.isNativePlatform();
 
+const waitForImages = async (node: HTMLElement) => {
+  const images = Array.from(node.querySelectorAll('img'));
+  await Promise.all(images.map(async (image) => {
+    if (image.complete) return;
+    await new Promise<void>((resolve) => {
+      image.addEventListener('load', () => resolve(), { once: true });
+      image.addEventListener('error', () => resolve(), { once: true });
+    });
+  }));
+};
+
 export const renderShareCardBlob = async (node: HTMLElement): Promise<Blob> => {
   if (document.fonts?.ready) {
     await document.fonts.ready;
   }
+  await waitForImages(node);
 
   const rect = node.getBoundingClientRect();
   const pixelRatio = rect.width > 0 ? TARGET_WIDTH / rect.width : 3;
   const blob = await toBlob(node, {
     cacheBust: true,
-    backgroundColor: '#f8fafc',
+    backgroundColor: '#172033',
     pixelRatio,
   });
 

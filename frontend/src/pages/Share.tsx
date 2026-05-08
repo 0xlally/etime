@@ -1,8 +1,14 @@
-import React, { useEffect, useRef, useState } from 'react';
-import { Download, Image as ImageIcon, Share2, ShieldCheck } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Download, Image as ImageIcon, RefreshCw, Share2, ShieldCheck } from 'lucide-react';
 import { Button, Card, LoadingState, PageShell, SectionHeader } from '../components/ui';
 import { apiClient } from '../api/client';
 import { ShareCard, ShareCardStyle } from '../components/ShareCard';
+import {
+  getInitialBackgroundPreset,
+  getPresetsByStyle,
+  ShareBackgroundStyle,
+  shareBackgroundPresets,
+} from '../components/shareBackgroundPresets';
 import { ShareRange, ShareSummary } from '../types';
 import {
   blobToObjectUrl,
@@ -24,6 +30,14 @@ const styleOptions: Array<{ value: ShareCardStyle; label: string }> = [
   { value: 'heatmap', label: '热力图' },
 ];
 
+const backgroundStyleOptions: Array<{ value: ShareBackgroundStyle; label: string }> = [
+  { value: 'vibrant', label: '活力渐变' },
+  { value: 'nature', label: '自然风景' },
+  { value: 'city', label: '城市光影' },
+  { value: 'minimal', label: '极简高级' },
+  { value: 'random', label: '随机' },
+];
+
 const rangeFilenameLabel: Record<ShareRange, string> = {
   today: 'today',
   week: 'week',
@@ -35,6 +49,11 @@ export const Share: React.FC = () => {
   const objectUrlRef = useRef<string | null>(null);
   const [range, setRange] = useState<ShareRange>('today');
   const [styleType, setStyleType] = useState<ShareCardStyle>('minimal');
+  const [backgroundStyle, setBackgroundStyle] = useState<ShareBackgroundStyle>('vibrant');
+  const [backgroundPresetId, setBackgroundPresetId] = useState(
+    () => getInitialBackgroundPreset('vibrant').id
+  );
+  const [backgroundReady, setBackgroundReady] = useState(true);
   const [privateMode, setPrivateMode] = useState(true);
   const [hideTotal, setHideTotal] = useState(false);
   const [summary, setSummary] = useState<ShareSummary | null>(null);
@@ -43,6 +62,14 @@ export const Share: React.FC = () => {
   const [status, setStatus] = useState('');
   const [generatedImageUrl, setGeneratedImageUrl] = useState<string | null>(null);
   const isNative = isNativeShareEnvironment();
+  const backgroundPreset = useMemo(
+    () => shareBackgroundPresets.find((preset) => preset.id === backgroundPresetId)
+      ?? getInitialBackgroundPreset(backgroundStyle),
+    [backgroundPresetId, backgroundStyle]
+  );
+  const handleBackgroundReadyChange = useCallback((ready: boolean) => {
+    setBackgroundReady(ready);
+  }, []);
 
   useEffect(() => {
     loadSummary();
@@ -81,6 +108,36 @@ export const Share: React.FC = () => {
     setGeneratedImageUrl(url);
   };
 
+  const handleBackgroundStyleChange = (value: ShareBackgroundStyle) => {
+    setBackgroundStyle(value);
+    const presets = getPresetsByStyle(value);
+    if (presets.length === 0) return;
+    const nextPreset = value === 'random'
+      ? presets[Math.floor(Math.random() * presets.length)]
+      : presets[0];
+    setBackgroundPresetId(nextPreset.id);
+    setGeneratedImageUrl(null);
+  };
+
+  const handleNextBackground = () => {
+    const presets = getPresetsByStyle(backgroundStyle);
+    if (presets.length === 0) return;
+    const currentIndex = presets.findIndex((preset) => preset.id === backgroundPreset.id);
+    const nextIndex = currentIndex >= 0 ? (currentIndex + 1) % presets.length : 0;
+    let nextPreset = presets[nextIndex];
+    if (backgroundStyle === 'random' && presets.length > 1) {
+      const otherPresets = presets.filter((preset) => preset.id !== backgroundPreset.id);
+      nextPreset = otherPresets[Math.floor(Math.random() * otherPresets.length)];
+    }
+    setBackgroundPresetId(nextPreset.id);
+    setGeneratedImageUrl(null);
+  };
+
+  const waitForBackground = useCallback(async () => {
+    if (backgroundReady) return;
+    await new Promise<void>((resolve) => window.setTimeout(resolve, 650));
+  }, [backgroundReady]);
+
   const buildImageBlob = async () => {
     if (!cardRef.current) {
       throw new Error('分享卡片尚未就绪');
@@ -89,6 +146,7 @@ export const Share: React.FC = () => {
     setRendering(true);
     setStatus('正在生成 PNG...');
     try {
+      await waitForBackground();
       const blob = await renderShareCardBlob(cardRef.current);
       refreshGeneratedImage(blob);
       return blob;
@@ -180,6 +238,33 @@ export const Share: React.FC = () => {
             </div>
           </section>
 
+          <section>
+            <SectionHeader
+              title="背景风格"
+              description={`${backgroundPreset.label} · ${backgroundPreset.source}`}
+              action={(
+                <button className="share-icon-button" type="button" onClick={handleNextBackground} title="换一张背景">
+                  <RefreshCw size={16} />
+                </button>
+              )}
+            />
+            <div className="share-background-options">
+              {backgroundStyleOptions.map((item) => (
+                <button
+                  key={item.value}
+                  className={backgroundStyle === item.value ? 'active' : ''}
+                  type="button"
+                  onClick={() => handleBackgroundStyleChange(item.value)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <button className="share-background-refresh" type="button" onClick={handleNextBackground}>
+              <RefreshCw size={16} /> 换一张背景
+            </button>
+          </section>
+
           <section className="share-privacy">
             <label>
               <input
@@ -192,11 +277,11 @@ export const Share: React.FC = () => {
             <label>
               <input
                 type="checkbox"
-                checked={privateMode && hideTotal}
-                disabled={!privateMode}
-                onChange={(event) => setHideTotal(event.target.checked)}
+                checked={privateMode || hideTotal}
+                disabled
+                readOnly
               />
-              <span>隐藏总时长</span>
+              <span>隐藏具体时长</span>
             </label>
           </section>
 
@@ -222,6 +307,8 @@ export const Share: React.FC = () => {
                 ref={cardRef}
                 summary={summary}
                 styleType={styleType}
+                backgroundPreset={backgroundPreset}
+                onBackgroundReadyChange={handleBackgroundReadyChange}
                 privateMode={privateMode}
                 hideTotal={hideTotal}
               />

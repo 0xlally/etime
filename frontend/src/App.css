@@ -7923,3 +7923,679 @@ table td {
     gap: 0.55rem;
   }
 }
+
+/* Share poster visual refresh */
+.share-page .share-layout {
+  grid-template-columns: 320px minmax(0, 1fr);
+  gap: 1rem;
+}
+
+.share-page .share-controls {
+  gap: 1rem;
+}
+
+.share-page .share-segment,
+.share-page .share-background-options {
+  display: grid;
+  gap: 0.35rem;
+  padding: 0.25rem;
+  border: 1px solid #dbe3ec;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.share-page .share-segment {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.share-page .share-background-options {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.share-page .share-segment button,
+.share-page .share-background-options button,
+.share-page .share-background-refresh,
+.share-page .share-icon-button {
+  min-height: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: #475569;
+  font-weight: 800;
+}
+
+.share-page .share-background-options button.active,
+.share-page .share-segment button.active {
+  background: #172033;
+  color: #ffffff;
+}
+
+.share-page .share-background-refresh {
+  width: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  border: 1px solid #dbe3ec;
+  background: #ffffff;
+  color: #172033;
+}
+
+.share-page .share-icon-button {
+  width: 36px;
+  min-width: 36px;
+  display: inline-grid;
+  place-items: center;
+  border: 1px solid #dbe3ec;
+  background: #ffffff;
+}
+
+.share-page .share-preview-panel {
+  min-height: 690px;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 12% 10%, rgba(59, 130, 246, 0.12), transparent 28%),
+    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
+}
+
+.share-page .share-preview-shell {
+  width: min(100%, 430px);
+}
+
+.share-page .share-preview-loading {
+  width: min(100%, 405px);
+  min-height: 540px;
+}
+
+.share-page .share-card {
+  --poster-accent: #ffd36b;
+  position: relative;
+  width: min(390px, 100%);
+  aspect-ratio: 3 / 4;
+  padding: 0;
+  display: block;
+  overflow: hidden;
+  border: 0;
+  border-radius: 28px;
+  background: #172033;
+  color: #ffffff;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
+  isolation: isolate;
+}
+
+.share-page .share-card-tone-dark {
+  color: #132022;
+}
+
+.share-page .poster-background,
+.share-page .poster-background-fallback,
+.share-page .poster-background img,
+.share-page .poster-background-blur,
+.share-page .poster-background-overlay,
+.share-page .poster-background-noise,
+.share-page .poster-background-glow {
+  position: absolute;
+  inset: 0;
+}
+
+.share-page .poster-background {
+  z-index: 0;
+  overflow: hidden;
+}
+
+.share-page .poster-background-fallback,
+.share-page .poster-background-blur {
+  background-size: cover;
+  background-position: center;
+}
+
+.share-page .poster-background img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transform: scale(1.04);
+  filter: saturate(1.02) contrast(0.98);
+  transition: opacity 0.2s ease;
+}
+
+.share-page .poster-background img.loaded {
+  opacity: 1;
+}
+
+.share-page .poster-background-blur {
+  opacity: 0.2;
+  filter: blur(34px) saturate(1.2);
+  transform: scale(1.16);
+  mix-blend-mode: screen;
+}
+
+.share-page .poster-background-overlay {
+  z-index: 2;
+}
+
+.share-page .poster-background-noise {
+  z-index: 3;
+  opacity: 0.1;
+  background-image:
+    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.42) 0 1px, transparent 1px),
+    radial-gradient(circle at 72% 62%, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px);
+  background-size: 9px 9px, 13px 13px;
+  pointer-events: none;
+}
+
+.share-page .poster-background-glow {
+  z-index: 4;
+  border-radius: inherit;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    inset 0 -120px 150px rgba(0, 0, 0, 0.34),
+    inset 0 80px 120px rgba(255, 255, 255, 0.08);
+  pointer-events: none;
+}
+
+.share-page .poster-content {
+  position: relative;
+  z-index: 5;
+  height: 100%;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.share-page .share-card-head,
+.share-page .share-card-foot,
+.share-page .share-card-section-head,
+.share-page .share-card-category div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+}
+
+.share-page .share-card-head span,
+.share-page .share-card-hero span,
+.share-page .share-card-metrics span,
+.share-page .share-card-section-head span,
+.share-page .share-card-foot span {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 0.7rem;
+  font-weight: 850;
+}
+
+.share-page .share-card-tone-dark .share-card-head span,
+.share-page .share-card-tone-dark .share-card-hero span,
+.share-page .share-card-tone-dark .share-card-metrics span,
+.share-page .share-card-tone-dark .share-card-section-head span,
+.share-page .share-card-tone-dark .share-card-foot span {
+  color: rgba(19, 32, 34, 0.68);
+}
+
+.share-page .share-card-head strong {
+  display: block;
+  margin-top: 0.2rem;
+  color: inherit;
+  font-size: 1.32rem;
+  line-height: 1.05;
+}
+
+.share-page .share-card-head time {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 0.78rem;
+  font-weight: 850;
+}
+
+.share-page .share-card-tone-dark .share-card-head time {
+  color: rgba(19, 32, 34, 0.72);
+}
+
+.share-page .share-card-hero,
+.share-page .poster-card,
+.share-page .poster-metric {
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(18, 26, 42, 0.28);
+  box-shadow: 0 16px 34px rgba(8, 15, 32, 0.16);
+  backdrop-filter: blur(16px) saturate(1.12);
+}
+
+.share-page .share-card-tone-dark .share-card-hero,
+.share-page .share-card-tone-dark .poster-card,
+.share-page .share-card-tone-dark .poster-metric {
+  border-color: rgba(255, 255, 255, 0.42);
+  background: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 18px 42px rgba(52, 64, 68, 0.14);
+}
+
+.share-page .share-card-hero {
+  min-height: 112px;
+  padding: 0.92rem 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  border-radius: 20px;
+  color: inherit;
+}
+
+.share-page .share-card-hero strong {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.18em;
+  margin-top: 0.22rem;
+  color: inherit;
+  font-size: 1.9rem;
+  line-height: 0.96;
+}
+
+.share-page .share-card-hero .share-card-private-title {
+  display: block;
+  font-size: 2.2rem;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.share-page .share-card-hero strong b {
+  font-size: 2.75rem;
+  font-weight: 950;
+  letter-spacing: 0;
+}
+
+.share-page .share-card-hero strong i {
+  font-size: 1.05rem;
+  font-style: normal;
+  font-weight: 900;
+  opacity: 0.86;
+}
+
+.share-page .share-card-hero small {
+  display: block;
+  margin-top: 0.35rem;
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  color: rgba(255, 255, 255, 0.72) !important;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.share-page .share-card-tone-dark .share-card-hero small {
+  color: rgba(19, 32, 34, 0.7) !important;
+}
+
+.share-page .share-card-hero em {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  padding: 0.28rem 0.52rem;
+  border-radius: 999px;
+  background: var(--poster-accent);
+  color: #101418;
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 900;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
+}
+
+.share-page .share-card-hero small {
+  width: auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  flex: 0 1 auto !important;
+}
+
+.share-page .share-card-style-data .share-card-hero {
+  min-height: 116px;
+}
+
+.share-page .share-card-style-data .poster-metric:first-child {
+  box-shadow:
+    0 18px 42px rgba(8, 15, 32, 0.18),
+    inset 0 -3px 0 var(--poster-accent);
+}
+
+.share-page .share-card-style-heatmap .share-card-heatmap-block {
+  border-color: rgba(255, 255, 255, 0.34);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.share-page .share-card-style-heatmap.share-card-tone-dark .share-card-heatmap-block {
+  border-color: rgba(255, 255, 255, 0.5);
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.share-page .share-card-style-heatmap .share-poster-heatmap span {
+  border-radius: 5px;
+}
+
+.share-page .share-card-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.share-page .poster-metric {
+  min-width: 0;
+  min-height: 74px;
+  padding: 0.66rem;
+  display: grid;
+  align-content: start;
+  gap: 0.22rem;
+  border-radius: 16px;
+}
+
+.share-page .poster-metric strong {
+  color: #ffffff;
+  font-size: 1rem;
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.share-page .share-card-tone-dark .poster-metric strong {
+  color: #132022;
+}
+
+.share-page .poster-metric small {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.68rem;
+  font-weight: 800;
+  line-height: 1.22;
+  overflow-wrap: anywhere;
+}
+
+.share-page .share-card-tone-dark .poster-metric small {
+  color: rgba(19, 32, 34, 0.68);
+}
+
+.share-page .poster-card {
+  padding: 0.78rem;
+  display: grid;
+  gap: 0.55rem;
+  border-radius: 18px;
+}
+
+.share-page .share-card-section {
+  min-height: 0;
+}
+
+.share-page .share-card-section-head strong,
+.share-page .share-card-foot strong {
+  color: inherit;
+  font-size: 0.94rem;
+}
+
+.share-page .share-card-empty {
+  min-height: 68px;
+  display: grid;
+  place-items: center;
+  padding: 0.8rem;
+  border: 1px dashed rgba(255, 255, 255, 0.36);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.12);
+  color: rgba(255, 255, 255, 0.78);
+  text-align: center;
+}
+
+.share-page .share-card-tone-dark .share-card-empty {
+  border-color: rgba(19, 32, 34, 0.22);
+  background: rgba(255, 255, 255, 0.28);
+  color: rgba(19, 32, 34, 0.72);
+}
+
+.share-page .share-card-category-summary {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.share-page .share-card-category-focus {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 0.5rem;
+  align-items: baseline;
+  min-height: 34px;
+}
+
+.share-page .share-card-category-focus span {
+  min-width: 0;
+  color: #ffffff;
+  font-size: 0.9rem;
+  font-weight: 900;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-page .share-card-category-focus strong {
+  color: var(--poster-accent);
+  font-size: 1.18rem;
+  line-height: 1;
+}
+
+.share-page .share-card-category-focus small {
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.66rem;
+  font-weight: 850;
+}
+
+.share-page .share-card-tone-dark .share-card-category-focus small {
+  color: rgba(19, 32, 34, 0.62);
+}
+
+.share-page .share-card-tone-dark .share-card-category-focus span {
+  color: #132022;
+}
+
+.share-page .share-card-categories {
+  display: grid;
+  gap: 0.38rem;
+}
+
+.share-page .share-card-category {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.share-page .share-card-category div {
+  min-width: 0;
+}
+
+.share-page .share-card-category span {
+  width: 9px;
+  height: 9px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22);
+}
+
+.share-page .share-card-category strong {
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  font-size: 0.76rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.share-page .share-card-category em {
+  color: rgba(255, 255, 255, 0.74);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 850;
+}
+
+.share-page .share-card-tone-dark .share-card-category em {
+  color: rgba(19, 32, 34, 0.68);
+}
+
+.share-page .share-card-category progress {
+  width: 100%;
+  height: 4px;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.share-page .share-card-tone-dark .share-card-category progress {
+  background: rgba(19, 32, 34, 0.14);
+}
+
+.share-page .share-card-category progress::-webkit-progress-bar {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.share-page .share-card-tone-dark .share-card-category progress::-webkit-progress-bar {
+  background: rgba(19, 32, 34, 0.14);
+}
+
+.share-page .share-card-category progress::-webkit-progress-value {
+  border-radius: 999px;
+  background: var(--category-color, var(--poster-accent));
+}
+
+.share-page .share-card-category progress::-moz-progress-bar {
+  border-radius: 999px;
+  background: var(--category-color, var(--poster-accent));
+}
+
+.share-page .share-card-category:nth-child(n + 4) {
+  display: none;
+}
+
+.share-page .share-card-heatmap-block {
+  margin-top: auto;
+  padding-bottom: 0.68rem;
+}
+
+.share-page .share-poster-heatmap {
+  display: grid;
+  grid-template-columns: repeat(14, 1fr);
+  gap: 3px;
+}
+
+.share-page .share-poster-heatmap span {
+  aspect-ratio: 1;
+  border-radius: 3px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+.share-page .share-card-tone-dark .share-poster-heatmap span {
+  box-shadow: inset 0 0 0 1px rgba(19, 32, 34, 0.08);
+}
+
+.share-page .share-card-foot {
+  margin-top: 0;
+  min-height: 20px;
+  padding-top: 0;
+  border-top: 0 !important;
+  background: transparent !important;
+  background-image: none !important;
+  box-shadow: none !important;
+}
+
+.share-page .share-card-foot span {
+  color: rgba(255, 255, 255, 0.64) !important;
+}
+
+.share-page .share-card-foot strong {
+  color: #ffffff;
+}
+
+.share-page .share-card-tone-dark .share-card-foot span {
+  color: rgba(19, 32, 34, 0.62) !important;
+}
+
+.share-page .share-card-tone-dark .share-card-foot strong {
+  color: #132022;
+}
+
+.share-page .share-output {
+  width: min(100%, 250px);
+}
+
+.share-page .share-output img {
+  width: 100%;
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
+}
+
+@media (max-width: 1100px) {
+  .share-page .share-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .share-page .share-controls {
+    position: static;
+  }
+
+  .share-page .share-preview-panel {
+    min-height: 0;
+  }
+}
+
+@media (max-width: 700px) {
+  .share-page .share-background-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .share-page .share-preview-panel {
+    padding: 0.8rem;
+  }
+
+  .share-page .share-preview-shell {
+    width: min(100%, 360px);
+  }
+
+  .share-page .share-card {
+    width: min(350px, 100%);
+    border-radius: 24px;
+  }
+
+  .share-page .poster-content {
+    padding: 18px;
+    gap: 9px;
+  }
+
+  .share-page .share-card-hero {
+    min-height: 102px;
+  }
+
+  .share-page .share-card-hero .share-card-private-title {
+    font-size: 1.95rem;
+  }
+
+  .share-page .share-card-hero strong b {
+    font-size: 2.2rem;
+  }
+
+  .share-page .share-card-hero strong i {
+    font-size: 0.88rem;
+  }
+
+  .share-page .share-card-metrics {
+    gap: 0.45rem;
+  }
+
+  .share-page .poster-metric {
+    min-height: 64px;
+    padding: 0.54rem;
+    border-radius: 14px;
+  }
+
+  .share-page .poster-metric strong {
+    font-size: 0.92rem;
+  }
+
+  .share-page .poster-metric small {
+    font-size: 0.68rem;
+  }
+
+  .share-page .poster-card {
+    padding: 0.64rem;
+  }
+}
