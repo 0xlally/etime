@@ -8764,152 +8764,276 @@ table td {
 }
 
 .timer-page .ui-page-header {
-  width: min(100%, 1480px);
+  width: min(100%, 1360px);
   justify-self: center;
   min-height: auto;
-  margin: 0 auto clamp(0.95rem, 1.8vw, 1.45rem);
+  margin: 0 auto clamp(0.7rem, 1.4vw, 1rem);
   padding: 0;
+  align-items: flex-end;
 }
 
 .timer-page .ui-page-header h1 {
-  font-size: clamp(3.7rem, 5.4vw, 5.2rem);
-  line-height: 0.9;
+  font-size: clamp(3.15rem, 5vw, 4.8rem);
+  line-height: 0.92;
 }
 
 .timer-page .ui-page-header p {
-  margin-top: 0.65rem;
+  margin-top: 0.42rem;
   font-size: clamp(1rem, 1vw, 1.12rem);
 }
 
+.timer-page .ui-page-action {
+  align-self: flex-end;
+}
+
+.timer-today-card {
+  width: min(36vw, 330px);
+  min-width: 270px;
+  display: grid;
+  gap: 0.28rem;
+  padding: 0.85rem 1rem 0.95rem;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #000000;
+}
+
+.timer-today-card span,
+.timer-today-card small {
+  color: #000000;
+  font-weight: 800;
+}
+
+.timer-today-card span {
+  font-size: 0.78rem;
+}
+
+.timer-today-card strong {
+  color: #000000;
+  font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+  line-height: 1;
+}
+
+.timer-today-card small {
+  font-size: 0.78rem;
+  line-height: 1.35;
+}
+
+.timer-today-card .ui-progress {
+  height: 6px;
+  margin-top: 0.25rem;
+  border: 1px solid #000000;
+}
+
 .timer-shell {
-  width: min(100%, 1480px);
+  width: min(100%, 1360px);
   max-width: none;
   justify-self: center;
   padding: 0;
   display: grid;
-  grid-template-columns: minmax(620px, 1.08fr) minmax(520px, 0.92fr);
-  gap: clamp(1rem, 1.6vw, 1.35rem);
+  grid-template-columns: 1fr;
+  gap: clamp(0.72rem, 1.3vw, 1rem);
   align-items: start;
 }
 
 .timer-sync-bar {
-  grid-column: 1 / -1;
-}
-
-.timer-page .timer-grid {
-  grid-column: 2;
   width: 100%;
-  display: block;
 }
 
 .timer-card {
-  min-height: 466px;
+  width: min(100%, 1180px);
+  min-height: clamp(520px, 52vh, 680px);
   justify-content: center;
-  padding: clamp(1.45rem, 2vw, 1.9rem);
+  justify-self: center;
+  padding: clamp(1.6rem, 2.4vw, 2.4rem);
 }
 
 .timer-card .mode-toggle {
-  width: min(100%, 372px);
-  margin-bottom: clamp(1.25rem, 2.2vw, 1.75rem);
+  width: min(100%, 410px);
+  margin-bottom: clamp(1.3rem, 2.2vw, 1.85rem);
 }
 
 .timer-focus-top {
-  width: min(100%, 560px);
-  margin-bottom: 1.05rem;
+  width: min(100%, 640px);
+  margin-bottom: clamp(1rem, 1.8vw, 1.4rem);
 }
 
 .timer-card .timer-controls {
-  width: min(100%, 610px);
+  width: min(100%, 860px);
   margin: 0 auto;
-  gap: 1.05rem;
+  gap: clamp(1rem, 1.8vw, 1.45rem);
 }
 
 .timer-card .timer-display {
-  padding: clamp(1rem, 2.2vw, 1.25rem) 0;
-  font-size: clamp(4.45rem, 5.5vw, 6rem);
+  padding: clamp(1.25rem, 2.6vw, 2rem) 0;
+  font-size: clamp(5.2rem, 9.2vw, 10.5rem);
+  line-height: 0.9;
 }
 
 .timer-card .timer-footer {
-  grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
+  grid-template-columns: minmax(240px, 0.76fr) minmax(260px, 1.24fr);
+  align-items: stretch;
 }
 
-.quick-start-card,
-.target-card {
-  padding: clamp(1.2rem, 1.6vw, 1.45rem);
+.timer-buttons button {
+  min-height: clamp(68px, 6vw, 84px);
+  font-size: clamp(1.05rem, 1.2vw, 1.28rem);
 }
 
 .quick-start-card {
-  min-height: 286px;
+  width: 100%;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: clamp(0.7rem, 1.2vw, 1rem);
+  padding: clamp(0.76rem, 1.1vw, 0.95rem);
 }
 
 .quick-start-card .ui-section-header {
-  align-items: start;
+  width: auto;
+  min-width: 120px;
+  margin: 0;
+  display: block;
 }
 
 .quick-start-card .ui-section-header h2 {
-  font-size: clamp(1.5rem, 1.9vw, 1.85rem);
+  margin-top: 0;
+  font-size: clamp(1.05rem, 1.2vw, 1.22rem);
+  line-height: 1.05;
+}
+
+.quick-start-card .ui-eyebrow,
+.quick-start-card .ui-section-header p {
+  display: none;
+}
+
+.quick-start-card .ui-section-action {
+  margin-top: 0.48rem;
+}
+
+.quick-start-card .ui-button-secondary {
+  min-height: 32px;
+  padding: 0.38rem 0.62rem;
+  border-radius: 8px;
+  font-size: 0.78rem;
+  white-space: nowrap;
 }
 
 .quick-template-list {
-  gap: 0.75rem;
+  min-width: 0;
+  display: flex;
+  gap: 0.65rem;
+  overflow-x: auto;
+  padding: 0.08rem 0.06rem 0.18rem;
+  scrollbar-width: thin;
 }
 
 .quick-template-item {
-  padding: 0.9rem;
+  flex: 0 0 clamp(92px, 10vw, 118px);
+  min-height: 108px;
+  padding: 0.48rem;
+  display: grid;
+  gap: 0.4rem;
+  border-top-width: 3px;
+  scroll-snap-align: start;
 }
 
 .quick-template-start {
-  min-height: 76px;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  justify-items: center;
+  gap: 0.35rem;
+  text-align: center;
+}
+
+.quick-template-start > span:not(.quick-template-icon) {
+  min-width: 0;
+  width: 100%;
+}
+
+.quick-template-start small {
+  display: none;
+}
+
+.quick-template-start strong {
+  width: 100%;
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.18;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.quick-template-start em {
+  max-width: 100%;
+  padding: 0.14rem 0.34rem;
+  border: 1px solid #000000;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  line-height: 1.1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.quick-template-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  font-size: 0.92rem;
 }
 
 .quick-template-actions {
-  gap: 0.5rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.22rem;
 }
 
-.target-card {
-  grid-template-columns: 128px minmax(0, 1fr);
-  min-height: 178px;
-  gap: 1rem;
+.quick-template-actions button {
+  min-width: 0;
+  min-height: 24px;
+  padding: 0 0.28rem;
+  border-radius: 6px;
+  font-size: 0.66rem;
+  line-height: 1;
+}
+
+.quick-template-actions button:nth-child(1),
+.quick-template-actions button:nth-child(2),
+.quick-template-actions button.danger {
+  display: none;
+}
+
+.quick-template-empty,
+.quick-start-card .ui-loading {
+  min-height: 108px;
   width: 100%;
-  justify-self: stretch;
-}
-
-.target-ring {
-  width: 126px;
-  height: 126px;
-}
-
-.target-ring-inner {
-  width: 104px;
-  height: 104px;
-}
-
-.target-meta {
-  gap: 0.38rem;
-}
-
-.target-title {
-  font-size: clamp(1.1rem, 1.35vw, 1.35rem);
+  padding: 0.7rem;
 }
 
 @media (max-width: 1500px) {
-  .timer-shell {
-    grid-template-columns: 1fr;
+  .timer-card {
+    width: 100%;
   }
 
-  .timer-page .timer-grid,
-  .target-card {
-    grid-column: auto;
+  .timer-card .timer-display {
+    font-size: clamp(5rem, 11.5vw, 9.4rem);
   }
 }
 
 @media (max-width: 700px) {
   .timer-page .ui-page-header {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.62rem;
     margin-bottom: 0.7rem;
   }
 
   .timer-page .ui-page-header h1 {
-    font-size: 2rem;
+    font-size: 2.15rem;
     line-height: 1;
   }
 
@@ -8918,95 +9042,321 @@ table td {
     font-size: 0.92rem;
   }
 
+  .timer-page .ui-page-action,
+  .timer-today-card {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .timer-today-card {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    gap: 0.25rem 0.65rem;
+    padding: 0.72rem 0.78rem;
+  }
+
+  .timer-today-card span,
+  .timer-today-card small,
+  .timer-today-card .ui-progress {
+    grid-column: 1 / -1;
+  }
+
+  .timer-today-card strong {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    align-self: center;
+    font-size: clamp(1.25rem, 7vw, 1.8rem);
+  }
+
   .timer-shell {
-    gap: 0.7rem;
+    gap: 0.62rem;
     display: grid;
     grid-template-columns: 1fr;
   }
 
-  .timer-card {
-    min-height: 0;
-    padding: 0.78rem;
-  }
-
-  .timer-card .mode-toggle {
-    width: min(100%, 284px);
-    margin-bottom: 0.7rem;
-  }
-
-  .timer-focus-top {
-    margin-bottom: 0.6rem;
-  }
-
-  .timer-card .timer-controls {
-    gap: 0.7rem;
-  }
-
-  .timer-card .timer-display {
-    padding: 0.76rem 0;
-    font-size: clamp(2.65rem, 14vw, 3.65rem);
-  }
-
-  .quick-start-card,
-  .target-card {
-    padding: 0.82rem;
-  }
-
   .quick-start-card {
-    min-height: 0;
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 0.58rem;
+    padding: 0.66rem;
   }
 
   .quick-start-card .ui-section-header {
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
-    gap: 0.75rem;
+    gap: 0.5rem;
   }
 
   .quick-start-card .ui-section-header h2 {
-    font-size: 1.7rem;
-    line-height: 1;
-  }
-
-  .quick-start-card .ui-section-header p {
-    margin-top: 0.45rem;
-  }
-
-  .quick-start-card .ui-section-action {
-    align-self: start;
-  }
-
-  .quick-start-card .ui-button-secondary {
-    width: auto;
-    min-height: 42px;
-    padding: 0.55rem 0.75rem;
-    white-space: nowrap;
-  }
-
-  .quick-template-item {
-    padding: 0.72rem;
-  }
-
-  .quick-template-start {
-    min-height: 62px;
-    gap: 0.65rem;
-  }
-
-  .quick-template-icon {
-    width: 48px;
-    height: 48px;
-  }
-
-  .quick-template-start strong {
     font-size: 1rem;
   }
 
-  .quick-template-start em {
-    font-size: 0.95rem;
+  .quick-start-card .ui-section-action {
+    margin-top: 0;
   }
 
-  .target-card {
-    grid-template-columns: 112px minmax(0, 1fr);
+  .quick-template-list {
+    gap: 0.5rem;
+    padding-bottom: 0.08rem;
+  }
+
+  .quick-template-item {
+    flex-basis: 86px;
+    min-height: 96px;
+    padding: 0.42rem;
+  }
+
+  .quick-template-icon {
+    width: 38px;
+    height: 38px;
+  }
+
+  .quick-template-start strong {
+    font-size: 0.76rem;
+  }
+
+  .quick-template-start em {
+    font-size: 0.62rem;
+  }
+
+  .quick-template-actions button {
+    min-height: 22px;
+    font-size: 0.62rem;
+  }
+
+  .timer-card {
+    min-height: min(64vh, 540px);
+    padding: 0.86rem;
+  }
+
+  .timer-card .mode-toggle {
+    width: min(100%, 310px);
+    margin-bottom: 0.78rem;
+  }
+
+  .timer-focus-top {
+    margin-bottom: 0.78rem;
+  }
+
+  .timer-card .timer-controls {
+    gap: 0.86rem;
+  }
+
+  .timer-card .timer-display {
+    padding: 1rem 0;
+    font-size: clamp(3.15rem, 17vw, 4.7rem);
+  }
+
+  .timer-card .timer-footer {
+    grid-template-columns: 1fr;
+    gap: 0.62rem;
+  }
+
+  .multiplier-control {
+    min-height: 48px;
+  }
+
+  .timer-buttons button {
+    min-height: 58px;
+  }
+}
+
+/* Timer final arrangement: quick icons above the enlarged timer. */
+.timer-shell {
+  grid-template-columns: minmax(0, 1fr) !important;
+  grid-auto-flow: row;
+}
+
+.timer-shell > .timer-sync-bar {
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+  order: 0;
+}
+
+.timer-shell > .quick-start-card {
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+  order: 1;
+}
+
+.timer-shell > .timer-card {
+  grid-column: 1 / -1 !important;
+  grid-row: auto !important;
+  order: 2;
+}
+
+/* Timer compact icon-row polish after screenshot review. */
+.quick-start-card {
+  padding: clamp(0.62rem, 0.9vw, 0.78rem) !important;
+}
+
+.quick-template-item {
+  flex-basis: clamp(82px, 8vw, 104px);
+  min-height: 94px;
+  padding: 0.42rem;
+}
+
+.quick-template-icon {
+  width: 38px;
+  height: 38px;
+}
+
+.quick-template-start {
+  gap: 0.28rem;
+}
+
+.quick-template-start strong {
+  font-size: 0.76rem;
+}
+
+.quick-template-start em {
+  font-size: 0.62rem;
+}
+
+@media (max-width: 700px) {
+  .timer-page .ui-page-header {
+    gap: 0.45rem;
+    margin-bottom: 0.48rem;
+  }
+
+  .timer-page .ui-page-header h1 {
+    font-size: 1.85rem;
+  }
+
+  .timer-page .ui-page-header p {
+    margin-top: 0.22rem;
+    font-size: 0.84rem;
+    line-height: 1.25;
+  }
+
+  .timer-today-card {
     min-height: 0;
+    padding: 0.58rem 0.68rem;
+    gap: 0.18rem 0.5rem;
+  }
+
+  .timer-today-card span,
+  .timer-today-card small {
+    font-size: 0.72rem;
+    line-height: 1.2;
+  }
+
+  .timer-today-card strong {
+    font-size: clamp(1.15rem, 5.8vw, 1.55rem);
+  }
+
+  .timer-today-card .ui-progress {
+    height: 5px;
+    margin-top: 0.12rem;
+  }
+
+  .timer-shell {
+    gap: 0.5rem;
+  }
+
+  .quick-start-card {
+    gap: 0.45rem;
+    padding: 0.52rem !important;
+  }
+
+  .quick-start-card .ui-section-header {
+    gap: 0.42rem;
+  }
+
+  .quick-start-card .ui-section-header h2 {
+    font-size: 0.92rem;
+  }
+
+  .quick-start-card .ui-button-secondary {
+    min-height: 30px;
+    padding: 0.3rem 0.48rem;
+    font-size: 0.72rem;
+  }
+
+  .quick-template-list {
+    gap: 0.42rem;
+  }
+
+  .quick-template-item {
+    flex-basis: 76px;
+    min-height: 82px;
+    padding: 0.34rem;
+  }
+
+  .quick-template-icon {
+    width: 32px;
+    height: 32px;
+    font-size: 0.82rem;
+  }
+
+  .quick-template-start strong {
+    font-size: 0.68rem;
+  }
+
+  .quick-template-start em {
+    max-width: 56px;
+    font-size: 0.56rem;
+  }
+
+  .quick-template-actions button {
+    min-height: 20px;
+    padding: 0 0.22rem;
+    font-size: 0.56rem;
+  }
+
+  .timer-card {
+    min-height: 0;
+    justify-content: flex-start;
+    padding: 0.68rem 0.68rem 0.42rem;
+  }
+
+  .timer-card .mode-toggle {
+    width: min(100%, 260px);
+    margin-bottom: 0.52rem;
+  }
+
+  .timer-card .mode-toggle button {
+    min-height: 32px;
+    font-size: 0.9rem;
+  }
+
+  .timer-focus-top {
+    margin-bottom: 0.56rem;
+    gap: 0.48rem;
+  }
+
+  .timer-category-inline > span {
+    font-size: 0.8rem;
+    margin-bottom: 0.22rem;
+  }
+
+  .timer-category-inline .category-select select,
+  .manual-category-field .category-select select,
+  .timer-create-category {
+    min-height: 38px;
+    font-size: 0.86rem;
+  }
+
+  .timer-card .timer-controls {
+    gap: 0.58rem;
+  }
+
+  .timer-card .timer-display {
+    padding: 0.76rem 0;
+    font-size: clamp(2.9rem, 15.8vw, 4.25rem);
+  }
+
+  .timer-card .timer-footer {
+    gap: 0.48rem;
+  }
+
+  .multiplier-control {
+    min-height: 44px;
+    padding: 0.45rem 0.58rem;
+  }
+
+  .timer-buttons button {
+    min-height: 50px;
   }
 }

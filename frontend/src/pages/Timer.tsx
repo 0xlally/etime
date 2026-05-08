@@ -481,12 +481,35 @@ export const Timer: React.FC = () => {
     || offlineState.pendingCount > 0
     || offlineState.failedCount > 0
     || Boolean(restoreMessage);
+  const remainingTargetSeconds = progress ? Math.max(0, progress.target - progress.actual) : 0;
+  const targetPeriod = highlightTarget?.period ?? highlightTarget?.target_type ?? 'daily';
+  const targetPeriodLabel = targetPeriod === 'tomorrow'
+    ? '明天'
+    : targetPeriod === 'daily'
+    ? '每日'
+    : targetPeriod === 'weekly'
+    ? '每周'
+    : '每月';
 
   return (
     <PageShell
       className="timer-page"
       title="计时"
       description="选一个分类，开始一段安静的时间。"
+      action={(
+        <div className={`timer-today-card ${progress ? '' : 'is-empty'}`}>
+          <span>今日剩余</span>
+          <strong>{progress ? formatTime(remainingTargetSeconds) : '未设置'}</strong>
+          <small>
+            {progress
+              ? `${targetPeriodLabel}目标 ${formatTime(progress.actual)} / ${formatTime(progress.target)}`
+              : '暂无追踪目标'}
+          </small>
+          {progress && (
+            <Progress value={progress.actual} max={progress.target} label="目标完成进度" />
+          )}
+        </div>
+      )}
     >
       <div className="timer-shell">
         {showSyncBar && (
@@ -504,115 +527,11 @@ export const Timer: React.FC = () => {
           </div>
         )}
 
-        <Card className="timer-card">
-          <div className="mode-toggle">
-            <button className={!manualMode ? 'active' : ''} onClick={() => setManualMode(false)}>
-              计时
-            </button>
-            <button className={manualMode ? 'active' : ''} onClick={() => setManualMode(true)}>
-              补录
-            </button>
-          </div>
-
-          {!manualMode ? (
-            <>
-              <div className="timer-focus-top">
-                <div className="timer-category-inline">
-                  <span>分类</span>
-                  <CategorySelect
-                    value={categoryId}
-                    onChange={setCategoryId}
-                    showCreate={false}
-                  />
-                </div>
-                <button type="button" className="timer-create-category" onClick={() => setCategoryCreateOpen(true)}>
-                  新建
-                </button>
-              </div>
-
-              <TimerControls
-                categoryId={categoryId}
-                quickStartRequest={quickStartRequest}
-                syncSignal={syncSignal}
-                onSessionStart={loadTargetsAndProgress}
-                onSessionEnd={loadTargetsAndProgress}
-                onRunningChange={handleRunningChange}
-                onCategoryRestore={setCategoryId}
-                onOfflineStateChange={setOfflineState}
-                onRecoveredRunning={setRestoreMessage}
-                onQuickStartHandled={() => setQuickStartRequest(null)}
-              />
-            </>
-          ) : (
-            <form onSubmit={handleManualSubmit} className="manual-form">
-              <div className="manual-category-field">
-                <CategorySelect
-                  value={categoryId}
-                  onChange={setCategoryId}
-                  showCreate={false}
-                  label="分类"
-                />
-              </div>
-
-              <div className="form-group">
-                <label>日期</label>
-                <input
-                  type="date"
-                  value={manualData.entry_date}
-                  onChange={(e) =>
-                    setManualData({ ...manualData, entry_date: e.target.value })
-                  }
-                  required
-                />
-              </div>
-
-              <div className="form-group">
-                <label>小时</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="24"
-                  step="1"
-                  placeholder="0"
-                  value={manualData.hours}
-                  onChange={(e) =>
-                    setManualData({ ...manualData, hours: e.target.value })
-                  }
-                />
-              </div>
-
-              <div className="form-group">
-                <label>分钟</label>
-                <input
-                  type="number"
-                  min="0"
-                  max="59"
-                  step="1"
-                  placeholder="0"
-                  value={manualData.minutes}
-                  onChange={(e) => setManualData({ ...manualData, minutes: e.target.value })}
-                />
-              </div>
-
-              <div className="form-group">
-                <label>备注（可选）</label>
-                <textarea
-                  value={manualData.note}
-                  onChange={(e) => setManualData({ ...manualData, note: e.target.value })}
-                  rows={3}
-                />
-              </div>
-
-              <Button type="submit">提交补录</Button>
-            </form>
-          )}
-        </Card>
-
         <Card className="quick-start-card">
           <SectionHeader
             eyebrow="快捷开始"
-                title="常用卡片"
-                description="高频事项，一点即开始。"
+            title="常用卡片"
+            description="高频事项，一点即开始。"
             action={(
               <Button variant="secondary" onClick={handleOpenNewTemplate}>
                 新建模板
@@ -752,55 +671,109 @@ export const Timer: React.FC = () => {
           )}
         </Card>
 
-        <div className="timer-grid">
-          {highlightTarget && progress ? (
-            <Card className="target-card">
-              <div
-                className="target-ring"
-                style={{
-                  background: `conic-gradient(var(--color-accent) ${Math.min(100, (progress.actual / progress.target) * 100)}%, var(--color-muted) 0)`,
-                }}
-              >
-                <div className="target-ring-inner">
-                  <div className="target-value">
-                    {formatTime(progress.target - progress.actual > 0 ? progress.target - progress.actual : 0)}
-                  </div>
-                  <div className="target-label">剩余</div>
+        <Card className="timer-card">
+          <div className="mode-toggle">
+            <button className={!manualMode ? 'active' : ''} onClick={() => setManualMode(false)}>
+              计时
+            </button>
+            <button className={manualMode ? 'active' : ''} onClick={() => setManualMode(true)}>
+              补录
+            </button>
+          </div>
+
+          {!manualMode ? (
+            <>
+              <div className="timer-focus-top">
+                <div className="timer-category-inline">
+                  <span>分类</span>
+                  <CategorySelect
+                    value={categoryId}
+                    onChange={setCategoryId}
+                    showCreate={false}
+                  />
                 </div>
+                <button type="button" className="timer-create-category" onClick={() => setCategoryCreateOpen(true)}>
+                  新建
+                </button>
               </div>
 
-              <div className="target-meta">
-                <div className="target-title">
-                  今天还差 {formatTime(progress.target - progress.actual > 0 ? progress.target - progress.actual : 0)}
-                </div>
-                <div className="target-desc">
-                  已经很接近了。当前目标：
-                  {(highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'tomorrow'
-                    ? '明天'
-                    : (highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'daily'
-                    ? '每日'
-                    : (highlightTarget.period ?? highlightTarget.target_type ?? 'daily') === 'weekly'
-                    ? '每周'
-                    : '每月'}
-                </div>
-                <div className="target-desc">
-                  目标 {formatTime(highlightTarget.target_seconds)} · 窗口 {progress.start.toLocaleDateString()} - {progress.end.toLocaleDateString()}
-                </div>
-                <div className="target-progress">已完成 {formatTime(progress.actual)} / {formatTime(progress.target)}</div>
-                <Progress value={progress.actual} max={progress.target} label="目标完成进度" />
-              </div>
-            </Card>
-          ) : (
-            <Card className="target-card target-card-empty">
-              <EmptyState
-                compact
-                title="还没有正在追踪的目标"
-                description="可以先开始一段计时，或者去目标页设一个温和的小目标。"
+              <TimerControls
+                categoryId={categoryId}
+                quickStartRequest={quickStartRequest}
+                syncSignal={syncSignal}
+                onSessionStart={loadTargetsAndProgress}
+                onSessionEnd={loadTargetsAndProgress}
+                onRunningChange={handleRunningChange}
+                onCategoryRestore={setCategoryId}
+                onOfflineStateChange={setOfflineState}
+                onRecoveredRunning={setRestoreMessage}
+                onQuickStartHandled={() => setQuickStartRequest(null)}
               />
-            </Card>
-          )}
+            </>
+          ) : (
+            <form onSubmit={handleManualSubmit} className="manual-form">
+              <div className="manual-category-field">
+                <CategorySelect
+                  value={categoryId}
+                  onChange={setCategoryId}
+                  showCreate={false}
+                  label="分类"
+                />
+              </div>
 
-        </div>
+              <div className="form-group">
+                <label>日期</label>
+                <input
+                  type="date"
+                  value={manualData.entry_date}
+                  onChange={(e) =>
+                    setManualData({ ...manualData, entry_date: e.target.value })
+                  }
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label>小时</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="24"
+                  step="1"
+                  placeholder="0"
+                  value={manualData.hours}
+                  onChange={(e) =>
+                    setManualData({ ...manualData, hours: e.target.value })
+                  }
+                />
+              </div>
+
+              <div className="form-group">
+                <label>分钟</label>
+                <input
+                  type="number"
+                  min="0"
+                  max="59"
+                  step="1"
+                  placeholder="0"
+                  value={manualData.minutes}
+                  onChange={(e) => setManualData({ ...manualData, minutes: e.target.value })}
+                />
+              </div>
+
+              <div className="form-group">
+                <label>备注（可选）</label>
+                <textarea
+                  value={manualData.note}
+                  onChange={(e) => setManualData({ ...manualData, note: e.target.value })}
+                  rows={3}
+                />
+              </div>
+
+              <Button type="submit">提交补录</Button>
+            </form>
+          )}
+        </Card>
 
         {categoryCreateOpen && (
           <div className="timer-category-modal" role="dialog" aria-modal="true">
