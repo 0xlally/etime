@@ -14,6 +14,8 @@ import android.os.Looper;
 
 import androidx.core.app.NotificationCompat;
 
+import java.util.Set;
+
 import top.lally.etime.R;
 
 public class DisciplineService extends Service {
@@ -66,7 +68,13 @@ public class DisciplineService extends Service {
             return;
         }
 
-        long usageMs = DisciplineMonitor.getTodayUsageMs(this);
+        String scope = prefs.getString(DisciplinePrefs.KEY_SCOPE, DisciplinePrefs.SCOPE_ALL);
+        Set<String> selectedPackages = DisciplineMonitor.parseSelectedPackages(
+            prefs.getString(DisciplinePrefs.KEY_SELECTED_PACKAGES, "")
+        );
+        long usageMs = DisciplinePrefs.SCOPE_SELECTED.equals(scope)
+            ? DisciplineMonitor.getTodayUsageMs(this, selectedPackages)
+            : DisciplineMonitor.getTodayUsageMs(this);
         if (usageMs < limitMinutes * 60_000L) {
             return;
         }

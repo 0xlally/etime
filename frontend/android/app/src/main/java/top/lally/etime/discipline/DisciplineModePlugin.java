@@ -9,11 +9,14 @@ import android.provider.Settings;
 
 import androidx.core.content.ContextCompat;
 
+import com.getcapacitor.JSArray;
 import com.getcapacitor.JSObject;
 import com.getcapacitor.Plugin;
 import com.getcapacitor.PluginCall;
 import com.getcapacitor.PluginMethod;
 import com.getcapacitor.annotation.CapacitorPlugin;
+
+import java.util.Set;
 
 @CapacitorPlugin(name = "DisciplineMode")
 public class DisciplineModePlugin extends Plugin {
@@ -53,7 +56,10 @@ public class DisciplineModePlugin extends Plugin {
     public void configure(PluginCall call) {
         Integer limitMinutesValue = call.getInt("limitMinutes");
         String password = call.getString("password");
+        String scope = call.getString("scope", DisciplinePrefs.SCOPE_ALL);
+        JSArray selectedPackagesArray = call.getArray("selectedPackages", new JSArray());
         int limitMinutes = limitMinutesValue == null ? 0 : limitMinutesValue;
+        String selectedPackages = normalizeSelectedPackages(selectedPackagesArray);
 
         if (limitMinutes <= 0) {
             call.reject("使用时长必须大于 0 分钟");
@@ -62,6 +68,11 @@ public class DisciplineModePlugin extends Plugin {
 
         if (password == null || password.length() < 4) {
             call.reject("解锁密码至少需要 4 位");
+            return;
+        }
+
+        if (DisciplinePrefs.SCOPE_SELECTED.equals(scope) && selectedPackages.isEmpty()) {
+            call.reject("请至少填写一个要限制的应用包名");
             return;
         }
 
@@ -86,6 +97,8 @@ public class DisciplineModePlugin extends Plugin {
         prefs.edit()
             .putBoolean(DisciplinePrefs.KEY_ENABLED, true)
             .putInt(DisciplinePrefs.KEY_LIMIT_MINUTES, limitMinutes)
+            .putString(DisciplinePrefs.KEY_SCOPE, DisciplinePrefs.SCOPE_SELECTED.equals(scope) ? DisciplinePrefs.SCOPE_SELECTED : DisciplinePrefs.SCOPE_ALL)
+            .putString(DisciplinePrefs.KEY_SELECTED_PACKAGES, selectedPackages)
             .putLong(DisciplinePrefs.KEY_SUPPRESSED_UNTIL_MS, 0L)
             .apply();
 
@@ -112,7 +125,12 @@ public class DisciplineModePlugin extends Plugin {
         SharedPreferences prefs = DisciplinePrefs.get(getContext());
         boolean enabled = prefs.getBoolean(DisciplinePrefs.KEY_ENABLED, false);
         int limitMinutes = prefs.getInt(DisciplinePrefs.KEY_LIMIT_MINUTES, 0);
-        long usageMs = DisciplineMonitor.getTodayUsageMs(getContext());
+        String scope = prefs.getString(DisciplinePrefs.KEY_SCOPE, DisciplinePrefs.SCOPE_ALL);
+        String selectedPackagesValue = prefs.getString(DisciplinePrefs.KEY_SELECTED_PACKAGES, "");
+        Set<String> selectedPackages = DisciplineMonitor.parseSelectedPackages(selectedPackagesValue);
+        long usageMs = DisciplinePrefs.SCOPE_SELECTED.equals(scope)
+            ? DisciplineMonitor.getTodayUsageMs(getContext(), selectedPackages)
+            : DisciplineMonitor.getTodayUsageMs(getContext());
 
         JSObject result = new JSObject();
         result.put("supported", true);
@@ -122,8 +140,29 @@ public class DisciplineModePlugin extends Plugin {
         result.put("usageAccessGranted", DisciplineMonitor.hasUsageAccess(getContext()));
         result.put("overlayPermissionGranted", DisciplineMonitor.hasOverlayPermission(getContext()));
         result.put("serviceRunning", isServiceRunning());
+        result.put("scope", DisciplinePrefs.SCOPE_SELECTED.equals(scope) ? DisciplinePrefs.SCOPE_SELECTED : DisciplinePrefs.SCOPE_ALL);
+        result.put("selectedPackages", new JSArray(selectedPackages));
         result.put("reminderMethod", "overlay");
         return result;
+    }
+
+    private String normalizeSelectedPackages(JSArray selectedPackagesArray) {
+        StringBuilder builder = new StringBuilder();
+        if (selectedPackagesArray == null) {
+            return "";
+        }
+
+        for (int i = 0; i < selectedPackagesArray.length(); i++) {
+            String packageName = selectedPackagesArray.optString(i, "").trim();
+            if (packageName.isEmpty()) {
+                continue;
+            }
+            if (builder.length() > 0) {
+                builder.append('\n');
+            }
+            builder.append(packageName);
+        }
+        return builder.toString();
     }
 
     private void startMonitorService() {

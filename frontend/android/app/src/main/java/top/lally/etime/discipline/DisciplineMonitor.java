@@ -8,8 +8,10 @@ import android.os.Process;
 import android.provider.Settings;
 
 import java.util.Calendar;
+import java.util.HashSet;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 final class DisciplineMonitor {
     private DisciplineMonitor() {}
@@ -37,6 +39,10 @@ final class DisciplineMonitor {
     }
 
     static long getTodayUsageMs(Context context) {
+        return getTodayUsageMs(context, null);
+    }
+
+    static long getTodayUsageMs(Context context, Set<String> includedPackages) {
         UsageStatsManager manager = (UsageStatsManager) context.getSystemService(Context.USAGE_STATS_SERVICE);
         if (manager == null || !hasUsageAccess(context)) {
             return 0L;
@@ -54,6 +60,9 @@ final class DisciplineMonitor {
             events.getNextEvent(event);
             String packageName = event.getPackageName();
             if (packageName == null || packageName.equals(ownPackage)) {
+                continue;
+            }
+            if (includedPackages != null && !includedPackages.contains(packageName)) {
                 continue;
             }
 
@@ -83,6 +92,22 @@ final class DisciplineMonitor {
             total += duration;
         }
         return total;
+    }
+
+    static Set<String> parseSelectedPackages(String rawPackages) {
+        Set<String> packages = new HashSet<>();
+        if (rawPackages == null) {
+            return packages;
+        }
+
+        String[] values = rawPackages.split("[\\s,;]+");
+        for (String value : values) {
+            String packageName = value.trim();
+            if (!packageName.isEmpty()) {
+                packages.add(packageName);
+            }
+        }
+        return packages;
     }
 
     private static long startOfTodayMs() {

@@ -4,6 +4,8 @@ import { disciplineMode, DisciplineStatus } from '../native/disciplineMode';
 export const Discipline: React.FC = () => {
   const [status, setStatus] = useState<DisciplineStatus | null>(null);
   const [limitMinutes, setLimitMinutes] = useState(120);
+  const [scope, setScope] = useState<'all' | 'selected'>('all');
+  const [selectedPackagesText, setSelectedPackagesText] = useState('');
   const [password, setPassword] = useState('');
   const [disablePassword, setDisablePassword] = useState('');
   const [message, setMessage] = useState('');
@@ -15,6 +17,8 @@ export const Discipline: React.FC = () => {
     if (nextStatus.limitMinutes > 0) {
       setLimitMinutes(nextStatus.limitMinutes);
     }
+    setScope(nextStatus.scope ?? 'all');
+    setSelectedPackagesText((nextStatus.selectedPackages ?? []).join('\n'));
   };
 
   useEffect(() => {
@@ -40,8 +44,18 @@ export const Discipline: React.FC = () => {
 
   const handleEnable = (event: React.FormEvent) => {
     event.preventDefault();
+    const selectedPackages = selectedPackagesText
+      .split(/\s+/)
+      .map((item) => item.trim())
+      .filter(Boolean);
+
+    if (scope === 'selected' && selectedPackages.length === 0) {
+      setMessage('请至少填写一个应用包名');
+      return;
+    }
+
     runAction(
-      () => disciplineMode.configure({ limitMinutes, password }),
+      () => disciplineMode.configure({ limitMinutes, password, scope, selectedPackages }),
       '自律模式已开启'
     ).then(() => setPassword(''));
   };
@@ -92,6 +106,10 @@ export const Discipline: React.FC = () => {
             <strong>{status?.limitMinutes ? `${status.limitMinutes} 分钟` : '未设置'}</strong>
           </div>
           <div>
+            <span>统计范围</span>
+            <strong>{status?.scope === 'selected' ? `${status.selectedPackages.length} 个应用` : '全部应用'}</strong>
+          </div>
+          <div>
             <span>后台监控</span>
             <strong>{status?.serviceRunning ? '运行中' : '未运行'}</strong>
           </div>
@@ -135,6 +153,24 @@ export const Discipline: React.FC = () => {
               required
             />
           </label>
+          <label>
+            统计范围
+            <select value={scope} onChange={(event) => setScope(event.target.value as 'all' | 'selected')}>
+              <option value="all">全部应用</option>
+              <option value="selected">指定应用</option>
+            </select>
+          </label>
+          {scope === 'selected' && (
+            <label>
+              应用包名（每行一个）
+              <textarea
+                rows={4}
+                placeholder="com.example.app"
+                value={selectedPackagesText}
+                onChange={(event) => setSelectedPackagesText(event.target.value)}
+              />
+            </label>
+          )}
           <label>
             解锁密码
             <input

@@ -19,6 +19,10 @@ final class DisciplinePrefs {
     static final String KEY_PASSWORD_SALT = "password_salt";
     static final String KEY_PASSWORD_ITERATIONS = "password_iterations";
     static final String KEY_SUPPRESSED_UNTIL_MS = "suppressed_until_ms";
+    static final String KEY_SCOPE = "scope";
+    static final String KEY_SELECTED_PACKAGES = "selected_packages";
+    static final String SCOPE_ALL = "all";
+    static final String SCOPE_SELECTED = "selected";
 
     private static final int SALT_BYTES = 16;
     private static final int PBKDF2_ITERATIONS = 120_000;

@@ -153,6 +153,7 @@ export const Planner: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [targetLoading, setTargetLoading] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
+  const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [targetFormOpen, setTargetFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<CalendarTask | null>(null);
   const [form, setForm] = useState<TaskFormState>(emptyForm());
@@ -322,6 +323,7 @@ export const Planner: React.FC = () => {
   }, [targetDashboard]);
 
   const openCreate = (date = anchorDate) => {
+    setSelectedDay(null);
     setEditingTask(null);
     setForm(emptyForm(format(date, 'yyyy-MM-dd')));
     setModalOpen(true);
@@ -338,6 +340,7 @@ export const Planner: React.FC = () => {
   const openEdit = (task: CalendarTask) => {
     const start = toLocalDateTimeInput(task.scheduled_start);
     const end = toLocalDateTimeInput(task.scheduled_end);
+    setSelectedDay(null);
     setEditingTask(task);
     setForm({
       title: task.title,
@@ -352,6 +355,14 @@ export const Planner: React.FC = () => {
       reminder_minutes_before: String(task.reminder_minutes_before ?? 10),
     });
     setModalOpen(true);
+  };
+
+  const handleDayHeadClick = (day: Date) => {
+    if (window.matchMedia('(max-width: 700px)').matches) {
+      setSelectedDay(day);
+      return;
+    }
+    openCreate(day);
   };
 
   const buildPayload = (): CalendarTaskPayload | null => {
@@ -622,7 +633,7 @@ export const Planner: React.FC = () => {
                     className={`planner-day ${outsideMonth ? 'muted' : ''} ${isSameDay(day, new Date()) ? 'today' : ''}`}
                     key={key}
                   >
-                    <button type="button" className="planner-day-head" onClick={() => openCreate(day)}>
+                    <button type="button" className="planner-day-head" onClick={() => handleDayHeadClick(day)}>
                       <span>{format(day, view === 'month' ? 'd' : 'MM/dd')}</span>
                       <small>{format(day, 'EEE')}</small>
                     </button>
@@ -850,6 +861,34 @@ export const Planner: React.FC = () => {
           )}
         </Card>
       </section>
+
+      {selectedDay && (
+        <div className="planner-modal planner-day-modal" role="dialog" aria-modal="true">
+          <div className="planner-dialog">
+            <header>
+              <div>
+                <span>计划内容</span>
+                <h2>{format(selectedDay, 'yyyy/MM/dd')}</h2>
+              </div>
+              <Button variant="ghost" onClick={() => setSelectedDay(null)}>关闭</Button>
+            </header>
+
+            <div className="planner-day-detail-list">
+              {(scheduledByDate.get(format(selectedDay, 'yyyy-MM-dd')) ?? []).length === 0 ? (
+                <EmptyState compact title="这天还没有计划" description="可以直接新增一个事项。" />
+              ) : (
+                (scheduledByDate.get(format(selectedDay, 'yyyy-MM-dd')) ?? []).map((task) => renderTask(task))
+              )}
+            </div>
+
+            <footer>
+              <Button variant="secondary" onClick={() => openCreate(selectedDay)}>
+                <Plus size={17} /> 新增计划
+              </Button>
+            </footer>
+          </div>
+        </div>
+      )}
 
       {modalOpen && (
         <div className="planner-modal" role="dialog" aria-modal="true">

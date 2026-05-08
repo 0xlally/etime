@@ -297,7 +297,7 @@ export const Review: React.FC = () => {
           <h1>复盘</h1>
           <p>{mode === 'daily' ? '日报' : mode === 'weekly' ? '周报' : '月报'}把统计、目标和时痕串在一起。</p>
         </div>
-        <button onClick={handleCopy} disabled={!currentMarkdown}>
+        <button className="review-export-top" onClick={handleCopy} disabled={!currentMarkdown}>
           <Clipboard size={17} /> 导出 Markdown
         </button>
       </div>
@@ -317,6 +317,9 @@ export const Review: React.FC = () => {
         <section className="review-panel markdown-panel">
           <h2>Markdown 预览</h2>
           <pre>{currentMarkdown}</pre>
+          <button className="review-export-bottom" onClick={handleCopy}>
+            <Clipboard size={17} /> 导出 Markdown
+          </button>
         </section>
       )}
     </div>

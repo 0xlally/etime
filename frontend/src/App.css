@@ -1316,7 +1316,9 @@ table button {
   font-weight: 700;
 }
 
-.discipline-form input {
+.discipline-form input,
+.discipline-form select,
+.discipline-form textarea {
   border: 1px solid #d8d7d1;
   border-radius: 8px;
   padding: 0.75rem;
@@ -6190,7 +6192,9 @@ button:disabled,
 .group-mini-form input,
 .group-mini-form textarea,
 .group-composer input,
-.discipline-form input {
+.discipline-form input,
+.discipline-form select,
+.discipline-form textarea {
   background: #ffffff;
   border-color: #000000;
   color: #000000;
@@ -7056,7 +7060,9 @@ body,
 .group-mini-form input,
 .group-mini-form textarea,
 .group-composer input,
-.discipline-form input {
+.discipline-form input,
+.discipline-form select,
+.discipline-form textarea {
   background: #ffffff;
   border-color: #000000;
   box-shadow: none;
@@ -8597,5 +8603,156 @@ table td {
 
   .share-page .poster-card {
     padding: 0.64rem;
+  }
+}
+
+/* Requested mobile and modal refinements */
+.target-ring-inner {
+  padding: 0.6rem;
+}
+
+.target-value {
+  max-width: 6.2em;
+  margin: 0 auto;
+  font-size: clamp(0.86rem, 1.2vw, 1.02rem);
+  line-height: 1.18;
+  letter-spacing: 0 !important;
+  overflow-wrap: anywhere;
+}
+
+.timer-category-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 125;
+  display: grid;
+  place-items: center;
+  padding: calc(1rem + env(safe-area-inset-top)) 1rem calc(1rem + env(safe-area-inset-bottom));
+  background: rgba(45, 42, 38, 0.36);
+  backdrop-filter: blur(4px);
+}
+
+.timer-category-dialog {
+  width: min(94vw, 460px);
+  display: grid;
+  gap: 1rem;
+  padding: 1.1rem;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #000000;
+}
+
+.timer-category-dialog header,
+.planner-day-modal .planner-dialog header,
+.markdown-panel h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.timer-category-dialog h2,
+.timer-category-dialog header span {
+  margin: 0;
+}
+
+.timer-category-dialog .category-create-form {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.timer-category-dialog .category-create-form button[type='submit'] {
+  width: 100%;
+}
+
+.planner-day-detail-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.planner-day-detail-list .planner-task {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.planner-day-detail-list .planner-task-main {
+  min-height: 74px;
+  display: grid;
+  align-content: center;
+  gap: 0.2rem;
+  padding: 0.55rem 0.7rem;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  background: #ffffff !important;
+  color: #000000 !important;
+}
+
+.planner-day-detail-list .planner-task-main strong,
+.planner-day-detail-list .planner-task-main span,
+.planner-day-detail-list .planner-task-main small {
+  color: #000000 !important;
+  line-height: 1.25;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+
+.planner-day-detail-list .planner-task-actions {
+  flex: 0 0 auto;
+  justify-content: flex-end;
+}
+
+.planner-day-modal footer {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.review-export-bottom {
+  display: none;
+}
+
+@media (max-width: 700px) {
+  .target-ring {
+    width: min(38vw, 128px);
+    height: min(38vw, 128px);
+  }
+
+  .target-ring-inner {
+    width: 76%;
+    height: 76%;
+  }
+
+  .target-value {
+    max-width: 5.5em;
+    font-size: clamp(0.74rem, 3.2vw, 0.92rem);
+  }
+
+  .review-header {
+    display: block;
+  }
+
+  .review-export-top {
+    display: none !important;
+  }
+
+  .review-export-bottom {
+    width: 100%;
+    min-height: 46px;
+    margin-top: 0.9rem;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    background: #000000;
+    color: #ffffff;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.45rem;
+    font-weight: 800;
+  }
+
+  .planner-day-modal .planner-dialog {
+    width: min(94vw, 520px);
+    max-height: 82vh;
   }
 }

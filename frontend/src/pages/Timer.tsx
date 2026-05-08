@@ -21,6 +21,7 @@ export const Timer: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<QuickStartTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [categoryCreateOpen, setCategoryCreateOpen] = useState(false);
   const [templateFormOpen, setTemplateFormOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
   const [templateForm, setTemplateForm] = useState({
@@ -524,7 +525,7 @@ export const Timer: React.FC = () => {
                     showCreate={false}
                   />
                 </div>
-                <button type="button" className="timer-create-category" onClick={() => document.querySelector<HTMLElement>('.timer-category-create input')?.focus()}>
+                <button type="button" className="timer-create-category" onClick={() => setCategoryCreateOpen(true)}>
                   新建
                 </button>
               </div>
@@ -799,19 +800,34 @@ export const Timer: React.FC = () => {
             </Card>
           )}
 
-          <div className="category-split">
-            <Card className="category-card timer-category-create">
-              <SectionHeader eyebrow="分类" title="新建分类" />
+        </div>
+
+        {categoryCreateOpen && (
+          <div className="timer-category-modal" role="dialog" aria-modal="true">
+            <div className="timer-category-dialog">
+              <header>
+                <div>
+                  <span>分类</span>
+                  <h2>新建分类</h2>
+                </div>
+                <Button variant="ghost" type="button" onClick={() => setCategoryCreateOpen(false)}>
+                  关闭
+                </Button>
+              </header>
               <CategorySelect
                 value={categoryId}
-                onChange={setCategoryId}
+                onChange={(nextCategoryId) => {
+                  setCategoryId(nextCategoryId);
+                  void loadCategories();
+                  setCategoryCreateOpen(false);
+                }}
                 showSelect={false}
                 showCreate
                 showEdit={false}
               />
-            </Card>
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </PageShell>
   );

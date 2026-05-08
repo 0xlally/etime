@@ -8,12 +8,16 @@ export interface DisciplineStatus {
   usageAccessGranted: boolean;
   overlayPermissionGranted: boolean;
   serviceRunning: boolean;
+  scope: 'all' | 'selected';
+  selectedPackages: string[];
   reminderMethod: 'overlay';
 }
 
 interface ConfigureOptions {
   limitMinutes: number;
   password: string;
+  scope: 'all' | 'selected';
+  selectedPackages: string[];
 }
 
 interface DisableOptions {
@@ -38,6 +42,8 @@ const unsupportedStatus: DisciplineStatus = {
   usageAccessGranted: false,
   overlayPermissionGranted: false,
   serviceRunning: false,
+  scope: 'all',
+  selectedPackages: [],
   reminderMethod: 'overlay',
 };
 
