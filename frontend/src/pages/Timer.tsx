@@ -690,6 +690,7 @@ export const Timer: React.FC = () => {
                     value={categoryId}
                     onChange={setCategoryId}
                     showCreate={false}
+                    showEdit={false}
                   />
                 </div>
                 <button type="button" className="timer-create-category" onClick={() => setCategoryCreateOpen(true)}>
@@ -717,6 +718,7 @@ export const Timer: React.FC = () => {
                   value={categoryId}
                   onChange={setCategoryId}
                   showCreate={false}
+                  showEdit={false}
                   label="分类"
                 />
               </div>
