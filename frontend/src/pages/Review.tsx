@@ -1,9 +1,17 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Bar, BarChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
-import { Clipboard, CalendarDays, TrendingUp } from 'lucide-react';
+import { Clipboard, CalendarDays, ListFilter, TrendingUp } from 'lucide-react';
 import { HeatmapGrid } from '../components/HeatmapGrid';
 import { apiClient } from '../api/client';
-import { DailyReview, HeatmapDay, MonthlyReview, ReviewCategoryItem, WeeklyReview } from '../types';
+import {
+  Category,
+  DailyReview,
+  HeatmapDay,
+  MonthlyReview,
+  ReviewCategoryItem,
+  ReviewCategorySummary,
+  WeeklyReview,
+} from '../types';
 
 type ReviewMode = 'daily' | 'weekly' | 'monthly';
 
@@ -42,6 +50,8 @@ const trendText = (seconds: number) => {
   return `${sign}${formatTime(Math.abs(seconds))}`;
 };
 
+const asArray = <T,>(value: T[] | unknown): T[] => (Array.isArray(value) ? value : []);
+
 const CategoryRows: React.FC<{ items: ReviewCategoryItem[] }> = ({ items }) => {
   if (items.length === 0) return <p>暂无分类记录</p>;
 
@@ -66,8 +76,12 @@ export const Review: React.FC = () => {
   const [weekly, setWeekly] = useState<WeeklyReview | null>(null);
   const [monthly, setMonthly] = useState<MonthlyReview | null>(null);
   const [heatmapData, setHeatmapData] = useState<HeatmapDay[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
+  const [categorySummary, setCategorySummary] = useState<ReviewCategorySummary | null>(null);
   const [loading, setLoading] = useState(false);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
+  const [categorySummaryLoading, setCategorySummaryLoading] = useState(false);
 
   const heatmapRange = useMemo(() => getHeatmapRange(date), [date]);
 
@@ -77,9 +91,23 @@ export const Review: React.FC = () => {
   }, [mode, date]);
 
   useEffect(() => {
+    loadCategories();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     loadHeatmap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [heatmapRange.start, heatmapRange.end]);
+
+  useEffect(() => {
+    if (!selectedCategoryId) {
+      setCategorySummary(null);
+      return;
+    }
+    loadCategorySummary(selectedCategoryId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCategoryId]);
 
   const loadReview = async () => {
     setLoading(true);
@@ -111,6 +139,31 @@ export const Review: React.FC = () => {
       setHeatmapData([]);
     } finally {
       setHeatmapLoading(false);
+    }
+  };
+
+  const loadCategories = async () => {
+    try {
+      const data = asArray<Category>(await apiClient.get<Category[]>('/categories', { include_archived: true }));
+      setCategories(data);
+      setSelectedCategoryId((current) => current ?? data[0]?.id);
+    } catch (error) {
+      console.error('加载分类列表失败', error);
+      setCategories([]);
+      setSelectedCategoryId(undefined);
+    }
+  };
+
+  const loadCategorySummary = async (categoryId: number) => {
+    setCategorySummaryLoading(true);
+    try {
+      const data = await apiClient.get<ReviewCategorySummary>('/reviews/category-summary', { category_id: categoryId });
+      setCategorySummary(data);
+    } catch (error) {
+      console.error('加载分类累计失败', error);
+      setCategorySummary(null);
+    } finally {
+      setCategorySummaryLoading(false);
     }
   };
 
@@ -155,6 +208,60 @@ export const Review: React.FC = () => {
           data={heatmapData}
           onDayClick={handleHeatmapDayClick}
         />
+      )}
+    </section>
+  );
+
+  const renderCategorySummary = () => (
+    <section className="review-panel review-category-summary-panel">
+      <div className="review-category-summary-head">
+        <h2><ListFilter size={18} /> 分类累计</h2>
+        <select
+          value={selectedCategoryId ?? ''}
+          onChange={(event) => {
+            const nextValue = Number(event.target.value);
+            setSelectedCategoryId(Number.isFinite(nextValue) && nextValue > 0 ? nextValue : undefined);
+          }}
+          disabled={categories.length === 0}
+        >
+          {categories.length === 0 ? (
+            <option value="">暂无分类</option>
+          ) : (
+            categories.map((category) => (
+              <option key={category.id} value={category.id}>
+                {category.name}{category.is_archived ? '（已归档）' : ''}
+              </option>
+            ))
+          )}
+        </select>
+      </div>
+
+      {categorySummaryLoading ? (
+        <p>加载中...</p>
+      ) : categorySummary ? (
+        <div className="review-category-summary-body">
+          <div className="review-category-summary-total">
+            <span style={{ background: categorySummary.category_color || '#64748b' }} />
+            <div>
+              <small>{categorySummary.category_name}</small>
+              <strong>{formatTime(categorySummary.total_seconds)}</strong>
+            </div>
+          </div>
+          <div className="review-year-list">
+            {categorySummary.yearly_totals.length === 0 ? (
+              <p>这个分类还没有计时记录</p>
+            ) : (
+              categorySummary.yearly_totals.map((item) => (
+                <div key={item.year} className="review-year-row">
+                  <span>{item.year}</span>
+                  <strong>{formatTime(item.total_seconds)}</strong>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      ) : (
+        <p>请选择一个分类查看累计时间</p>
       )}
     </section>
   );
@@ -310,6 +417,8 @@ export const Review: React.FC = () => {
         </div>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
+
+      {renderCategorySummary()}
 
       {loading ? <p>加载中...</p> : mode === 'daily' ? renderDaily() : renderPeriod()}
 

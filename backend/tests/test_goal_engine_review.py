@@ -215,3 +215,46 @@ def test_daily_and_weekly_reviews_include_stats_targets_traces_and_markdown(clie
     assert monthly_data["best_day"]["date"] == "2025-12-08"
     assert monthly_data["gap_days"] == 30
     assert "# 月报复盘 2025-12-01 - 2025-12-31" in monthly_data["markdown"]
+
+
+def test_category_summary_returns_all_time_and_yearly_totals(client: TestClient, db_session):
+    headers, _user_id = _auth(client, "category_summary@example.com", "categorysummary")
+    study = client.post("/api/v1/categories", json={"name": "Study", "color": "#2563eb"}, headers=headers).json()
+    exercise = client.post("/api/v1/categories", json={"name": "Exercise"}, headers=headers).json()
+
+    _manual_session(
+        client,
+        headers,
+        datetime(2024, 6, 1, 9, 0, tzinfo=timezone.utc),
+        datetime(2024, 6, 1, 10, 0, tzinfo=timezone.utc),
+        category_id=study["id"],
+    )
+    _manual_session(
+        client,
+        headers,
+        datetime(2025, 1, 5, 9, 0, tzinfo=timezone.utc),
+        datetime(2025, 1, 5, 11, 0, tzinfo=timezone.utc),
+        category_id=study["id"],
+    )
+    _manual_session(
+        client,
+        headers,
+        datetime(2025, 1, 6, 9, 0, tzinfo=timezone.utc),
+        datetime(2025, 1, 6, 10, 0, tzinfo=timezone.utc),
+        category_id=exercise["id"],
+    )
+
+    response = client.get(
+        f"/api/v1/reviews/category-summary?category_id={study['id']}",
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+
+    data = response.json()
+    assert data["category_name"] == "Study"
+    assert data["category_color"] == "#2563eb"
+    assert data["total_seconds"] == 10800
+    assert data["yearly_totals"] == [
+        {"year": 2025, "total_seconds": 7200},
+        {"year": 2024, "total_seconds": 3600},
+    ]

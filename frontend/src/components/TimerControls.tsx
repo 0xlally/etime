@@ -40,6 +40,7 @@ interface TimerControlsProps {
   onSessionStart?: () => void;
   onSessionEnd?: () => void;
   onRunningChange?: (running: boolean, initialElapsed?: number) => void;
+  onElapsedChange?: (elapsedSeconds: number) => void;
   onCategoryRestore?: (categoryId: number | undefined) => void;
   onOfflineStateChange?: (state: TimerOfflineState) => void;
   onRecoveredRunning?: (message: string) => void;
@@ -70,6 +71,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   onSessionStart,
   onSessionEnd,
   onRunningChange,
+  onElapsedChange,
   onCategoryRestore,
   onOfflineStateChange,
   onRecoveredRunning,
@@ -98,6 +100,27 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
     return result;
   }, [emitOfflineState]);
 
+  const publishElapsed = useCallback((seconds: number) => {
+    const normalized = Math.max(0, Math.floor(seconds));
+    setElapsed(normalized);
+    onElapsedChange?.(normalized);
+  }, [onElapsedChange]);
+
+  const clearRunningTimer = useCallback((timer: OfflineTimerRecord | null, message?: string) => {
+    if (timer) {
+      removeOfflineTimerRecord(timer.local_timer_id);
+    }
+
+    setCurrentTimer(null);
+    setRunning(false);
+    publishElapsed(0);
+    onRunningChange?.(false, 0);
+    emitOfflineState(false);
+    if (message) {
+      onRecoveredRunning?.(message);
+    }
+  }, [emitOfflineState, onRecoveredRunning, onRunningChange, publishElapsed]);
+
   const restoreFromActiveSession = useCallback((active: ActiveSession, showRecovery: boolean) => {
     const localRunning = getRunningTimer();
     if (localRunning && !activeMatchesLocal(active, localRunning)) {
@@ -120,27 +143,27 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
     const initialElapsed = active.elapsed_seconds ?? calculateElapsedSeconds(active.start_time);
     setCurrentTimer(restored);
     setRunning(true);
-    setElapsed(initialElapsed);
+    publishElapsed(initialElapsed);
     onCategoryRestore?.(active.category_id ?? undefined);
     onRunningChange?.(true, initialElapsed);
     if (showRecovery) {
       onRecoveredRunning?.('已为你恢复服务端正在计时');
     }
     emitOfflineState(false);
-  }, [emitOfflineState, onCategoryRestore, onRecoveredRunning, onRunningChange]);
+  }, [emitOfflineState, onCategoryRestore, onRecoveredRunning, onRunningChange, publishElapsed]);
 
   const restoreFromLocalTimer = useCallback((local: OfflineTimerRecord, showRecovery: boolean) => {
     const initialElapsed = calculateElapsedSeconds(local.started_at);
     setCurrentTimer(local);
     setRunning(true);
-    setElapsed(initialElapsed);
+    publishElapsed(initialElapsed);
     onCategoryRestore?.(local.category_id);
     onRunningChange?.(true, initialElapsed);
     if (showRecovery) {
       onRecoveredRunning?.('已为你恢复上次计时');
     }
     emitOfflineState(false);
-  }, [emitOfflineState, onCategoryRestore, onRecoveredRunning, onRunningChange]);
+  }, [emitOfflineState, onCategoryRestore, onRecoveredRunning, onRunningChange, publishElapsed]);
 
   const loadActiveOrLocal = useCallback(async (showRecovery: boolean) => {
     try {
@@ -161,10 +184,10 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 
     setCurrentTimer(null);
     setRunning(false);
-    setElapsed(0);
+    publishElapsed(0);
     onRunningChange?.(false, 0);
     emitOfflineState(false);
-  }, [emitOfflineState, onRunningChange, restoreFromActiveSession, restoreFromLocalTimer]);
+  }, [emitOfflineState, onRunningChange, publishElapsed, restoreFromActiveSession, restoreFromLocalTimer]);
 
   useEffect(() => {
     let cancelled = false;
@@ -203,18 +226,123 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
   }, [loadActiveOrLocal, syncSignal]);
 
   useEffect(() => {
-    let timer: number | undefined;
-    if (running) {
-      timer = window.setInterval(() => {
-        setElapsed((seconds) => seconds + 1);
-      }, 1000);
+    if (!running) {
+      publishElapsed(0);
+      return;
     }
+
+    let cancelled = false;
+    const refreshElapsed = () => {
+      if (cancelled) return;
+      const timer = currentTimer ?? getRunningTimer();
+      if (!timer) {
+        publishElapsed(0);
+        return;
+      }
+
+      publishElapsed(calculateElapsedSeconds(timer.started_at));
+    };
+
+    refreshElapsed();
+    const intervalId = window.setInterval(refreshElapsed, 1000);
+    window.addEventListener('focus', refreshElapsed);
+    window.addEventListener('pageshow', refreshElapsed);
+    document.addEventListener('visibilitychange', refreshElapsed);
+
     return () => {
-      if (timer !== undefined) {
-        clearInterval(timer);
+      cancelled = true;
+      clearInterval(intervalId);
+      window.removeEventListener('focus', refreshElapsed);
+      window.removeEventListener('pageshow', refreshElapsed);
+      document.removeEventListener('visibilitychange', refreshElapsed);
+    };
+  }, [currentTimer, publishElapsed, running]);
+
+  const reconcileWithServer = useCallback(async () => {
+    if (!running || !isNetworkOnline()) return;
+
+    const local = currentTimer ?? getRunningTimer();
+    try {
+      const active = await apiClient.get<ActiveSession | null>('/sessions/active');
+      if (active) {
+        if (!local || !activeMatchesLocal(active, local)) {
+          restoreFromActiveSession(active, false);
+          return;
+        }
+
+        const serverElapsed = active.elapsed_seconds ?? calculateElapsedSeconds(active.start_time);
+        if (local.server_session_id !== active.id || local.client_generated_id !== active.client_generated_id) {
+          const updated = saveRunningTimer({
+            ...local,
+            server_session_id: active.id,
+            client_generated_id: active.client_generated_id ?? local.client_generated_id,
+            started_at: active.start_time,
+            status: 'running',
+          });
+          setCurrentTimer(updated);
+        }
+        publishElapsed(serverElapsed);
+        onRunningChange?.(true, serverElapsed);
+        emitOfflineState(false);
+        return;
+      }
+
+      if (!local) {
+        clearRunningTimer(null);
+        return;
+      }
+
+      if (!local.server_session_id) {
+        return;
+      }
+
+      const serverSession = await apiClient.get<Session>(`/sessions/${local.server_session_id}`);
+      if (serverSession.end_time) {
+        clearRunningTimer(local, '服务端计时已结束，已同步到本页');
+        onSessionEnd?.();
+      }
+    } catch {
+      emitOfflineState(false);
+    }
+  }, [
+    clearRunningTimer,
+    currentTimer,
+    emitOfflineState,
+    onRunningChange,
+    onSessionEnd,
+    publishElapsed,
+    restoreFromActiveSession,
+    running,
+  ]);
+
+  useEffect(() => {
+    if (!running) return;
+
+    let cancelled = false;
+    const reconcile = () => {
+      if (!cancelled) {
+        void reconcileWithServer();
       }
     };
-  }, [running]);
+    const reconcileWhenVisible = () => {
+      if (!document.hidden) {
+        reconcile();
+      }
+    };
+
+    const intervalId = window.setInterval(reconcile, 8000);
+    window.addEventListener('focus', reconcile);
+    window.addEventListener('pageshow', reconcile);
+    document.addEventListener('visibilitychange', reconcileWhenVisible);
+
+    return () => {
+      cancelled = true;
+      clearInterval(intervalId);
+      window.removeEventListener('focus', reconcile);
+      window.removeEventListener('pageshow', reconcile);
+      document.removeEventListener('visibilitychange', reconcileWhenVisible);
+    };
+  }, [reconcileWithServer, running]);
 
   useEffect(() => {
     if (!running) {
@@ -268,7 +396,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 
     setCurrentTimer(local);
     setRunning(true);
-    setElapsed(0);
+    publishElapsed(calculateElapsedSeconds(local.started_at));
     onRunningChange?.(true, 0);
     onCategoryRestore?.(input.categoryId);
     emitOfflineState(false);
@@ -314,7 +442,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
         removeOfflineTimerRecord(local.local_timer_id);
         setCurrentTimer(null);
         setRunning(false);
-        setElapsed(0);
+        publishElapsed(0);
         onRunningChange?.(false, 0);
         alert(getErrorDetail(error));
         await loadActiveOrLocal(false);
@@ -323,7 +451,15 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       setBusy(false);
       emitOfflineState(false);
     }
-  }, [emitOfflineState, loadActiveOrLocal, onCategoryRestore, onRunningChange, onSessionStart, running]);
+  }, [
+    emitOfflineState,
+    loadActiveOrLocal,
+    onCategoryRestore,
+    onRunningChange,
+    onSessionStart,
+    publishElapsed,
+    running,
+  ]);
 
   const handleStart = async () => {
     await startTimer({ categoryId });
@@ -348,7 +484,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
     const timer = currentTimer ?? getRunningTimer();
     if (!timer) {
       setRunning(false);
-      setElapsed(0);
+      publishElapsed(0);
       onRunningChange?.(false, 0);
       return;
     }
@@ -365,7 +501,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
 
     setCurrentTimer(null);
     setRunning(false);
-    setElapsed(0);
+    publishElapsed(0);
     onRunningChange?.(false, 0);
     emitOfflineState(false);
 

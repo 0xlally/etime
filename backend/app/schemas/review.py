@@ -18,6 +18,19 @@ class ReviewDayTotal(BaseModel):
     total_seconds: int
 
 
+class ReviewCategoryYearTotal(BaseModel):
+    year: int
+    total_seconds: int
+
+
+class ReviewCategorySummaryResponse(BaseModel):
+    category_id: int
+    category_name: str
+    category_color: str | None = None
+    total_seconds: int
+    yearly_totals: List[ReviewCategoryYearTotal]
+
+
 class ReviewEvaluationItem(BaseModel):
     id: int
     target_id: int

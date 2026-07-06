@@ -333,6 +333,19 @@ export interface ReviewDayTotal {
   total_seconds: number;
 }
 
+export interface ReviewCategoryYearTotal {
+  year: number;
+  total_seconds: number;
+}
+
+export interface ReviewCategorySummary {
+  category_id: number;
+  category_name: string;
+  category_color?: string | null;
+  total_seconds: number;
+  yearly_totals: ReviewCategoryYearTotal[];
+}
+
 export interface DailyReview {
   date: string;
   total_seconds: number;

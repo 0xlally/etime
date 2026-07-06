@@ -42,8 +42,9 @@ export const Timer: React.FC = () => {
     note: '',
   });
   const [highlightTarget, setHighlightTarget] = useState<WorkTarget | null>(null);
-  const [progress, setProgress] = useState<{ actual: number; target: number; start: Date; end: Date } | null>(null);
+  const [progress, setProgress] = useState<{ completed: number; target: number; start: Date; end: Date } | null>(null);
   const [isRunning, setIsRunning] = useState(false);
+  const [activeElapsed, setActiveElapsed] = useState(0);
   const [offlineState, setOfflineState] = useState<TimerOfflineState>({
     ...getOfflineTimerSnapshot(),
     isOnline: isNetworkOnline(),
@@ -51,8 +52,6 @@ export const Timer: React.FC = () => {
   });
   const [restoreMessage, setRestoreMessage] = useState('');
   const [syncSignal, setSyncSignal] = useState(0);
-  const intervalRef = useRef<number | null>(null);
-  const wasRunningRef = useRef(false);
   const plannerStartHandledRef = useRef(false);
 
   useEffect(() => {
@@ -111,30 +110,6 @@ export const Timer: React.FC = () => {
     };
   }, []);
 
-  useEffect(() => {
-    if (!isRunning) {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-      return;
-    }
-
-    intervalRef.current = window.setInterval(() => {
-      setProgress((prev) => {
-        if (!prev) return prev;
-        return { ...prev, actual: prev.actual + 1 };
-      });
-    }, 1000);
-
-    return () => {
-      if (intervalRef.current) {
-        clearInterval(intervalRef.current);
-        intervalRef.current = null;
-      }
-    };
-  }, [isRunning]);
-
   const loadTargetsAndProgress = async () => {
     try {
       const targetList = asArray<WorkTarget>(await apiClient.get<WorkTarget[]>('/targets'));
@@ -172,13 +147,13 @@ export const Timer: React.FC = () => {
 
       const includeIds = pick.include_category_ids ?? pick.category_ids ?? [];
       const byCategory = asArray<CategoryStatsSummaryItem>(stats.by_category);
-      const actual = includeIds.length > 0
+      const completed = includeIds.length > 0
         ? byCategory
             .filter((c) => includeIds.includes(c.category_id ?? -1))
             .reduce((sum, c) => sum + c.seconds, 0)
         : stats.total_seconds;
 
-      setProgress({ actual, target: pick.target_seconds, start: window.start, end: window.end });
+      setProgress({ completed, target: pick.target_seconds, start: window.start, end: window.end });
     } catch (error) {
       console.error('加载目标/进度失败', error);
       setHighlightTarget(null);
@@ -463,25 +438,23 @@ export const Timer: React.FC = () => {
   };
 
   const handleRunningChange = useCallback((running: boolean, initialElapsed = 0) => {
-    const wasRunning = wasRunningRef.current;
-    wasRunningRef.current = running;
     setIsRunning(running);
-
-    if (running && !wasRunning && initialElapsed > 0) {
-      setProgress((prev) =>
-        prev ? { ...prev, actual: prev.actual + initialElapsed } : prev,
-      );
-    }
     if (!running) {
-      setProgress((prev) => (prev ? { ...prev } : prev));
+      setActiveElapsed(0);
+      return;
     }
+
+    setActiveElapsed(Math.max(0, Math.floor(initialElapsed)));
   }, []);
 
   const showSyncBar = offlineState.syncing
     || offlineState.pendingCount > 0
     || offlineState.failedCount > 0
     || Boolean(restoreMessage);
-  const remainingTargetSeconds = progress ? Math.max(0, progress.target - progress.actual) : 0;
+  const displayedActualSeconds = progress
+    ? progress.completed + (isRunning ? activeElapsed : 0)
+    : 0;
+  const remainingTargetSeconds = progress ? Math.max(0, progress.target - displayedActualSeconds) : 0;
   const targetPeriod = highlightTarget?.period ?? highlightTarget?.target_type ?? 'daily';
   const targetPeriodLabel = targetPeriod === 'tomorrow'
     ? '明天'
@@ -502,11 +475,11 @@ export const Timer: React.FC = () => {
           <strong>{progress ? formatTime(remainingTargetSeconds) : '未设置'}</strong>
           <small>
             {progress
-              ? `${targetPeriodLabel}目标 ${formatTime(progress.actual)} / ${formatTime(progress.target)}`
+              ? `${targetPeriodLabel}目标 ${formatTime(displayedActualSeconds)} / ${formatTime(progress.target)}`
               : '暂无追踪目标'}
           </small>
           {progress && (
-            <Progress value={progress.actual} max={progress.target} label="目标完成进度" />
+            <Progress value={displayedActualSeconds} max={progress.target} label="目标完成进度" />
           )}
         </div>
       )}
@@ -705,6 +678,7 @@ export const Timer: React.FC = () => {
                 onSessionStart={loadTargetsAndProgress}
                 onSessionEnd={loadTargetsAndProgress}
                 onRunningChange={handleRunningChange}
+                onElapsedChange={setActiveElapsed}
                 onCategoryRestore={setCategoryId}
                 onOfflineStateChange={setOfflineState}
                 onRecoveredRunning={setRestoreMessage}

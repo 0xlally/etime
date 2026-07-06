@@ -3,8 +3,8 @@ from datetime import date as DateType
 from datetime import datetime, time as TimeType, timedelta, timezone
 from typing import Iterable, List, Optional
 
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy import func
+from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy import extract, func
 from sqlalchemy.orm import Session as DBSession
 
 from app.api.deps import get_current_active_user
@@ -19,6 +19,8 @@ from app.schemas.review import (
     DailyReviewResponse,
     MonthlyReviewResponse,
     ReviewCategoryItem,
+    ReviewCategorySummaryResponse,
+    ReviewCategoryYearTotal,
     ReviewDayTotal,
     ReviewEvaluationItem,
     ReviewTargetSummary,
@@ -356,6 +358,56 @@ def _weekly_markdown(
         lines.append("- 暂无时痕")
 
     return "\n".join(lines)
+
+
+@router.get("/category-summary", response_model=ReviewCategorySummaryResponse)
+def get_category_summary(
+    category_id: int = Query(..., description="Category ID to summarize"),
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db),
+):
+    """Get all-time and yearly totals for one category."""
+    category = db.query(Category).filter(
+        Category.id == category_id,
+        Category.user_id == current_user.id,
+    ).first()
+    if not category:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
+
+    seconds_expr = func.coalesce(
+        func.sum(func.coalesce(Session.effective_seconds, Session.duration_seconds)),
+        0,
+    )
+    year_expr = extract("year", Session.start_time)
+
+    rows = db.query(
+        year_expr.label("year"),
+        seconds_expr.label("total_seconds"),
+    ).filter(
+        Session.user_id == current_user.id,
+        Session.category_id == category.id,
+        Session.end_time.isnot(None),
+    ).group_by(
+        year_expr,
+    ).order_by(
+        year_expr.desc(),
+    ).all()
+
+    yearly_totals = [
+        ReviewCategoryYearTotal(
+            year=int(row.year),
+            total_seconds=int(row.total_seconds),
+        )
+        for row in rows
+    ]
+
+    return ReviewCategorySummaryResponse(
+        category_id=category.id,
+        category_name=category.name,
+        category_color=category.color,
+        total_seconds=sum(item.total_seconds for item in yearly_totals),
+        yearly_totals=yearly_totals,
+    )
 
 
 @router.get("/daily", response_model=DailyReviewResponse)
