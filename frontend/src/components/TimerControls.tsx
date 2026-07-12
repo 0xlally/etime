@@ -38,7 +38,7 @@ interface TimerControlsProps {
   quickStartRequest?: QuickStartRequest | null;
   syncSignal?: number;
   onSessionStart?: () => void;
-  onSessionEnd?: () => void;
+  onSessionEnd?: () => void | Promise<void>;
   onRunningChange?: (running: boolean, initialElapsed?: number) => void;
   onElapsedChange?: (elapsedSeconds: number) => void;
   onCategoryRestore?: (categoryId: number | undefined) => void;
@@ -506,13 +506,9 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
     emitOfflineState(false);
 
     if (isNetworkOnline()) {
-      const result = await syncAndNotify();
-      if (result.syncedCount > 0) {
-        onSessionEnd?.();
-      }
-    } else {
-      onSessionEnd?.();
+      await syncAndNotify();
     }
+    await onSessionEnd?.();
 
     if (ended.status === 'failed') {
       emitOfflineState(false);
