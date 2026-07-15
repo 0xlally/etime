@@ -1,8 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Bell } from 'lucide-react';
 import { apiClient } from '../api/client';
 import { NotificationItem, TargetDashboard } from '../types';
+import { TARGET_PROGRESS_CHANGED_EVENT } from '../utils/targetProgress';
 
 const formatTime = (seconds: number) => {
   const total = Math.max(0, Math.floor(seconds || 0));
@@ -19,11 +20,41 @@ export const NotificationBell: React.FC = () => {
   const [dashboard, setDashboard] = useState<TargetDashboard | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
-  useEffect(() => {
-    loadNotifications();
-    const interval = setInterval(loadNotifications, 60000);
-    return () => clearInterval(interval);
+  const loadNotifications = useCallback(async () => {
+    try {
+      const [notificationData, dashboardData] = await Promise.all([
+        apiClient.get<NotificationItem[]>('/notifications'),
+        apiClient.get<TargetDashboard>('/targets/dashboard'),
+      ]);
+      setNotifications(notificationData);
+      setDashboard(dashboardData);
+    } catch (error) {
+      console.error('加载通知失败', error);
+    }
   }, []);
+
+  useEffect(() => {
+    const refreshWhenVisible = () => {
+      if (!document.hidden) {
+        void loadNotifications();
+      }
+    };
+
+    void loadNotifications();
+    const interval = window.setInterval(refreshWhenVisible, 10000);
+    window.addEventListener(TARGET_PROGRESS_CHANGED_EVENT, refreshWhenVisible);
+    window.addEventListener('focus', refreshWhenVisible);
+    window.addEventListener('pageshow', refreshWhenVisible);
+    document.addEventListener('visibilitychange', refreshWhenVisible);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener(TARGET_PROGRESS_CHANGED_EVENT, refreshWhenVisible);
+      window.removeEventListener('focus', refreshWhenVisible);
+      window.removeEventListener('pageshow', refreshWhenVisible);
+      document.removeEventListener('visibilitychange', refreshWhenVisible);
+    };
+  }, [loadNotifications]);
 
   useEffect(() => {
     setShowDropdown(false);
@@ -52,19 +83,6 @@ export const NotificationBell: React.FC = () => {
       document.removeEventListener('keydown', handleKeyDown);
     };
   }, [showDropdown]);
-
-  const loadNotifications = async () => {
-    try {
-      const [notificationData, dashboardData] = await Promise.all([
-        apiClient.get<NotificationItem[]>('/notifications'),
-        apiClient.get<TargetDashboard>('/targets/dashboard'),
-      ]);
-      setNotifications(notificationData);
-      setDashboard(dashboardData);
-    } catch (error) {
-      console.error('加载通知失败', error);
-    }
-  };
 
   const unreadCount = notifications.filter((notification) => !notification.read_at).length;
 

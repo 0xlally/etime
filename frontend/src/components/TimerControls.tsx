@@ -18,6 +18,7 @@ import {
   syncOfflineTimers,
   upsertOfflineTimerRecord,
 } from '../utils/offlineTimer';
+import { notifyTargetProgressChanged } from '../utils/targetProgress';
 
 export interface TimerOfflineState extends OfflineTimerSnapshot {
   isOnline: boolean;
@@ -299,7 +300,8 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       const serverSession = await apiClient.get<Session>(`/sessions/${local.server_session_id}`);
       if (serverSession.end_time) {
         clearRunningTimer(local, '服务端计时已结束，已同步到本页');
-        onSessionEnd?.();
+        await onSessionEnd?.();
+        notifyTargetProgressChanged();
       }
     } catch {
       emitOfflineState(false);
@@ -509,6 +511,7 @@ export const TimerControls: React.FC<TimerControlsProps> = ({
       await syncAndNotify();
     }
     await onSessionEnd?.();
+    notifyTargetProgressChanged();
 
     if (ended.status === 'failed') {
       emitOfflineState(false);
