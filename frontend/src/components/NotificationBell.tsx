@@ -16,16 +16,19 @@ const formatTime = (seconds: number) => {
 export const NotificationBell: React.FC = () => {
   const location = useLocation();
   const rootRef = useRef<HTMLDivElement | null>(null);
+  const refreshIdRef = useRef(0);
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [dashboard, setDashboard] = useState<TargetDashboard | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
   const loadNotifications = useCallback(async () => {
+    const refreshId = ++refreshIdRef.current;
     try {
       const [notificationData, dashboardData] = await Promise.all([
         apiClient.get<NotificationItem[]>('/notifications'),
         apiClient.get<TargetDashboard>('/targets/dashboard'),
       ]);
+      if (refreshId !== refreshIdRef.current) return;
       setNotifications(notificationData);
       setDashboard(dashboardData);
     } catch (error) {
