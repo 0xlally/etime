@@ -5,7 +5,7 @@ import { QuickStartRequest, TimerControls, type TimerOfflineState } from '../com
 import { Button, Card, EmptyState, LoadingState, PageShell, Progress, SectionHeader } from '../components/ui';
 import { apiClient } from '../api/client';
 import { Category, CategoryStatsSummaryItem, QuickStartTemplate, StatsSummary, WorkTarget } from '../types';
-import { getOfflineTimerSnapshot, isNetworkOnline, syncOfflineTimers } from '../utils/offlineTimer';
+import { getOfflineTimerSnapshot, isNetworkOnline } from '../utils/offlineTimer';
 
 const getLocalDateInputValue = () => {
   const now = new Date();
@@ -50,8 +50,6 @@ export const Timer: React.FC = () => {
     isOnline: isNetworkOnline(),
     syncing: false,
   });
-  const [restoreMessage, setRestoreMessage] = useState('');
-  const [syncSignal, setSyncSignal] = useState(0);
   const plannerStartHandledRef = useRef(false);
 
   useEffect(() => {
@@ -420,23 +418,6 @@ export const Timer: React.FC = () => {
     }
   };
 
-  const handleRetrySync = async () => {
-    setOfflineState((prev) => ({
-      ...prev,
-      isOnline: isNetworkOnline(),
-      syncing: true,
-    }));
-
-    const result = await syncOfflineTimers(apiClient);
-    setOfflineState({
-      ...result,
-      isOnline: isNetworkOnline(),
-      syncing: false,
-    });
-    setSyncSignal((value) => value + 1);
-    loadTargetsAndProgress();
-  };
-
   const handleRunningChange = useCallback((running: boolean, initialElapsed = 0) => {
     setIsRunning(running);
     if (!running) {
@@ -447,10 +428,6 @@ export const Timer: React.FC = () => {
     setActiveElapsed(Math.max(0, Math.floor(initialElapsed)));
   }, []);
 
-  const showSyncBar = offlineState.syncing
-    || offlineState.pendingCount > 0
-    || offlineState.failedCount > 0
-    || Boolean(restoreMessage);
   const displayedActualSeconds = progress
     ? progress.completed + (isRunning ? activeElapsed : 0)
     : 0;
@@ -485,21 +462,6 @@ export const Timer: React.FC = () => {
       )}
     >
       <div className="timer-shell">
-        {showSyncBar && (
-          <div className="timer-sync-bar">
-            {offlineState.syncing && <span className="sync-text">正在同步</span>}
-            {offlineState.pendingCount > 0 && (
-              <span className="sync-text">有 {offlineState.pendingCount} 条待同步记录</span>
-            )}
-            {offlineState.failedCount > 0 && (
-              <Button variant="secondary" onClick={handleRetrySync} disabled={offlineState.syncing}>
-                重试同步
-              </Button>
-            )}
-            {restoreMessage && <strong>{restoreMessage}</strong>}
-          </div>
-        )}
-
         <Card className="quick-start-card">
           <SectionHeader
             eyebrow="快捷开始"
@@ -674,14 +636,12 @@ export const Timer: React.FC = () => {
               <TimerControls
                 categoryId={categoryId}
                 quickStartRequest={quickStartRequest}
-                syncSignal={syncSignal}
                 onSessionStart={loadTargetsAndProgress}
                 onSessionEnd={loadTargetsAndProgress}
                 onRunningChange={handleRunningChange}
                 onElapsedChange={setActiveElapsed}
                 onCategoryRestore={setCategoryId}
                 onOfflineStateChange={setOfflineState}
-                onRecoveredRunning={setRestoreMessage}
                 onQuickStartHandled={() => setQuickStartRequest(null)}
               />
             </>

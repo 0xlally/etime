@@ -22,6 +22,7 @@ import {
   ChevronRight,
   Clock,
   Play,
+  Pencil,
   Plus,
   RotateCcw,
   XCircle,
@@ -43,6 +44,13 @@ import { Button, Card, EmptyState, LoadingState, PageShell, SectionHeader, StatC
 
 type PlannerView = 'month' | 'week' | 'day';
 type TargetPeriod = 'daily' | 'weekly' | 'monthly' | 'tomorrow';
+
+interface TargetFormState {
+  target_type: TargetPeriod;
+  target_seconds: number;
+  category_ids: number[];
+  effective_from: string;
+}
 
 interface TaskFormState {
   title: string;
@@ -131,6 +139,13 @@ const tomorrowStartInputValue = () => {
   return toLocalInputValue(tomorrow);
 };
 
+const emptyTargetForm = (): TargetFormState => ({
+  target_type: 'daily',
+  target_seconds: 3600,
+  category_ids: [],
+  effective_from: toLocalInputValue(new Date()),
+});
+
 const periodLabel = (period: string) => {
   if (period === 'tomorrow') return '明日计划';
   if (period === 'daily') return '每日';
@@ -155,14 +170,10 @@ export const Planner: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [targetFormOpen, setTargetFormOpen] = useState(false);
+  const [editingTarget, setEditingTarget] = useState<WorkTarget | null>(null);
   const [editingTask, setEditingTask] = useState<CalendarTask | null>(null);
   const [form, setForm] = useState<TaskFormState>(emptyForm());
-  const [targetForm, setTargetForm] = useState({
-    target_type: 'daily' as TargetPeriod,
-    target_seconds: 3600,
-    category_ids: [] as number[],
-    effective_from: toLocalInputValue(new Date()),
-  });
+  const [targetForm, setTargetForm] = useState<TargetFormState>(emptyTargetForm);
   const [toast, setToast] = useState('');
 
   const range = useMemo(() => {
@@ -337,6 +348,29 @@ export const Planner: React.FC = () => {
     }));
   };
 
+  const openTargetEditor = (target?: WorkTarget) => {
+    if (!target) {
+      setEditingTarget(null);
+      setTargetForm(emptyTargetForm());
+      setTargetFormOpen(true);
+      return;
+    }
+
+    setEditingTarget(target);
+    setTargetForm({
+      target_type: target.period ?? target.target_type ?? 'daily',
+      target_seconds: target.target_seconds,
+      category_ids: target.include_category_ids ?? target.category_ids ?? [],
+      effective_from: toLocalInputValue(new Date(target.effective_from ?? new Date())),
+    });
+    setTargetFormOpen(true);
+  };
+
+  const closeTargetEditor = () => {
+    setEditingTarget(null);
+    setTargetFormOpen(false);
+  };
+
   const openEdit = (task: CalendarTask) => {
     const start = toLocalDateTimeInput(task.scheduled_start);
     const end = toLocalDateTimeInput(task.scheduled_end);
@@ -432,24 +466,24 @@ export const Planner: React.FC = () => {
         ? `${targetForm.effective_from}:00`
         : targetForm.effective_from;
 
-      await apiClient.post<WorkTarget>('/targets', {
+      const payload = {
         period: targetForm.target_type,
         target_seconds: targetForm.target_seconds,
         include_category_ids: targetForm.category_ids.length > 0 ? targetForm.category_ids : null,
         effective_from: effective,
-      });
-      setTargetFormOpen(false);
-      setTargetForm({
-        target_type: 'daily',
-        target_seconds: 3600,
-        category_ids: [],
-        effective_from: toLocalInputValue(new Date()),
-      });
+      };
+      if (editingTarget) {
+        await apiClient.patch<WorkTarget>(`/targets/${editingTarget.id}`, payload);
+      } else {
+        await apiClient.post<WorkTarget>('/targets', payload);
+      }
+      closeTargetEditor();
+      setTargetForm(emptyTargetForm());
       await loadTargetData();
-      setToast('目标创建成功');
+      setToast(editingTarget ? '目标已更新' : '目标创建成功');
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
-      setToast(typeof detail === 'string' ? detail : '创建目标失败');
+      setToast(typeof detail === 'string' ? detail : editingTarget ? '更新目标失败' : '创建目标失败');
     }
   };
 
@@ -686,8 +720,8 @@ export const Planner: React.FC = () => {
             <h2>完成节奏</h2>
             <p>只保留几个关键数字，方便看趋势。</p>
           </div>
-          <Button variant={targetFormOpen ? 'ghost' : 'primary'} onClick={() => setTargetFormOpen(!targetFormOpen)}>
-            {targetFormOpen ? '收起' : '新增目标'}
+          <Button variant={targetFormOpen ? 'ghost' : 'primary'} onClick={() => targetFormOpen ? closeTargetEditor() : openTargetEditor()}>
+            {targetFormOpen ? '取消' : '新增目标'}
           </Button>
         </div>
 
@@ -768,7 +802,7 @@ export const Planner: React.FC = () => {
                 ))}
               </div>
             </div>
-            <Button type="submit">创建目标</Button>
+            <Button type="submit">{editingTarget ? '保存修改' : '创建目标'}</Button>
           </Card>
         )}
 
@@ -807,6 +841,9 @@ export const Planner: React.FC = () => {
                       <td>{metric ? `${Math.round(metric.completion_rate * 100)}%` : '0%'}</td>
                       <td>{isActive ? '启用' : '停用'}</td>
                       <td>
+                        <Button variant="ghost" onClick={() => openTargetEditor(target)} title="编辑目标" aria-label="编辑目标">
+                          <Pencil size={16} />
+                        </Button>
                         <Button variant="ghost" onClick={() => toggleTarget(target.id, isActive)}>
                           {isActive ? '停用' : '启用'}
                         </Button>

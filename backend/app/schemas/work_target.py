@@ -28,9 +28,18 @@ class WorkTargetCreate(BaseModel):
 
 class WorkTargetUpdate(BaseModel):
     """Schema for updating a work target"""
+    period: Optional[str] = None
     target_seconds: Optional[int] = None
     include_category_ids: Optional[List[int]] = None
+    effective_from: Optional[datetime] = None
     is_active: Optional[bool] = None
+
+    @field_validator("period")
+    @classmethod
+    def validate_period(cls, v):
+        if v is not None and v not in ["daily", "weekly", "monthly", "tomorrow"]:
+            raise ValueError("period must be 'daily', 'weekly', 'monthly', or 'tomorrow'")
+        return v
     
     @field_validator("target_seconds")
     @classmethod

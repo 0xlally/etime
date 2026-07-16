@@ -117,11 +117,17 @@ def update_target(
         )
     
     # Update fields
+    if update_data.period is not None:
+        target.period = update_data.period
+
     if update_data.target_seconds is not None:
         target.target_seconds = update_data.target_seconds
     
-    if update_data.include_category_ids is not None:
+    if "include_category_ids" in update_data.model_fields_set:
         target.include_category_ids = update_data.include_category_ids
+
+    if update_data.effective_from is not None:
+        target.effective_from = update_data.effective_from
     
     if update_data.is_active is not None:
         target.is_active = update_data.is_active
