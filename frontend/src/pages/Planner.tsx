@@ -782,7 +782,7 @@ export const Planner: React.FC = () => {
                 onChange={(e) => setTargetForm({ ...targetForm, target_seconds: Number(e.target.value) * 3600 })}
               />
             </div>
-            <div className="form-group">
+            <div className="form-group target-category-field">
               <label>包含分类</label>
               <div className="category-checkboxes">
                 {categories.map((category) => (
