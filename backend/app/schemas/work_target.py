@@ -93,6 +93,10 @@ class NotificationResponse(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class NotificationReadAllResponse(BaseModel):
+    updated_count: int
+
+
 class PunishmentEventResponse(BaseModel):
     """Schema for punishment/reward event response"""
     id: int

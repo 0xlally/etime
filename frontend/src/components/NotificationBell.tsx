@@ -110,11 +110,33 @@ export const NotificationBell: React.FC = () => {
     }
   };
 
+  const markAllAsRead = async () => {
+    const readAt = new Date().toISOString();
+    setNotifications((current) => current.map((notification) => (
+      notification.read_at ? notification : { ...notification, read_at: readAt }
+    )));
+    try {
+      await apiClient.post('/notifications/read-all');
+      await loadNotifications();
+    } catch (error) {
+      console.error('全部标记已读失败', error);
+      await loadNotifications();
+    }
+  };
+
+  const toggleDropdown = () => {
+    const nextOpen = !showDropdown;
+    setShowDropdown(nextOpen);
+    if (nextOpen && unreadCount > 0) {
+      void markAllAsRead();
+    }
+  };
+
   return (
     <div className="notification-bell" ref={rootRef}>
       <button
         type="button"
-        onClick={() => setShowDropdown(!showDropdown)}
+        onClick={toggleDropdown}
         className="bell-button"
         aria-label="通知"
         aria-expanded={showDropdown}

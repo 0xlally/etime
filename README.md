@@ -42,10 +42,6 @@ ETime 是一个开源、自托管的时间工作台，把计时、补录、计�
 
 Android 端复用同一套前端体验，加入离线计时队列和自律模式。自律模式可统计今日手机使用时长，超过上限后通过悬浮提醒介入。
 
-![ETime Android 计时](docs/assets/screenshots/mobile-timer.png)
-
-![ETime Android 自律模式](docs/assets/screenshots/android-discipline.png)
-
 ## 核心功能
 
 ### 1. 计时与补录

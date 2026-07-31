@@ -6,7 +6,7 @@ from typing import List
 
 from app.models.user import User
 from app.models.notification import Notification
-from app.schemas.work_target import NotificationResponse
+from app.schemas.work_target import NotificationReadAllResponse, NotificationResponse
 from app.api.deps import get_current_active_user
 from app.core.db import get_db
 
@@ -37,6 +37,23 @@ def list_notifications(
     ).all()
     
     return notifications
+
+
+@router.post("/read-all", response_model=NotificationReadAllResponse)
+def mark_all_notifications_read(
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db)
+):
+    """Mark every unread notification for the current user as read."""
+    updated_count = db.query(Notification).filter(
+        Notification.user_id == current_user.id,
+        Notification.read_at.is_(None),
+    ).update(
+        {Notification.read_at: datetime.now(timezone.utc)},
+        synchronize_session=False,
+    )
+    db.commit()
+    return NotificationReadAllResponse(updated_count=updated_count)
 
 
 @router.post("/{notification_id}/read", response_model=NotificationResponse)

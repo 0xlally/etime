@@ -8304,3 +8304,66 @@ table td {
 .planner-target-form > .ui-button[type='submit'] {
   justify-self: start;
 }
+
+/* Annual review heatmap timeline. */
+.months-container {
+  display: block;
+}
+
+.heatmap-scroll-track {
+  width: max-content;
+  min-width: 100%;
+}
+
+.heatmap-days {
+  width: max-content;
+  min-width: 100%;
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 4px;
+}
+
+.heatmap-year-timeline {
+  min-width: 100%;
+  height: 30px;
+  display: flex;
+  align-items: flex-end;
+  margin-bottom: 0.45rem;
+  border-bottom: 1px solid #000000;
+}
+
+.heatmap-year-timeline span {
+  position: relative;
+  flex: 0 0 auto;
+  padding: 0 0.2rem 0.35rem;
+  color: #000000;
+  font-size: 0.76rem;
+  font-weight: 750;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.heatmap-year-timeline span::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -4px;
+  width: 1px;
+  height: 7px;
+  background: #000000;
+}
+
+/* The desktop rail is scrollable, so its notification panel must escape it. */
+@media (min-width: 1101px) {
+  .notification-bell .dropdown {
+    position: fixed;
+    top: auto;
+    right: auto;
+    bottom: 4.75rem;
+    left: 0.9rem;
+    width: min(360px, calc(100vw - 1.8rem));
+    max-height: min(70vh, 560px);
+    margin: 0;
+    z-index: 120;
+  }
+}

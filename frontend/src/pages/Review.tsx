@@ -263,6 +263,7 @@ export const Review: React.FC = () => {
           end={heatmapRange.end}
           data={heatmapData}
           onDayClick={handleHeatmapDayClick}
+          showYearTimeline={mode === 'yearly'}
         />
       )}
     </section>

@@ -322,6 +322,18 @@ def test_notification_read(client: TestClient, db_session):
     
     read_notif = response.json()
     assert read_notif["read_at"] is not None
+
+    evaluate_targets_for_date(date(2025, 12, 13), db_session, user_id=user_id)
+    response = client.post("/api/v1/notifications/read-all", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["updated_count"] == 1
+
+    notifications = client.get("/api/v1/notifications", headers=headers).json()
+    assert all(notification["read_at"] is not None for notification in notifications)
+
+    response = client.post("/api/v1/notifications/read-all", headers=headers)
+    assert response.status_code == 200
+    assert response.json()["updated_count"] == 0
     
     print("✓ Notification marked as read")
 
