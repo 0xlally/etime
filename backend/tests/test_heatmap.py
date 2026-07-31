@@ -79,6 +79,51 @@ def test_heatmap_basic(client: TestClient):
     print("✓ Heatmap basic aggregation verified")
 
 
+def test_heatmap_filters_multiple_categories(client: TestClient):
+    register_data = {
+        "email": "heatmap_categories@example.com",
+        "username": "heatmapcategories",
+        "password": "testpass123"
+    }
+    client.post("/api/v1/auth/register", json=register_data)
+    login_response = client.post("/api/v1/auth/login", json={
+        "username": register_data["username"],
+        "password": register_data["password"]
+    })
+    headers = {"Authorization": f"Bearer {login_response.json()['access_token']}"}
+
+    categories = [
+        client.post("/api/v1/categories", json={"name": name}, headers=headers).json()
+        for name in ("Work", "Study", "Exercise")
+    ]
+    start_time = datetime(2025, 12, 10, 9, 0, 0, tzinfo=timezone.utc)
+    for index, category in enumerate(categories):
+        session_start = start_time + timedelta(hours=index * 2)
+        client.post("/api/v1/sessions/manual", json={
+            "category_id": category["id"],
+            "start_time": session_start.isoformat(),
+            "end_time": (session_start + timedelta(hours=1)).isoformat(),
+        }, headers=headers)
+
+    category_ids = f"{categories[0]['id']},{categories[1]['id']}"
+    response = client.get(
+        f"/api/v1/heatmap?start=2025-12-10&end=2025-12-10&category_ids={category_ids}",
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    assert response.json() == [{"date": "2025-12-10", "total_seconds": 7200}]
+
+    legacy_response = client.get(
+        f"/api/v1/heatmap?start=2025-12-10&end=2025-12-10&category_id={categories[0]['id']}",
+        headers=headers,
+    )
+    assert legacy_response.status_code == 200, legacy_response.text
+    assert legacy_response.json()[0]["total_seconds"] == 3600
+
+    invalid = client.get("/api/v1/heatmap?category_ids=1,nope", headers=headers)
+    assert invalid.status_code == 422
+
+
 def test_heatmap_cross_day_sessions(client: TestClient):
     """
     Test that sessions are grouped by start_time date

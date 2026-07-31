@@ -1815,101 +1815,89 @@ table button {
   background: #ffffff;
 }
 
-.review-category-summary-panel {
-  display: grid;
-  gap: 0.85rem;
+.review-category-filter {
+  margin-bottom: 1.25rem;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  background: #ffffff;
 }
 
-.review-category-summary-head {
+.review-category-filter summary {
+  min-height: 54px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  list-style: none;
 }
 
-.review-category-summary-head h2 {
-  margin: 0;
+.review-category-filter summary::-webkit-details-marker {
+  display: none;
 }
 
-.review-category-summary-head select {
-  min-width: 220px;
+.review-category-filter summary > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 800;
+}
+
+.review-category-filter summary > strong {
+  color: #475569;
+}
+
+.review-category-filter[open] summary {
+  border-bottom: 1px solid #000000;
+}
+
+.review-category-options {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 0.65rem;
+  padding: 0.85rem 1rem 1rem;
+}
+
+.review-category-options label {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: auto 12px minmax(0, 1fr);
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.7rem 0.75rem;
   border: 1px solid #cbd5e1;
   border-radius: 8px;
-  padding: 0.62rem 0.75rem;
-  background: #ffffff;
-  color: #0f172a;
-  font-weight: 700;
+  cursor: pointer;
 }
 
-.review-category-summary-body {
-  display: grid;
-  grid-template-columns: minmax(210px, 0.7fr) minmax(0, 1.3fr);
-  gap: 1rem;
-  align-items: stretch;
+.review-category-options input {
+  width: 17px;
+  height: 17px;
+  margin: 0;
+  accent-color: #000000;
 }
 
-.review-category-summary-total {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  min-height: 96px;
-  padding: 0.9rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #f8fafc;
+.review-category-options label > span {
+  width: 12px;
+  height: 12px;
+  border-radius: 3px;
 }
 
-.review-category-summary-total > span {
-  width: 14px;
-  height: 54px;
-  border-radius: 999px;
-  flex: 0 0 auto;
+.review-category-options label > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
-.review-category-summary-total small {
-  display: block;
-  color: #64748b;
-  font-weight: 800;
-  margin-bottom: 0.35rem;
+.review-category-all-swatch {
+  border: 1px solid #000000;
+  background: linear-gradient(135deg, #000000 0 50%, #ffffff 50% 100%);
 }
 
-.review-category-summary-total strong {
-  display: block;
-  color: #0f172a;
-  font-size: 1.45rem;
-  line-height: 1.15;
-}
-
-.review-year-list {
-  display: grid;
-  gap: 0.45rem;
-  align-content: start;
-}
-
-.review-year-list p {
+.review-category-options p {
+  grid-column: 1 / -1;
   margin: 0;
   color: #64748b;
-}
-
-.review-year-row {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 1rem;
-  min-height: 42px;
-  padding: 0.58rem 0.75rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.review-year-row span {
-  color: #475569;
-  font-weight: 800;
-}
-
-.review-year-row strong {
-  color: #0f172a;
 }
 
 .review-grid {
@@ -2007,16 +1995,6 @@ table button {
 
 .review-heatmap-panel .grid-cell {
   cursor: pointer;
-}
-
-.markdown-panel pre {
-  white-space: pre-wrap;
-  line-height: 1.75;
-  background: #0f172a;
-  color: #e5e7eb;
-  border-radius: 8px;
-  padding: 1rem;
-  overflow-x: auto;
 }
 
 /* 小组 */
@@ -2355,424 +2333,6 @@ table button {
   border: 1px solid #e2e8f0;
   border-radius: 14px;
   background: #ffffff;
-}
-
-/* 分享卡片 */
-.share-page {
-  max-width: 1120px;
-  margin: 0 auto;
-  padding-bottom: 2rem;
-}
-
-.share-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
-}
-
-.share-header span {
-  display: block;
-  color: #2f855a;
-  font-size: 0.85rem;
-  font-weight: 800;
-  letter-spacing: 0.08em;
-}
-
-.share-header h1 {
-  margin: 0.2rem 0 0;
-  color: #0f172a;
-  font-size: 2rem;
-}
-
-.share-header button,
-.share-actions button {
-  min-height: 44px;
-  border: none;
-  border-radius: 8px;
-  padding: 0.7rem 1rem;
-  background: #172033;
-  color: #ffffff;
-  font-weight: 800;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-}
-
-.share-header button:disabled,
-.share-actions button:disabled {
-  background: #94a3b8;
-}
-
-.share-layout {
-  display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
-  gap: 1rem;
-  align-items: start;
-}
-
-.share-controls,
-.share-preview-panel {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.06);
-}
-
-.share-controls {
-  position: sticky;
-  top: 6.4rem;
-  display: grid;
-  gap: 1rem;
-  padding: 1rem;
-}
-
-.share-controls section {
-  display: grid;
-  gap: 0.65rem;
-}
-
-.share-controls h2 {
-  margin: 0;
-  font-size: 1rem;
-  color: #0f172a;
-}
-
-.share-segment {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.35rem;
-  padding: 0.25rem;
-  border: 1px solid #dbe3ec;
-  border-radius: 8px;
-  background: #f8fafc;
-}
-
-.share-segment button {
-  min-height: 42px;
-  border: none;
-  border-radius: 6px;
-  background: transparent;
-  color: #475569;
-  font-weight: 800;
-}
-
-.share-segment button.active {
-  background: #172033;
-  color: #ffffff;
-}
-
-.share-privacy {
-  padding: 0.85rem;
-  border: 1px solid #dbe3ec;
-  border-radius: 8px;
-  background: #f8fafc;
-}
-
-.share-privacy label {
-  min-height: 40px;
-  display: flex;
-  align-items: center;
-  gap: 0.6rem;
-  color: #0f172a;
-  font-weight: 800;
-}
-
-.share-privacy label + label {
-  margin-top: 0.35rem;
-}
-
-.share-privacy input {
-  width: 18px;
-  height: 18px;
-  accent-color: #172033;
-}
-
-.share-privacy span {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-}
-
-.share-actions {
-  display: grid;
-  gap: 0.6rem;
-}
-
-.share-actions button:nth-child(2) {
-  background: #2f855a;
-}
-
-.share-actions p {
-  margin: 0;
-  color: #475569;
-  line-height: 1.5;
-}
-
-.share-preview-panel {
-  min-height: 620px;
-  padding: 1.25rem;
-  display: grid;
-  gap: 1rem;
-  justify-items: center;
-}
-
-.share-preview-shell {
-  width: min(100%, 390px);
-  display: grid;
-  justify-items: center;
-}
-
-.share-preview-loading {
-  width: min(100%, 390px);
-  min-height: 520px;
-  display: grid;
-  place-items: center;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  color: #64748b;
-  background: #f8fafc;
-}
-
-.share-card {
-  width: min(360px, 100%);
-  aspect-ratio: 3 / 4;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-  overflow: hidden;
-  border-radius: 8px;
-  background: #f8fafc;
-  border: 1px solid #dbe3ec;
-  color: #0f172a;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.16);
-}
-
-.share-card-minimal {
-  background:
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 58%, #eef2f7 100%);
-}
-
-.share-card-data {
-  background:
-    linear-gradient(135deg, rgba(37, 99, 235, 0.08), transparent 36%),
-    linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
-}
-
-.share-card-heatmap {
-  background:
-    linear-gradient(135deg, rgba(47, 133, 90, 0.12), transparent 42%),
-    #ffffff;
-}
-
-.share-card-head,
-.share-card-foot,
-.share-card-section-head,
-.share-card-category div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-}
-
-.share-card-head span,
-.share-card-hero span,
-.share-card-metrics span,
-.share-card-section-head span,
-.share-card-foot span {
-  color: #64748b;
-  font-size: 0.78rem;
-  font-weight: 800;
-}
-
-.share-card-head strong {
-  display: block;
-  margin-top: 0.2rem;
-  color: #0f172a;
-  font-size: 1.45rem;
-}
-
-.share-card-head time {
-  color: #475569;
-  font-size: 0.82rem;
-  font-weight: 800;
-}
-
-.share-card-hero {
-  min-height: 96px;
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 1rem;
-  padding: 1rem;
-  border-radius: 8px;
-  background: #172033;
-  color: #ffffff;
-}
-
-.share-card-hero strong {
-  display: block;
-  margin-top: 0.3rem;
-  color: #ffffff;
-  font-size: 1.75rem;
-  line-height: 1.1;
-}
-
-.share-card-hero small {
-  flex: 0 0 auto;
-  border-radius: 999px;
-  padding: 0.28rem 0.5rem;
-  background: #f59e0b;
-  color: #111827;
-  font-weight: 900;
-}
-
-.share-card-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.share-card-metrics div {
-  min-width: 0;
-  display: grid;
-  gap: 0.22rem;
-  padding: 0.7rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
-  background: #ffffff;
-}
-
-.share-card-metrics strong {
-  color: #0f172a;
-  font-size: 1.02rem;
-  overflow-wrap: anywhere;
-}
-
-.share-card-metrics small {
-  color: #2f855a;
-  font-weight: 800;
-  overflow-wrap: anywhere;
-}
-
-.share-card-section {
-  display: grid;
-  gap: 0.55rem;
-  min-height: 0;
-}
-
-.share-card-section-head strong,
-.share-card-foot strong {
-  color: #0f172a;
-}
-
-.share-card-empty {
-  min-height: 70px;
-  display: grid;
-  place-items: center;
-  border: 1px dashed #cbd5e1;
-  border-radius: 8px;
-  color: #64748b;
-  background: #ffffff;
-}
-
-.share-card-categories {
-  display: grid;
-  gap: 0.52rem;
-}
-
-.share-card-category {
-  display: grid;
-  gap: 0.3rem;
-}
-
-.share-card-category div {
-  min-width: 0;
-}
-
-.share-card-category span {
-  width: 10px;
-  height: 10px;
-  flex: 0 0 auto;
-  border-radius: 50%;
-}
-
-.share-card-category strong {
-  flex: 1;
-  min-width: 0;
-  color: #0f172a;
-  font-size: 0.9rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.share-card-category em {
-  color: #475569;
-  font-size: 0.82rem;
-  font-style: normal;
-  font-weight: 800;
-}
-
-.share-card-category progress {
-  width: 100%;
-  height: 6px;
-  overflow: hidden;
-  border: none;
-  border-radius: 999px;
-  background: #e2e8f0;
-}
-
-.share-card-category progress::-webkit-progress-bar {
-  background: #e2e8f0;
-}
-
-.share-card-category progress::-webkit-progress-value {
-  border-radius: 999px;
-  background: #2f855a;
-}
-
-.share-card-category progress::-moz-progress-bar {
-  border-radius: 999px;
-  background: #2f855a;
-}
-
-.share-card-heatmap-block {
-  margin-top: auto;
-}
-
-.share-card-heatmap {
-  display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 5px;
-}
-
-.share-card-heatmap span {
-  aspect-ratio: 1;
-  border-radius: 3px;
-}
-
-.share-card-foot {
-  margin-top: 0.1rem;
-  padding-top: 0.7rem;
-  border-top: 1px solid #e2e8f0;
-}
-
-.share-output {
-  width: min(100%, 240px);
-  display: grid;
-  justify-items: center;
-  gap: 0.5rem;
-}
-
-.share-output img {
-  width: 100%;
-  border-radius: 8px;
-  border: 1px solid #dbe3ec;
-  box-shadow: 0 10px 28px rgba(15, 23, 42, 0.14);
 }
 
 /* 计划日历 */
@@ -3309,20 +2869,6 @@ table button {
     align-items: stretch;
   }
 
-  .review-category-summary-head,
-  .review-category-summary-body {
-    grid-template-columns: 1fr;
-  }
-
-  .review-category-summary-head {
-    display: grid;
-  }
-
-  .review-category-summary-head select {
-    min-width: 0;
-    width: 100%;
-  }
-
   .targets-header button,
   .review-header button {
     justify-content: center;
@@ -3427,29 +2973,6 @@ table button {
 
   .group-composer button {
     width: 100%;
-  }
-
-  .share-header,
-  .share-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .share-header {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .share-header button {
-    justify-content: center;
-  }
-
-  .share-controls {
-    position: static;
-  }
-
-  .share-preview-panel {
-    min-height: 0;
-    padding: 0.85rem;
   }
 
   .planner-header,
@@ -3639,7 +3162,6 @@ body {
 
 .ui-eyebrow,
 .card-eyebrow,
-.share-header span,
 .planner-header span,
 .planner-dialog header span {
   display: inline-flex;
@@ -3665,8 +3187,6 @@ body {
 .history-panel,
 .planner-calendar,
 .planner-pool,
-.share-controls,
-.share-preview-panel,
 .targets-list,
 .evaluations-list,
 .target-events,
@@ -3799,12 +3319,7 @@ button[type='submit']:disabled {
 .target-progress-card span,
 .planner-task-main span,
 .planner-task-main small,
-.planner-pool-item span,
-.share-card-head span,
-.share-card-hero span,
-.share-card-metrics span,
-.share-card-section-head span,
-.share-card-foot span {
+.planner-pool-item span {
   color: var(--color-text-secondary);
 }
 
@@ -3851,8 +3366,7 @@ button[type='submit']:disabled {
 }
 
 .ui-progress,
-.target-progress-bar,
-.share-card-category progress {
+.target-progress-bar {
   width: 100%;
   height: 8px;
   overflow: hidden;
@@ -3870,8 +3384,7 @@ button[type='submit']:disabled {
 }
 
 .ui-loading,
-.planner-loading,
-.share-preview-loading {
+.planner-loading {
   min-height: 180px;
   display: grid;
   place-items: center;
@@ -3982,9 +3495,7 @@ button[type='submit']:disabled {
 .quick-template-start strong,
 .target-title,
 .planner-task-main strong,
-.planner-pool-item strong,
-.share-card-section-head strong,
-.share-card-foot strong {
+.planner-pool-item strong {
   color: var(--color-text-primary);
 }
 
@@ -4048,7 +3559,6 @@ button[type='submit']:disabled {
 .period-selector,
 .planner-view-switch,
 .planner-range-nav,
-.share-segment,
 .tabs {
   border: 1px solid var(--color-border);
   border-radius: 999px;
@@ -4060,7 +3570,6 @@ button[type='submit']:disabled {
 .period-selector button,
 .planner-view-switch button,
 .planner-range-nav button,
-.share-segment button,
 .tabs button {
   border: 0;
   border-radius: 999px;
@@ -4073,7 +3582,6 @@ button[type='submit']:disabled {
 .mode-toggle button.active,
 .period-selector button.active,
 .planner-view-switch button.active,
-.share-segment button.active,
 .tabs button.active {
   background: var(--color-surface);
   color: var(--color-text-primary);
@@ -4112,7 +3620,6 @@ button[type='submit']:disabled {
 .stats-page,
 .heatmap-page,
 .targets-page,
-.share-page,
 .planner-page {
   max-width: none;
   padding-bottom: 2rem;
@@ -4121,8 +3628,7 @@ button[type='submit']:disabled {
 .stats-page > h1,
 .heatmap-page > h1,
 .targets-page > h1,
-.planner-header,
-.share-header {
+.planner-header {
   display: none;
 }
 
@@ -4383,112 +3889,6 @@ td {
   letter-spacing: -0.04em;
 }
 
-.share-layout {
-  grid-template-columns: 320px minmax(0, 1fr);
-}
-
-.share-controls,
-.share-preview-panel {
-  padding: var(--spacing-card);
-}
-
-.share-controls {
-  top: 6rem;
-}
-
-.share-privacy {
-  border-color: var(--color-border);
-  border-radius: var(--radius-md);
-  background: var(--color-surface-soft);
-}
-
-.share-actions p {
-  color: var(--color-text-secondary);
-}
-
-.share-preview-panel {
-  min-height: 640px;
-  background:
-    linear-gradient(180deg, rgba(255, 253, 248, 0.86), rgba(240, 237, 228, 0.6)),
-    var(--color-surface);
-}
-
-.share-card {
-  width: min(370px, 100%);
-  padding: 26px;
-  border: 1px solid #ded8cc;
-  border-radius: 26px;
-  background: #fffdf8;
-  color: var(--color-text-primary);
-  box-shadow: 0 18px 54px rgba(43, 38, 31, 0.14);
-}
-
-.share-card-minimal,
-.share-card-data,
-.share-card-heatmap {
-  background:
-    linear-gradient(180deg, #fffdf8 0%, #f7f3ea 100%);
-}
-
-.share-card-data {
-  background:
-    radial-gradient(circle at 88% 10%, rgba(111, 127, 114, 0.12), transparent 8rem),
-    linear-gradient(180deg, #fffdf8 0%, #f7f3ea 100%);
-}
-
-.share-card-heatmap {
-  background:
-    repeating-linear-gradient(90deg, transparent 0 28px, rgba(222, 216, 204, 0.24) 28px 29px),
-    linear-gradient(180deg, #fffdf8 0%, #f7f3ea 100%);
-}
-
-.share-card-head strong,
-.share-card-metrics strong {
-  color: var(--color-text-primary);
-}
-
-.share-card-hero {
-  border: 1px solid rgba(83, 101, 83, 0.18);
-  border-radius: 22px;
-  background: var(--color-accent-soft);
-  color: var(--color-text-primary);
-}
-
-.share-card-hero strong,
-.share-card-hero span {
-  color: var(--color-text-primary);
-}
-
-.share-card-hero small {
-  background: rgba(255, 253, 248, 0.76);
-  color: var(--color-accent-strong);
-}
-
-.share-card-metrics div,
-.share-card-empty {
-  border-color: var(--color-border);
-  border-radius: 16px;
-  background: rgba(255, 253, 248, 0.76);
-}
-
-.share-card-category progress::-webkit-progress-bar {
-  background: var(--color-muted);
-}
-
-.share-card-category progress::-webkit-progress-value {
-  background: var(--color-accent);
-}
-
-.share-card-category progress::-moz-progress-bar {
-  background: var(--color-accent);
-}
-
-.share-output img {
-  border-color: var(--color-border);
-  border-radius: var(--radius-md);
-  box-shadow: 0 10px 28px rgba(43, 38, 31, 0.12);
-}
-
 .notification-bell .dropdown {
   border: 1px solid var(--color-border);
   border-radius: var(--radius-lg);
@@ -4622,9 +4022,8 @@ td {
   }
 
   .stats-current,
-  .share-layout,
-  .planner-layout,
-  .target-form {
+.planner-layout,
+.target-form {
     grid-template-columns: 1fr;
   }
 
@@ -4667,14 +4066,7 @@ td {
     min-width: 720px;
   }
 
-  .share-controls {
-    position: static;
   }
-
-  .share-preview-panel {
-    min-height: 0;
-  }
-}
 
 @media (max-width: 560px) {
   .target-overview,
@@ -4691,16 +4083,12 @@ td {
     grid-column: 2;
   }
 
-  .share-card-metrics {
-    grid-template-columns: 1fr;
   }
-}
 
 .timer-sync-bar .ui-button,
 .quick-start-card .ui-button,
 .timer-card .ui-button,
 .planner-page .ui-button,
-.share-page .ui-button,
 .targets-page .ui-button,
 .heatmap-page .ui-button {
   min-height: 42px;
@@ -4716,7 +4104,6 @@ td {
 .timer-sync-bar .ui-button-secondary,
 .quick-start-card .ui-button-secondary,
 .planner-page .ui-button-secondary,
-.share-page .ui-button-secondary,
 .heatmap-page .ui-button-secondary {
   background: var(--color-accent-soft);
   border-color: rgba(111, 127, 114, 0.18);
@@ -4726,7 +4113,6 @@ td {
 .timer-card .ui-button-ghost,
 .quick-start-card .ui-button-ghost,
 .planner-page .ui-button-ghost,
-.share-page .ui-button-ghost,
 .targets-page .ui-button-ghost,
 .heatmap-page .ui-button-ghost {
   background: transparent;
@@ -4774,8 +4160,6 @@ body {
 .history-panel,
 .planner-calendar,
 .planner-pool,
-.share-controls,
-.share-preview-panel,
 .targets-list,
 .evaluations-list,
 .target-events,
@@ -4801,7 +4185,6 @@ body {
 .ui-empty-state,
 .ui-loading,
 .planner-loading,
-.share-preview-loading,
 .timer-banner,
 .timer-sync-bar,
 .quick-template-form,
@@ -4809,21 +4192,15 @@ body {
 .period-selector,
 .planner-view-switch,
 .planner-range-nav,
-.share-segment,
 .tabs,
 .planner-day,
 .planner-empty,
-.share-privacy,
 .category-checkboxes label {
   background: #f2f2f2;
   border-color: #d9d9d9;
 }
 
-.timer-controls,
-.share-preview-panel,
-.share-card-minimal,
-.share-card-data,
-.share-card-heatmap {
+.timer-controls {
   background:
     repeating-linear-gradient(90deg, transparent 0 32px, rgba(17, 17, 17, 0.045) 32px 33px),
     #ffffff;
@@ -4842,7 +4219,6 @@ button[type='submit'],
 .timer-buttons button,
 .manual-form button[type='submit'],
 .planner-page .ui-button,
-.share-page .ui-button,
 .targets-page .ui-button,
 .heatmap-page .ui-button,
 .review-header button,
@@ -4857,7 +4233,6 @@ button[type='submit'],
 
 .ui-button-secondary,
 .planner-page .ui-button-secondary,
-.share-page .ui-button-secondary,
 .heatmap-page .ui-button-secondary,
 .planner-dialog .planner-dialog-complete,
 .timer-buttons button.stop {
@@ -4868,7 +4243,6 @@ button[type='submit'],
 
 .ui-button-ghost,
 .planner-page .ui-button-ghost,
-.share-page .ui-button-ghost,
 .targets-page .ui-button-ghost,
 .heatmap-page .ui-button-ghost,
 .quick-template-actions button,
@@ -4890,7 +4264,6 @@ button[type='submit'],
 .mode-toggle button.active,
 .period-selector button.active,
 .planner-view-switch button.active,
-.share-segment button.active,
 .tabs button.active {
   background: #111111;
   color: #ffffff;
@@ -4904,10 +4277,6 @@ button[type='submit'],
 .ui-tag-warning,
 .ui-tag-danger,
 .sync-pill.offline,
-.share-card-hero,
-.share-card-hero small,
-.share-card-metrics div,
-.share-card-empty,
 .planner-empty {
   background: #f2f2f2;
   color: #111111;
@@ -4915,16 +4284,12 @@ button[type='submit'],
 }
 
 .ui-progress,
-.target-progress-bar,
-.share-card-category progress,
-.share-card-category progress::-webkit-progress-bar {
+.target-progress-bar {
   background: #e9e9e9;
 }
 
 .ui-progress span,
-.target-progress-bar span,
-.share-card-category progress::-webkit-progress-value,
-.share-card-category progress::-moz-progress-bar {
+.target-progress-bar span {
   background: #111111;
 }
 
@@ -4958,7 +4323,6 @@ button[type='submit'],
 
 .time-trace-line,
 .target-progress-bar span,
-.share-card-heatmap span[style],
 .grid-cell[style] {
   filter: grayscale(1);
 }
@@ -5103,11 +4467,10 @@ button[type='submit'],
   }
 
   .stats-page,
-  .heatmap-page,
-  .targets-page,
-  .share-page,
-  .planner-page,
-  .review-page {
+.heatmap-page,
+.targets-page,
+.planner-page,
+.review-page {
     max-width: 1480px;
     margin: 0;
   }
@@ -5236,10 +4599,9 @@ button[type='submit'],
   }
 
   .ui-eyebrow,
-  .card-eyebrow,
-  .share-header span,
-  .planner-header span,
-  .planner-dialog header span {
+.card-eyebrow,
+.planner-header span,
+.planner-dialog header span {
     font-size: 0.68rem;
     letter-spacing: 0.08em;
   }
@@ -5377,10 +4739,9 @@ button[type='submit'],
   }
 
   .review-grid,
-  .stats-current,
-  .share-layout,
-  .planner-layout,
-  .target-form {
+.stats-current,
+.planner-layout,
+.target-form {
     grid-template-columns: 1fr;
   }
 }
@@ -5464,42 +4825,32 @@ body {
 .ui-empty-state,
 .ui-loading,
 .planner-loading,
-.share-preview-loading,
 .timer-sync-bar,
 .quick-template-form,
 .mode-toggle,
 .period-selector,
 .planner-view-switch,
 .planner-range-nav,
-.share-segment,
 .tabs,
 .planner-day,
 .planner-empty,
-.share-privacy,
 .category-checkboxes label {
   background: var(--color-surface-soft);
   border-color: var(--color-border);
 }
 
-.timer-controls,
-.share-preview-panel,
-.share-card-minimal,
-.share-card-data,
-.share-card-heatmap {
+.timer-controls {
   background: #ffffff;
 }
 
 .time-trace-line,
 .target-progress-bar span,
-.share-card-heatmap span[style],
 .grid-cell[style] {
   filter: none;
 }
 
 .ui-progress span,
-.target-progress-bar span,
-.share-card-category progress::-webkit-progress-value,
-.share-card-category progress::-moz-progress-bar {
+.target-progress-bar span {
   background: var(--color-accent);
 }
 
@@ -5595,8 +4946,7 @@ body {
   margin: 0;
 }
 
-.planner-target-list,
-.planner-evaluation-list {
+.planner-target-list {
   overflow-x: auto;
 }
 
@@ -5886,29 +5236,18 @@ body {
   }
 
   .category-split,
-  .share-layout,
-  .planner-layout,
-  .review-grid {
+.planner-layout,
+.review-grid {
     grid-template-columns: 1fr;
   }
 
-  .share-page,
   .planner-page,
-  .review-page,
-  .groups-page,
-  .discipline-page,
-  .time-trace-page {
+.review-page,
+.groups-page,
+.discipline-page,
+.time-trace-page {
     max-width: 760px;
     margin: 0 auto;
-  }
-
-  .share-controls {
-    position: static;
-  }
-
-  .share-preview-panel {
-    min-height: 0;
-    padding: 1rem;
   }
 
   .groups-page {
@@ -6004,10 +5343,6 @@ body {
 
   .planner-task-actions {
     justify-content: flex-start;
-  }
-
-  .share-card {
-    width: min(330px, 100%);
   }
 
   .time-trace-form button[type='submit'] {
@@ -6114,8 +5449,6 @@ body,
 .history-panel,
 .planner-calendar,
 .planner-pool,
-.share-controls,
-.share-preview-panel,
 .targets-list,
 .evaluations-list,
 .target-events,
@@ -6144,13 +5477,6 @@ body,
 .group-composer,
 .group-status-card,
 .planner-target-head,
-.share-card,
-.share-card-minimal,
-.share-card-data,
-.share-card-heatmap,
-.share-card-hero,
-.share-card-metrics div,
-.share-card-empty,
 .login-bg .rounded-2xl {
   background: #ffffff;
   background-image: none;
@@ -6162,7 +5488,6 @@ body,
 .ui-empty-state,
 .ui-loading,
 .planner-loading,
-.share-preview-loading,
 .timer-banner,
 .timer-sync-bar,
 .quick-template-form,
@@ -6170,19 +5495,16 @@ body,
 .period-selector,
 .planner-view-switch,
 .planner-range-nav,
-.share-segment,
 .tabs,
 .planner-day,
 .planner-empty,
-.share-privacy,
 .category-checkboxes label,
 .quick-template-item,
 .group-card-share,
 .groups-empty,
 .group-chat-empty,
 .group-messages-empty,
-.planner-day-list p,
-.share-output img {
+.planner-day-list p {
   background: #ffffff;
   background-image: none;
   border-color: #000000;
@@ -6220,7 +5542,6 @@ button[type='submit'],
 .timer-buttons button,
 .manual-form button[type='submit'],
 .planner-page .ui-button,
-.share-page .ui-button,
 .targets-page .ui-button,
 .heatmap-page .ui-button,
 .review-header button,
@@ -6244,13 +5565,11 @@ button[type='submit'],
 
 .ui-button-secondary,
 .planner-page .ui-button-secondary,
-.share-page .ui-button-secondary,
 .heatmap-page .ui-button-secondary,
 .planner-dialog .planner-dialog-complete,
 .timer-buttons button.stop,
 .ui-button-ghost,
 .planner-page .ui-button-ghost,
-.share-page .ui-button-ghost,
 .targets-page .ui-button-ghost,
 .heatmap-page .ui-button-ghost,
 .quick-template-actions button,
@@ -6281,7 +5600,6 @@ button:disabled,
 .mode-toggle button.active,
 .period-selector button.active,
 .planner-view-switch button.active,
-.share-segment button.active,
 .tabs button.active,
 .nav-links a.active {
   background: #000000;
@@ -6360,13 +5678,7 @@ button:disabled,
 .group-member-list span,
 .discipline-head p,
 .discipline-message,
-.time-trace-card time,
-.share-card-head span,
-.share-card-hero span,
-.share-card-metrics span,
-.share-card-section-head span,
-.share-card-foot span,
-.share-actions p {
+.time-trace-card time {
   color: #000000;
 }
 
@@ -6377,7 +5689,6 @@ button:disabled,
 .ui-tag-warning,
 .ui-tag-danger,
 .sync-pill.offline,
-.share-card-hero small,
 .group-member-list span {
   background: #ffffff;
   border-color: #000000;
@@ -6385,17 +5696,13 @@ button:disabled,
 }
 
 .ui-progress,
-.target-progress-bar,
-.share-card-category progress,
-.share-card-category progress::-webkit-progress-bar {
+.target-progress-bar {
   background: #ffffff;
   border: 1px solid #000000;
 }
 
 .ui-progress span,
-.target-progress-bar span,
-.share-card-category progress::-webkit-progress-value,
-.share-card-category progress::-moz-progress-bar {
+.target-progress-bar span {
   background: #000000;
 }
 
@@ -6423,11 +5730,6 @@ table td {
   background: #ffffff;
   border-color: #000000;
   color: #000000;
-}
-
-.markdown-panel pre {
-  background: #000000;
-  color: #ffffff;
 }
 
 .recharts-cartesian-grid line,
@@ -6811,8 +6113,6 @@ table td {
 .review-header p,
 .review-category-row small,
 .review-category-row em,
-.share-actions p,
-.share-card-foot span,
 .group-muted,
 .discipline-message {
   color: #000000 !important;
@@ -7066,7 +6366,6 @@ body,
 .main-content,
 .ui-page-shell,
 .timer-shell,
-.share-page,
 .planner-page,
 .targets-page,
 .heatmap-page,
@@ -7097,15 +6396,6 @@ body,
 .targets-list,
 .target-events,
 .evaluations-list,
-.share-controls,
-.share-preview-panel,
-.share-card,
-.share-card-minimal,
-.share-card-data,
-.share-card-heatmap,
-.share-card-hero,
-.share-card-metrics div,
-.share-card-empty,
 .heatmap-card,
 .review-panel,
 .review-metric-grid div,
@@ -7133,22 +6423,18 @@ body,
 .ui-empty-state,
 .ui-loading,
 .planner-loading,
-.share-preview-loading,
 .timer-banner,
 .timer-sync-bar,
 .mode-toggle,
 .period-selector,
 .planner-view-switch,
 .planner-range-nav,
-.share-segment,
 .tabs,
-.share-privacy,
 .category-checkboxes label,
 .groups-empty,
 .group-chat-empty,
 .group-messages-empty,
-.planner-day-list p,
-.share-output img {
+.planner-day-list p {
   background: #ffffff;
   background-image: none;
   border-color: #000000;
@@ -7197,7 +6483,6 @@ button[type='submit'],
 .timer-buttons button,
 .manual-form button[type='submit'],
 .planner-page .ui-button,
-.share-page .ui-button,
 .targets-page .ui-button,
 .heatmap-page .ui-button,
 .review-header button,
@@ -7222,14 +6507,12 @@ button[type='submit'],
 
 .ui-button-secondary,
 .planner-page .ui-button-secondary,
-.share-page .ui-button-secondary,
 .targets-page .ui-button-secondary,
 .heatmap-page .ui-button-secondary,
 .planner-dialog .planner-dialog-complete,
 .timer-buttons button.stop,
 .ui-button-ghost,
 .planner-page .ui-button-ghost,
-.share-page .ui-button-ghost,
 .targets-page .ui-button-ghost,
 .heatmap-page .ui-button-ghost,
 .quick-template-actions button,
@@ -7254,7 +6537,6 @@ button:disabled,
 .mode-toggle button.active,
 .period-selector button.active,
 .planner-view-switch button.active,
-.share-segment button.active,
 .tabs button.active {
   background: #000000;
   color: #ffffff;
@@ -7263,7 +6545,6 @@ button:disabled,
 .mode-toggle button,
 .period-selector button,
 .planner-view-switch button,
-.share-segment button,
 .tabs button,
 .quick-start-card .ui-button-secondary,
 .quick-start-card .ui-button-ghost,
@@ -7287,7 +6568,6 @@ button:disabled,
 .mode-toggle button:disabled,
 .period-selector button:disabled,
 .planner-view-switch button:disabled,
-.share-segment button:disabled,
 .tabs button:disabled {
   background: #ffffff;
   border-color: #000000;
@@ -7302,12 +6582,9 @@ button:disabled,
 .ui-tag-success,
 .ui-tag-warning,
 .ui-tag-danger,
-.share-card-hero small,
 .group-member-list span,
 .ui-progress,
 .target-progress-bar,
-.share-card-category progress,
-.share-card-category progress::-webkit-progress-bar,
 .legend div {
   background: #ffffff;
   border-color: #000000;
@@ -7315,9 +6592,7 @@ button:disabled,
 }
 
 .ui-progress span,
-.target-progress-bar span,
-.share-card-category progress::-webkit-progress-value,
-.share-card-category progress::-moz-progress-bar {
+.target-progress-bar span {
   background: #000000;
 }
 
@@ -7332,7 +6607,6 @@ button:disabled,
 }
 
 .grid-cell[style],
-.share-card-heatmap span[style],
 .category-color-dot,
 .quick-template-icon,
 .review-category-row > span,
@@ -7405,8 +6679,7 @@ button:disabled,
 .group-card-share span,
 .group-status-card strong,
 .group-status-grid span,
-.public-group-card code,
-.share-header span {
+.public-group-card code {
   color: #000000;
 }
 
@@ -7491,11 +6764,6 @@ table td {
   background: #ffffff;
   border-color: #000000;
   color: #000000;
-}
-
-.markdown-panel pre {
-  background: #000000;
-  color: #ffffff;
 }
 
 @media (max-width: 1100px) {
@@ -8041,682 +7309,6 @@ table td {
   }
 }
 
-/* Share poster visual refresh */
-.share-page .share-layout {
-  grid-template-columns: 320px minmax(0, 1fr);
-  gap: 1rem;
-}
-
-.share-page .share-controls {
-  gap: 1rem;
-}
-
-.share-page .share-segment,
-.share-page .share-background-options {
-  display: grid;
-  gap: 0.35rem;
-  padding: 0.25rem;
-  border: 1px solid #dbe3ec;
-  border-radius: 8px;
-  background: #f8fafc;
-}
-
-.share-page .share-segment {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-}
-
-.share-page .share-background-options {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.share-page .share-segment button,
-.share-page .share-background-options button,
-.share-page .share-background-refresh,
-.share-page .share-icon-button {
-  min-height: 40px;
-  border: 0;
-  border-radius: 6px;
-  background: transparent;
-  color: #475569;
-  font-weight: 800;
-}
-
-.share-page .share-background-options button.active,
-.share-page .share-segment button.active {
-  background: #172033;
-  color: #ffffff;
-}
-
-.share-page .share-background-refresh {
-  width: 100%;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  border: 1px solid #dbe3ec;
-  background: #ffffff;
-  color: #172033;
-}
-
-.share-page .share-icon-button {
-  width: 36px;
-  min-width: 36px;
-  display: inline-grid;
-  place-items: center;
-  border: 1px solid #dbe3ec;
-  background: #ffffff;
-}
-
-.share-page .share-preview-panel {
-  min-height: 690px;
-  padding: 1.25rem;
-  background:
-    radial-gradient(circle at 12% 10%, rgba(59, 130, 246, 0.12), transparent 28%),
-    linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
-}
-
-.share-page .share-preview-shell {
-  width: min(100%, 430px);
-}
-
-.share-page .share-preview-loading {
-  width: min(100%, 405px);
-  min-height: 540px;
-}
-
-.share-page .share-card {
-  --poster-accent: #ffd36b;
-  position: relative;
-  width: min(390px, 100%);
-  aspect-ratio: 3 / 4;
-  padding: 0;
-  display: block;
-  overflow: hidden;
-  border: 0;
-  border-radius: 28px;
-  background: #172033;
-  color: #ffffff;
-  box-shadow: 0 24px 70px rgba(15, 23, 42, 0.24);
-  isolation: isolate;
-}
-
-.share-page .share-card-tone-dark {
-  color: #132022;
-}
-
-.share-page .poster-background,
-.share-page .poster-background-fallback,
-.share-page .poster-background img,
-.share-page .poster-background-blur,
-.share-page .poster-background-overlay,
-.share-page .poster-background-noise,
-.share-page .poster-background-glow {
-  position: absolute;
-  inset: 0;
-}
-
-.share-page .poster-background {
-  z-index: 0;
-  overflow: hidden;
-}
-
-.share-page .poster-background-fallback,
-.share-page .poster-background-blur {
-  background-size: cover;
-  background-position: center;
-}
-
-.share-page .poster-background img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transform: scale(1.04);
-  filter: saturate(1.02) contrast(0.98);
-  transition: opacity 0.2s ease;
-}
-
-.share-page .poster-background img.loaded {
-  opacity: 1;
-}
-
-.share-page .poster-background-blur {
-  opacity: 0.2;
-  filter: blur(34px) saturate(1.2);
-  transform: scale(1.16);
-  mix-blend-mode: screen;
-}
-
-.share-page .poster-background-overlay {
-  z-index: 2;
-}
-
-.share-page .poster-background-noise {
-  z-index: 3;
-  opacity: 0.1;
-  background-image:
-    radial-gradient(circle at 20% 30%, rgba(255, 255, 255, 0.42) 0 1px, transparent 1px),
-    radial-gradient(circle at 72% 62%, rgba(0, 0, 0, 0.2) 0 1px, transparent 1px);
-  background-size: 9px 9px, 13px 13px;
-  pointer-events: none;
-}
-
-.share-page .poster-background-glow {
-  z-index: 4;
-  border-radius: inherit;
-  box-shadow:
-    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
-    inset 0 -120px 150px rgba(0, 0, 0, 0.34),
-    inset 0 80px 120px rgba(255, 255, 255, 0.08);
-  pointer-events: none;
-}
-
-.share-page .poster-content {
-  position: relative;
-  z-index: 5;
-  height: 100%;
-  padding: 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-}
-
-.share-page .share-card-head,
-.share-page .share-card-foot,
-.share-page .share-card-section-head,
-.share-page .share-card-category div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.65rem;
-}
-
-.share-page .share-card-head span,
-.share-page .share-card-hero span,
-.share-page .share-card-metrics span,
-.share-page .share-card-section-head span,
-.share-page .share-card-foot span {
-  color: rgba(255, 255, 255, 0.7);
-  font-size: 0.7rem;
-  font-weight: 850;
-}
-
-.share-page .share-card-tone-dark .share-card-head span,
-.share-page .share-card-tone-dark .share-card-hero span,
-.share-page .share-card-tone-dark .share-card-metrics span,
-.share-page .share-card-tone-dark .share-card-section-head span,
-.share-page .share-card-tone-dark .share-card-foot span {
-  color: rgba(19, 32, 34, 0.68);
-}
-
-.share-page .share-card-head strong {
-  display: block;
-  margin-top: 0.2rem;
-  color: inherit;
-  font-size: 1.32rem;
-  line-height: 1.05;
-}
-
-.share-page .share-card-head time {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.78rem;
-  font-weight: 850;
-}
-
-.share-page .share-card-tone-dark .share-card-head time {
-  color: rgba(19, 32, 34, 0.72);
-}
-
-.share-page .share-card-hero,
-.share-page .poster-card,
-.share-page .poster-metric {
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(18, 26, 42, 0.28);
-  box-shadow: 0 16px 34px rgba(8, 15, 32, 0.16);
-  backdrop-filter: blur(16px) saturate(1.12);
-}
-
-.share-page .share-card-tone-dark .share-card-hero,
-.share-page .share-card-tone-dark .poster-card,
-.share-page .share-card-tone-dark .poster-metric {
-  border-color: rgba(255, 255, 255, 0.42);
-  background: rgba(255, 255, 255, 0.5);
-  box-shadow: 0 18px 42px rgba(52, 64, 68, 0.14);
-}
-
-.share-page .share-card-hero {
-  min-height: 112px;
-  padding: 0.92rem 1rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.8rem;
-  border-radius: 20px;
-  color: inherit;
-}
-
-.share-page .share-card-hero strong {
-  display: flex;
-  align-items: baseline;
-  flex-wrap: wrap;
-  gap: 0.18em;
-  margin-top: 0.22rem;
-  color: inherit;
-  font-size: 1.9rem;
-  line-height: 0.96;
-}
-
-.share-page .share-card-hero .share-card-private-title {
-  display: block;
-  font-size: 2.2rem;
-  line-height: 1;
-  letter-spacing: 0;
-}
-
-.share-page .share-card-hero strong b {
-  font-size: 2.75rem;
-  font-weight: 950;
-  letter-spacing: 0;
-}
-
-.share-page .share-card-hero strong i {
-  font-size: 1.05rem;
-  font-style: normal;
-  font-weight: 900;
-  opacity: 0.86;
-}
-
-.share-page .share-card-hero small {
-  display: block;
-  margin-top: 0.35rem;
-  padding: 0 !important;
-  border: 0 !important;
-  border-radius: 0 !important;
-  background: transparent !important;
-  box-shadow: none !important;
-  color: rgba(255, 255, 255, 0.72) !important;
-  font-size: 0.7rem;
-  font-weight: 800;
-}
-
-.share-page .share-card-tone-dark .share-card-hero small {
-  color: rgba(19, 32, 34, 0.7) !important;
-}
-
-.share-page .share-card-hero em {
-  flex: 0 0 auto;
-  align-self: flex-start;
-  padding: 0.28rem 0.52rem;
-  border-radius: 999px;
-  background: var(--poster-accent);
-  color: #101418;
-  font-size: 0.68rem;
-  font-style: normal;
-  font-weight: 900;
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.14);
-}
-
-.share-page .share-card-hero small {
-  width: auto !important;
-  height: auto !important;
-  min-height: 0 !important;
-  flex: 0 1 auto !important;
-}
-
-.share-page .share-card-style-data .share-card-hero {
-  min-height: 116px;
-}
-
-.share-page .share-card-style-data .poster-metric:first-child {
-  box-shadow:
-    0 18px 42px rgba(8, 15, 32, 0.18),
-    inset 0 -3px 0 var(--poster-accent);
-}
-
-.share-page .share-card-style-heatmap .share-card-heatmap-block {
-  border-color: rgba(255, 255, 255, 0.34);
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.share-page .share-card-style-heatmap.share-card-tone-dark .share-card-heatmap-block {
-  border-color: rgba(255, 255, 255, 0.5);
-  background: rgba(255, 255, 255, 0.48);
-}
-
-.share-page .share-card-style-heatmap .share-poster-heatmap span {
-  border-radius: 5px;
-}
-
-.share-page .share-card-metrics {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.5rem;
-}
-
-.share-page .poster-metric {
-  min-width: 0;
-  min-height: 74px;
-  padding: 0.66rem;
-  display: grid;
-  align-content: start;
-  gap: 0.22rem;
-  border-radius: 16px;
-}
-
-.share-page .poster-metric strong {
-  color: #ffffff;
-  font-size: 1rem;
-  line-height: 1.1;
-  overflow-wrap: anywhere;
-}
-
-.share-page .share-card-tone-dark .poster-metric strong {
-  color: #132022;
-}
-
-.share-page .poster-metric small {
-  color: rgba(255, 255, 255, 0.74);
-  font-size: 0.68rem;
-  font-weight: 800;
-  line-height: 1.22;
-  overflow-wrap: anywhere;
-}
-
-.share-page .share-card-tone-dark .poster-metric small {
-  color: rgba(19, 32, 34, 0.68);
-}
-
-.share-page .poster-card {
-  padding: 0.78rem;
-  display: grid;
-  gap: 0.55rem;
-  border-radius: 18px;
-}
-
-.share-page .share-card-section {
-  min-height: 0;
-}
-
-.share-page .share-card-section-head strong,
-.share-page .share-card-foot strong {
-  color: inherit;
-  font-size: 0.94rem;
-}
-
-.share-page .share-card-empty {
-  min-height: 68px;
-  display: grid;
-  place-items: center;
-  padding: 0.8rem;
-  border: 1px dashed rgba(255, 255, 255, 0.36);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  color: rgba(255, 255, 255, 0.78);
-  text-align: center;
-}
-
-.share-page .share-card-tone-dark .share-card-empty {
-  border-color: rgba(19, 32, 34, 0.22);
-  background: rgba(255, 255, 255, 0.28);
-  color: rgba(19, 32, 34, 0.72);
-}
-
-.share-page .share-card-category-summary {
-  display: grid;
-  gap: 0.35rem;
-}
-
-.share-page .share-card-category-focus {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto auto;
-  gap: 0.5rem;
-  align-items: baseline;
-  min-height: 34px;
-}
-
-.share-page .share-card-category-focus span {
-  min-width: 0;
-  color: #ffffff;
-  font-size: 0.9rem;
-  font-weight: 900;
-  line-height: 1.1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.share-page .share-card-category-focus strong {
-  color: var(--poster-accent);
-  font-size: 1.18rem;
-  line-height: 1;
-}
-
-.share-page .share-card-category-focus small {
-  color: rgba(255, 255, 255, 0.68);
-  font-size: 0.66rem;
-  font-weight: 850;
-}
-
-.share-page .share-card-tone-dark .share-card-category-focus small {
-  color: rgba(19, 32, 34, 0.62);
-}
-
-.share-page .share-card-tone-dark .share-card-category-focus span {
-  color: #132022;
-}
-
-.share-page .share-card-categories {
-  display: grid;
-  gap: 0.38rem;
-}
-
-.share-page .share-card-category {
-  display: grid;
-  gap: 0.2rem;
-}
-
-.share-page .share-card-category div {
-  min-width: 0;
-}
-
-.share-page .share-card-category span {
-  width: 9px;
-  height: 9px;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.22);
-}
-
-.share-page .share-card-category strong {
-  flex: 1;
-  min-width: 0;
-  color: inherit;
-  font-size: 0.76rem;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.share-page .share-card-category em {
-  color: rgba(255, 255, 255, 0.74);
-  font-size: 0.7rem;
-  font-style: normal;
-  font-weight: 850;
-}
-
-.share-page .share-card-tone-dark .share-card-category em {
-  color: rgba(19, 32, 34, 0.68);
-}
-
-.share-page .share-card-category progress {
-  width: 100%;
-  height: 4px;
-  overflow: hidden;
-  border: 0;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.share-page .share-card-tone-dark .share-card-category progress {
-  background: rgba(19, 32, 34, 0.14);
-}
-
-.share-page .share-card-category progress::-webkit-progress-bar {
-  background: rgba(255, 255, 255, 0.2);
-}
-
-.share-page .share-card-tone-dark .share-card-category progress::-webkit-progress-bar {
-  background: rgba(19, 32, 34, 0.14);
-}
-
-.share-page .share-card-category progress::-webkit-progress-value {
-  border-radius: 999px;
-  background: var(--category-color, var(--poster-accent));
-}
-
-.share-page .share-card-category progress::-moz-progress-bar {
-  border-radius: 999px;
-  background: var(--category-color, var(--poster-accent));
-}
-
-.share-page .share-card-category:nth-child(n + 4) {
-  display: none;
-}
-
-.share-page .share-card-heatmap-block {
-  margin-top: auto;
-  padding-bottom: 0.68rem;
-}
-
-.share-page .share-poster-heatmap {
-  display: grid;
-  grid-template-columns: repeat(14, 1fr);
-  gap: 3px;
-}
-
-.share-page .share-poster-heatmap span {
-  aspect-ratio: 1;
-  border-radius: 3px;
-  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
-}
-
-.share-page .share-card-tone-dark .share-poster-heatmap span {
-  box-shadow: inset 0 0 0 1px rgba(19, 32, 34, 0.08);
-}
-
-.share-page .share-card-foot {
-  margin-top: 0;
-  min-height: 20px;
-  padding-top: 0;
-  border-top: 0 !important;
-  background: transparent !important;
-  background-image: none !important;
-  box-shadow: none !important;
-}
-
-.share-page .share-card-foot span {
-  color: rgba(255, 255, 255, 0.64) !important;
-}
-
-.share-page .share-card-foot strong {
-  color: #ffffff;
-}
-
-.share-page .share-card-tone-dark .share-card-foot span {
-  color: rgba(19, 32, 34, 0.62) !important;
-}
-
-.share-page .share-card-tone-dark .share-card-foot strong {
-  color: #132022;
-}
-
-.share-page .share-output {
-  width: min(100%, 250px);
-}
-
-.share-page .share-output img {
-  width: 100%;
-  border: 1px solid rgba(15, 23, 42, 0.12);
-  border-radius: 18px;
-  box-shadow: 0 18px 42px rgba(15, 23, 42, 0.16);
-}
-
-@media (max-width: 1100px) {
-  .share-page .share-layout {
-    grid-template-columns: 1fr;
-  }
-
-  .share-page .share-controls {
-    position: static;
-  }
-
-  .share-page .share-preview-panel {
-    min-height: 0;
-  }
-}
-
-@media (max-width: 700px) {
-  .share-page .share-background-options {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .share-page .share-preview-panel {
-    padding: 0.8rem;
-  }
-
-  .share-page .share-preview-shell {
-    width: min(100%, 360px);
-  }
-
-  .share-page .share-card {
-    width: min(350px, 100%);
-    border-radius: 24px;
-  }
-
-  .share-page .poster-content {
-    padding: 18px;
-    gap: 9px;
-  }
-
-  .share-page .share-card-hero {
-    min-height: 102px;
-  }
-
-  .share-page .share-card-hero .share-card-private-title {
-    font-size: 1.95rem;
-  }
-
-  .share-page .share-card-hero strong b {
-    font-size: 2.2rem;
-  }
-
-  .share-page .share-card-hero strong i {
-    font-size: 0.88rem;
-  }
-
-  .share-page .share-card-metrics {
-    gap: 0.45rem;
-  }
-
-  .share-page .poster-metric {
-    min-height: 64px;
-    padding: 0.54rem;
-    border-radius: 14px;
-  }
-
-  .share-page .poster-metric strong {
-    font-size: 0.92rem;
-  }
-
-  .share-page .poster-metric small {
-    font-size: 0.68rem;
-  }
-
-  .share-page .poster-card {
-    padding: 0.64rem;
-  }
-}
-
 /* Requested mobile and modal refinements */
 .target-ring-inner {
   padding: 0.6rem;
@@ -8754,8 +7346,7 @@ table td {
 }
 
 .timer-category-dialog header,
-.planner-day-modal .planner-dialog header,
-.markdown-panel h2 {
+.planner-day-modal .planner-dialog header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -8819,10 +7410,6 @@ table td {
   justify-content: flex-end;
 }
 
-.review-export-bottom {
-  display: none;
-}
-
 @media (max-width: 700px) {
   .target-ring {
     width: min(38vw, 128px);
@@ -8847,19 +7434,31 @@ table td {
     display: none !important;
   }
 
-  .review-export-bottom {
-    width: 100%;
-    min-height: 46px;
-    margin-top: 0.9rem;
-    border: 1px solid #000000;
+  .review-toolbar .period-selector {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
     border-radius: 8px;
-    background: #000000;
-    color: #ffffff;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.45rem;
-    font-weight: 800;
+  }
+
+  .review-toolbar .period-selector button {
+    width: 100%;
+    min-width: 0;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+
+  .review-category-filter summary {
+    align-items: flex-start;
+  }
+
+  .review-category-filter summary > strong {
+    max-width: 55%;
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .review-category-options {
+    grid-template-columns: 1fr;
   }
 
   .planner-day-modal .planner-dialog {

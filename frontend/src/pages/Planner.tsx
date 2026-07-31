@@ -36,7 +36,6 @@ import {
   CalendarTaskStatus,
   Category,
   TargetDashboard,
-  WorkEvaluation,
   WorkTarget,
 } from '../types';
 import { getRunningTimer } from '../utils/offlineTimer';
@@ -163,7 +162,6 @@ export const Planner: React.FC = () => {
   const [tasks, setTasks] = useState<CalendarTask[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [targets, setTargets] = useState<WorkTarget[]>([]);
-  const [evaluations, setEvaluations] = useState<WorkEvaluation[]>([]);
   const [targetDashboard, setTargetDashboard] = useState<TargetDashboard | null>(null);
   const [loading, setLoading] = useState(false);
   const [targetLoading, setTargetLoading] = useState(false);
@@ -235,13 +233,11 @@ export const Planner: React.FC = () => {
   const loadTargetData = async () => {
     setTargetLoading(true);
     try {
-      const [targetData, evaluationData, dashboardData] = await Promise.all([
+      const [targetData, dashboardData] = await Promise.all([
         apiClient.get<WorkTarget[]>('/targets'),
-        apiClient.get<WorkEvaluation[]>('/evaluations'),
         apiClient.get<TargetDashboard>('/targets/dashboard'),
       ]);
       setTargets(targetData);
-      setEvaluations(evaluationData);
       setTargetDashboard(dashboardData);
     } catch (error) {
       console.error('加载目标数据失败', error);
@@ -314,12 +310,6 @@ export const Planner: React.FC = () => {
     targetDashboard?.metrics.forEach((metric) => map.set(metric.target_id, metric));
     return map;
   }, [targetDashboard]);
-
-  const targetById = useMemo(() => {
-    const map = new Map<number, WorkTarget>();
-    targets.forEach((target) => map.set(target.id, target));
-    return map;
-  }, [targets]);
 
   const targetOverview = useMemo(() => {
     const metrics = targetDashboard?.metrics ?? [];
@@ -859,44 +849,6 @@ export const Planner: React.FC = () => {
           )}
         </Card>
 
-        <Card className="evaluations-list planner-evaluation-list">
-          <h2>记录</h2>
-          {targetLoading ? (
-            <LoadingState text="正在查看最近评估..." />
-          ) : evaluations.length === 0 ? (
-            <EmptyState title="暂无评估记录" description="目标走过一个周期后，这里会出现结果。" />
-          ) : (
-            <table>
-              <thead>
-                <tr>
-                  <th>周期</th>
-                  <th>范围</th>
-                  <th>目标</th>
-                  <th>实际</th>
-                  <th>结果</th>
-                </tr>
-              </thead>
-              <tbody>
-                {evaluations.slice(0, 8).map((evaluation) => {
-                  const target = targetById.get(evaluation.target_id);
-                  return (
-                    <tr key={evaluation.id}>
-                      <td>{periodLabel(target?.period ?? 'daily')}</td>
-                      <td>
-                        {new Date(evaluation.period_start).toLocaleDateString()} - {new Date(evaluation.period_end).toLocaleDateString()}
-                      </td>
-                      <td>{formatTime(evaluation.target_seconds)}</td>
-                      <td>{formatTime(evaluation.actual_seconds)}</td>
-                      <td className={evaluation.status === 'met' ? 'pass' : 'fail'}>
-                        {evaluation.status === 'met' ? '达标' : `未达标，差 ${formatTime(evaluation.deficit_seconds)}`}
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          )}
-        </Card>
       </section>
 
       {selectedDay && (

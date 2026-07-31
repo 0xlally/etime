@@ -1,10 +1,10 @@
-"""Review endpoints - daily, weekly, and monthly retrospectives."""
+"""Review endpoints - daily, weekly, monthly, and yearly retrospectives."""
 from datetime import date as DateType
 from datetime import datetime, time as TimeType, timedelta, timezone
 from typing import Iterable, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
-from sqlalchemy import extract, func
+from sqlalchemy import func
 from sqlalchemy.orm import Session as DBSession
 
 from app.api.deps import get_current_active_user
@@ -19,12 +19,11 @@ from app.schemas.review import (
     DailyReviewResponse,
     MonthlyReviewResponse,
     ReviewCategoryItem,
-    ReviewCategorySummaryResponse,
-    ReviewCategoryYearTotal,
     ReviewDayTotal,
     ReviewEvaluationItem,
     ReviewTargetSummary,
     WeeklyReviewResponse,
+    YearlyReviewResponse,
 )
 
 
@@ -57,6 +56,26 @@ def _month_bounds(value: DateType) -> tuple[DateType, DateType, datetime, dateti
     return start_date, end_date, start_dt, end_dt
 
 
+def _year_bounds(value: DateType) -> tuple[DateType, DateType, datetime, datetime]:
+    start_date = value.replace(month=1, day=1)
+    end_date = value.replace(month=12, day=31)
+    start_dt, _ = _date_bounds(start_date)
+    _, end_dt = _date_bounds(end_date)
+    return start_date, end_date, start_dt, end_dt
+
+
+def _parse_category_ids(value: Optional[str]) -> Optional[list[int]]:
+    if not value:
+        return None
+    try:
+        category_ids = list(dict.fromkeys(int(item) for item in value.split(",") if item.strip()))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid category_ids") from exc
+    if not category_ids or any(category_id <= 0 for category_id in category_ids):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid category_ids")
+    return category_ids
+
+
 def _format_seconds(seconds: int) -> str:
     total = max(0, int(seconds))
     hours = total // 3600
@@ -73,8 +92,9 @@ def _category_totals(
     start_dt: datetime,
     end_dt: datetime,
     db: DBSession,
+    category_ids: Optional[list[int]] = None,
 ) -> List[ReviewCategoryItem]:
-    rows = db.query(
+    query = db.query(
         Session.category_id,
         Category.name.label("category_name"),
         Category.color.label("category_color"),
@@ -89,7 +109,11 @@ def _category_totals(
         Session.end_time.isnot(None),
         Session.start_time >= start_dt,
         Session.start_time <= end_dt,
-    ).group_by(
+    )
+    if category_ids:
+        query = query.filter(Session.category_id.in_(category_ids))
+
+    rows = query.group_by(
         Session.category_id,
         Category.name,
         Category.color,
@@ -128,10 +152,11 @@ def _daily_totals(
     start_date: DateType,
     end_date: DateType,
     db: DBSession,
+    category_ids: Optional[list[int]] = None,
 ) -> List[ReviewDayTotal]:
     start_dt, _ = _date_bounds(start_date)
     _, end_dt = _date_bounds(end_date)
-    rows = db.query(
+    query = db.query(
         func.date(Session.start_time).label("date"),
         func.coalesce(
             func.sum(func.coalesce(Session.effective_seconds, Session.duration_seconds)),
@@ -142,7 +167,11 @@ def _daily_totals(
         Session.end_time.isnot(None),
         Session.start_time >= start_dt,
         Session.start_time <= end_dt,
-    ).group_by(
+    )
+    if category_ids:
+        query = query.filter(Session.category_id.in_(category_ids))
+
+    rows = query.group_by(
         func.date(Session.start_time)
     ).all()
 
@@ -360,70 +389,22 @@ def _weekly_markdown(
     return "\n".join(lines)
 
 
-@router.get("/category-summary", response_model=ReviewCategorySummaryResponse)
-def get_category_summary(
-    category_id: int = Query(..., description="Category ID to summarize"),
-    current_user: User = Depends(get_current_active_user),
-    db: DBSession = Depends(get_db),
-):
-    """Get all-time and yearly totals for one category."""
-    category = db.query(Category).filter(
-        Category.id == category_id,
-        Category.user_id == current_user.id,
-    ).first()
-    if not category:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Category not found")
-
-    seconds_expr = func.coalesce(
-        func.sum(func.coalesce(Session.effective_seconds, Session.duration_seconds)),
-        0,
-    )
-    year_expr = extract("year", Session.start_time)
-
-    rows = db.query(
-        year_expr.label("year"),
-        seconds_expr.label("total_seconds"),
-    ).filter(
-        Session.user_id == current_user.id,
-        Session.category_id == category.id,
-        Session.end_time.isnot(None),
-    ).group_by(
-        year_expr,
-    ).order_by(
-        year_expr.desc(),
-    ).all()
-
-    yearly_totals = [
-        ReviewCategoryYearTotal(
-            year=int(row.year),
-            total_seconds=int(row.total_seconds),
-        )
-        for row in rows
-    ]
-
-    return ReviewCategorySummaryResponse(
-        category_id=category.id,
-        category_name=category.name,
-        category_color=category.color,
-        total_seconds=sum(item.total_seconds for item in yearly_totals),
-        yearly_totals=yearly_totals,
-    )
-
-
 @router.get("/daily", response_model=DailyReviewResponse)
 def get_daily_review(
     date: Optional[DateType] = Query(None, description="Review date (YYYY-MM-DD)"),
+    category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
     current_user: User = Depends(get_current_active_user),
     db: DBSession = Depends(get_db),
 ):
     """Get a daily retrospective with stats, targets, and time traces."""
     review_date = date or datetime.now(timezone.utc).date()
+    selected_category_ids = _parse_category_ids(category_ids)
     start_dt, end_dt = _date_bounds(review_date)
     previous_start, previous_end = _date_bounds(review_date - timedelta(days=1))
 
     categories = _with_trends(
-        _category_totals(current_user.id, start_dt, end_dt, db),
-        _category_totals(current_user.id, previous_start, previous_end, db),
+        _category_totals(current_user.id, start_dt, end_dt, db, selected_category_ids),
+        _category_totals(current_user.id, previous_start, previous_end, db, selected_category_ids),
     )
     total_seconds = _total_seconds(categories)
     target_summary = _target_summary(
@@ -450,11 +431,13 @@ def get_daily_review(
 @router.get("/weekly", response_model=WeeklyReviewResponse)
 def get_weekly_review(
     date: Optional[DateType] = Query(None, description="Any date in the week (YYYY-MM-DD)"),
+    category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
     current_user: User = Depends(get_current_active_user),
     db: DBSession = Depends(get_db),
 ):
     """Get a weekly retrospective with trends and Markdown export."""
     anchor = date or datetime.now(timezone.utc).date()
+    selected_category_ids = _parse_category_ids(category_ids)
     start_date, end_date, start_dt, end_dt = _week_bounds(anchor)
     previous_start_date = start_date - timedelta(days=7)
     previous_end_date = end_date - timedelta(days=7)
@@ -462,11 +445,11 @@ def get_weekly_review(
     _, previous_end_dt = _date_bounds(previous_end_date)
 
     categories = _with_trends(
-        _category_totals(current_user.id, start_dt, end_dt, db),
-        _category_totals(current_user.id, previous_start_dt, previous_end_dt, db),
+        _category_totals(current_user.id, start_dt, end_dt, db, selected_category_ids),
+        _category_totals(current_user.id, previous_start_dt, previous_end_dt, db, selected_category_ids),
     )
     total_seconds = _total_seconds(categories)
-    daily_totals = _daily_totals(current_user.id, start_date, end_date, db)
+    daily_totals = _daily_totals(current_user.id, start_date, end_date, db, selected_category_ids)
     best_day_candidates = [item for item in daily_totals if item.total_seconds > 0]
     best_day = max(best_day_candidates, key=lambda item: item.total_seconds) if best_day_candidates else None
     gap_days = sum(1 for item in daily_totals if item.total_seconds == 0)
@@ -510,21 +493,23 @@ def get_weekly_review(
 @router.get("/monthly", response_model=MonthlyReviewResponse)
 def get_monthly_review(
     date: Optional[DateType] = Query(None, description="Any date in the month (YYYY-MM-DD)"),
+    category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
     current_user: User = Depends(get_current_active_user),
     db: DBSession = Depends(get_db),
 ):
     """Get a monthly retrospective with trends and Markdown export."""
     anchor = date or datetime.now(timezone.utc).date()
+    selected_category_ids = _parse_category_ids(category_ids)
     start_date, end_date, start_dt, end_dt = _month_bounds(anchor)
     previous_anchor = start_date - timedelta(days=1)
     previous_start_date, previous_end_date, previous_start_dt, previous_end_dt = _month_bounds(previous_anchor)
 
     categories = _with_trends(
-        _category_totals(current_user.id, start_dt, end_dt, db),
-        _category_totals(current_user.id, previous_start_dt, previous_end_dt, db),
+        _category_totals(current_user.id, start_dt, end_dt, db, selected_category_ids),
+        _category_totals(current_user.id, previous_start_dt, previous_end_dt, db, selected_category_ids),
     )
     total_seconds = _total_seconds(categories)
-    daily_totals = _daily_totals(current_user.id, start_date, end_date, db)
+    daily_totals = _daily_totals(current_user.id, start_date, end_date, db, selected_category_ids)
     best_day_candidates = [item for item in daily_totals if item.total_seconds > 0]
     best_day = max(best_day_candidates, key=lambda item: item.total_seconds) if best_day_candidates else None
     gap_days = sum(1 for item in daily_totals if item.total_seconds == 0)
@@ -551,6 +536,71 @@ def get_monthly_review(
     )
 
     return MonthlyReviewResponse(
+        start_date=start_date.isoformat(),
+        end_date=end_date.isoformat(),
+        total_seconds=total_seconds,
+        average_daily_seconds=average_daily_seconds,
+        best_day=best_day,
+        gap_days=gap_days,
+        by_category=categories,
+        daily_totals=daily_totals,
+        target_summary=target_summary,
+        time_traces=traces,
+        markdown=markdown,
+    )
+
+
+@router.get("/yearly", response_model=YearlyReviewResponse)
+def get_yearly_review(
+    date: Optional[DateType] = Query(None, description="Any date in the year (YYYY-MM-DD)"),
+    category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
+    current_user: User = Depends(get_current_active_user),
+    db: DBSession = Depends(get_db),
+):
+    """Get a yearly retrospective with trends and Markdown export."""
+    anchor = date or datetime.now(timezone.utc).date()
+    selected_category_ids = _parse_category_ids(category_ids)
+    start_date, end_date, start_dt, end_dt = _year_bounds(anchor)
+    previous_anchor = start_date - timedelta(days=1)
+    _, _, previous_start_dt, previous_end_dt = _year_bounds(previous_anchor)
+
+    categories = _with_trends(
+        _category_totals(current_user.id, start_dt, end_dt, db, selected_category_ids),
+        _category_totals(current_user.id, previous_start_dt, previous_end_dt, db, selected_category_ids),
+    )
+    total_seconds = _total_seconds(categories)
+    daily_totals = _daily_totals(current_user.id, start_date, end_date, db, selected_category_ids)
+    best_day_candidates = [item for item in daily_totals if item.total_seconds > 0]
+    best_day = max(best_day_candidates, key=lambda item: item.total_seconds) if best_day_candidates else None
+    gap_days = sum(1 for item in daily_totals if item.total_seconds == 0)
+    average_daily_seconds = total_seconds // len(daily_totals) if daily_totals else 0
+    target_summary = _target_summary(
+        current_user.id,
+        start_dt,
+        end_dt,
+        [
+            TargetPeriod.DAILY.value,
+            TargetPeriod.WEEKLY.value,
+            TargetPeriod.MONTHLY.value,
+            TargetPeriod.TOMORROW.value,
+        ],
+        db,
+    )
+    traces = _time_traces(current_user.id, start_dt, end_dt, db)
+    markdown = _weekly_markdown(
+        "年报复盘",
+        start_date,
+        end_date,
+        total_seconds,
+        average_daily_seconds,
+        best_day,
+        gap_days,
+        categories,
+        target_summary,
+        traces,
+    )
+
+    return YearlyReviewResponse(
         start_date=start_date.isoformat(),
         end_date=end_date.isoformat(),
         total_seconds=total_seconds,

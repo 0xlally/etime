@@ -21,11 +21,24 @@ def _date_label(value) -> str:
     return value.isoformat() if hasattr(value, "isoformat") else str(value)
 
 
+def _parse_category_ids(value: Optional[str]) -> Optional[list[int]]:
+    if not value:
+        return None
+    try:
+        category_ids = list(dict.fromkeys(int(item) for item in value.split(",") if item.strip()))
+    except ValueError as exc:
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid category_ids") from exc
+    if not category_ids or any(category_id <= 0 for category_id in category_ids):
+        raise HTTPException(status_code=status.HTTP_422_UNPROCESSABLE_CONTENT, detail="Invalid category_ids")
+    return category_ids
+
+
 @router.get("", response_model=List[HeatmapDay])
 def get_heatmap(
     start: Optional[DateType] = Query(None, description="Start date (YYYY-MM-DD)"),
     end: Optional[DateType] = Query(None, description="End date (YYYY-MM-DD)"),
     category_id: Optional[int] = Query(None, description="Filter by category id"),
+    category_ids: Optional[str] = Query(None, description="Comma-separated category IDs"),
     current_user: User = Depends(get_current_active_user),
     db: DBSession = Depends(get_db)
 ):
@@ -78,7 +91,10 @@ def get_heatmap(
         Session.start_time <= end_dt
     )
 
-    if category_id is not None:
+    selected_category_ids = _parse_category_ids(category_ids)
+    if selected_category_ids:
+        query = query.filter(Session.category_id.in_(selected_category_ids))
+    elif category_id is not None:
         query = query.filter(Session.category_id == category_id)
 
     results = query.group_by(

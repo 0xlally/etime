@@ -7,7 +7,6 @@ import {
   LogOut,
   Settings,
   ShieldCheck,
-  Share2,
   Timer as TimerIcon,
   Users,
 } from 'lucide-react';
@@ -18,7 +17,6 @@ import { Review } from './pages/Review';
 import { Discipline } from './pages/Discipline';
 import { Groups } from './pages/Groups';
 import { Admin } from './pages/Admin';
-import { Share } from './pages/Share';
 import { Planner } from './pages/Planner';
 import { NotificationBell } from './components/NotificationBell';
 import { apiClient } from './api/client';
@@ -59,7 +57,6 @@ const Layout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     { to: '/time-trace', label: '时痕', icon: GitBranch },
     { to: '/planner', label: '计划', icon: CalendarClock },
     { to: '/review', label: '复盘', icon: CalendarDays },
-    { to: '/share', label: '分享', icon: Share2 },
     { to: '/groups', label: '小组', icon: Users },
     { to: '/discipline', label: '自律', icon: ShieldCheck },
   ];
@@ -154,16 +151,7 @@ function App() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/share"
-          element={
-            <ProtectedRoute>
-              <Layout>
-                <Share />
-              </Layout>
-            </ProtectedRoute>
-          }
-        />
+        <Route path="/share" element={<Navigate to="/review" replace />} />
         <Route
           path="/discipline"
           element={

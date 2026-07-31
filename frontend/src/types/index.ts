@@ -192,49 +192,6 @@ export interface TargetDashboard {
   events: PunishmentEvent[];
 }
 
-export type ShareRange = 'today' | 'week' | 'month';
-
-export interface ShareCategoryStats {
-  category_id: number | null;
-  category_name: string | null;
-  category_color: string | null;
-  seconds: number;
-  percent: number;
-}
-
-export interface ShareTargetItem {
-  target_id: number;
-  period: 'daily' | 'weekly' | 'monthly' | 'tomorrow' | string;
-  actual_seconds: number;
-  target_seconds: number;
-  progress_ratio: number;
-  is_completed: boolean;
-}
-
-export interface ShareTargetCompletion {
-  total_count: number;
-  completed_count: number;
-  status: 'no_target' | 'in_progress' | 'completed';
-  items: ShareTargetItem[];
-}
-
-export interface ShareHeatmapDay {
-  date: string;
-  total_seconds: number;
-}
-
-export interface ShareSummary {
-  range: ShareRange;
-  start: string;
-  end: string;
-  total_seconds: number;
-  by_category: ShareCategoryStats[];
-  target_completion: ShareTargetCompletion;
-  streak_days: number;
-  heatmap_preview: ShareHeatmapDay[];
-  generated_at: string;
-}
-
 export interface NotificationItem {
   id: number;
   user_id: number;
@@ -333,19 +290,6 @@ export interface ReviewDayTotal {
   total_seconds: number;
 }
 
-export interface ReviewCategoryYearTotal {
-  year: number;
-  total_seconds: number;
-}
-
-export interface ReviewCategorySummary {
-  category_id: number;
-  category_name: string;
-  category_color?: string | null;
-  total_seconds: number;
-  yearly_totals: ReviewCategoryYearTotal[];
-}
-
 export interface DailyReview {
   date: string;
   total_seconds: number;
@@ -371,6 +315,8 @@ export interface WeeklyReview {
 }
 
 export interface MonthlyReview extends WeeklyReview {}
+
+export interface YearlyReview extends WeeklyReview {}
 
 export interface AdminUser {
   id: number;

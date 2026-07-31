@@ -1,6 +1,6 @@
 # ETime
 
-ETime 是一个开源、自托管的时间工作台，把计时、补录、计划、目标、复盘、分享海报、小组协作和 Android 自律模式放在同一套安静清晰的系统里。
+ETime 是一个开源、自托管的时间工作台，把计时、补录、计划、目标、复盘、小组协作和 Android 自律模式放在同一套安静清晰的系统里。
 
 它不是只回答“我花了多久”的秒表，而是帮你持续回答三个问题：
 
@@ -28,15 +28,9 @@ ETime 是一个开源、自托管的时间工作台，把计时、补录、计�
 
 ### 复盘与热力
 
-日报、周报、月报聚合分类占比、目标达成、趋势、时痕和近 8 周热力，支持导出 Markdown。
+日报、周报、月报、年报聚合分类占比、目标达成、最近评估记录、趋势、时痕和热力图；每种复盘范围都支持查看全部分类或多选若干分类，并可导出 Markdown。
 
 ![ETime 复盘页面](docs/assets/screenshots/review.png)
-
-### 复盘海报
-
-把今天、本周或本月的投入生成一张适合保存和分享的卡片，支持隐私模式、不同样式和 PNG 导出。
-
-![ETime 复盘海报](docs/assets/screenshots/share-card.png)
 
 ### 小组协作
 
@@ -79,26 +73,21 @@ Android 端复用同一套前端体验，加入离线计时队列和自律模式
 
 ### 4. 复盘、统计与热力
 
-- 日报、周报、月报覆盖总时长、分类趋势、目标达成和时间轨迹。
+- 日报、周报、月报、年报覆盖总时长、分类趋势、目标达成和时间轨迹。
+- 所有复盘范围都可查看全部分类，或组合筛选多个分类。
+- 最近 8 条目标评估记录集中显示在复盘页。
 - 近 8 周热力图帮助判断节奏是否稳定。
 - 支持 Markdown 导出，方便沉淀到博客、Notion、Obsidian 或周报。
 - 时间轨迹记录一天中的关键状态，让数字和上下文一起保留。
 
-### 5. 分享海报
-
-- 支持今日、本周、本月三种范围。
-- 提供简洁、数据感、热力图三种卡片样式。
-- 隐私模式可隐藏真实分类名和具体时长。
-- Web 端可导出 PNG，Android 端可调用系统分享。
-
-### 6. 小组协作
+### 5. 小组协作
 
 - 创建/加入小组，使用邀请码轻量协作。
 - 支持公开小组申请、成员列表、群聊消息。
 - 支持分享今日状态和复盘卡片摘要。
 - 适合自习小组、学习搭子、备考打卡群、写作/开发结伴。
 
-### 7. Android 自律模式
+### 6. Android 自律模式
 
 - Capacitor Android 客户端复用 Web 功能。
 - 原生侧统计今日手机使用时长。
@@ -106,7 +95,7 @@ Android 端复用同一套前端体验，加入离线计时队列和自律模式
 - 使用 Android 使用情况访问和悬浮窗权限，超过上限后显示悬浮提醒。
 - 本地解锁密码使用 PBKDF2-HMAC-SHA256 派生存储。
 
-### 8. 账号、安全与部署
+### 7. 账号、安全与部署
 
 - JWT access token + refresh token 登录。
 - 邮箱找回密码，重置令牌绑定当前密码状态，改密后自动失效。
@@ -218,8 +207,7 @@ cd android
 - `GET /stats/summary`
 - `GET /heatmap`
 - `GET|POST /targets`, `GET /targets/dashboard`
-- `GET /reviews/daily`, `GET /reviews/weekly`, `GET /reviews/monthly`
-- `GET /share/summary?range=today|week|month`
+- `GET /reviews/daily`, `GET /reviews/weekly`, `GET /reviews/monthly`, `GET /reviews/yearly`
 - `GET|POST /calendar-tasks`
 - `GET|POST /quick-start-templates`
 - `GET|POST /groups`
@@ -239,4 +227,4 @@ cd android
 
 一句话版本：
 
-> ETime 是一个开源、自托管的时间工作台：计时、计划、目标、复盘、分享和小组协作，都放在一套安静清晰的系统里。
+> ETime 是一个开源、自托管的时间工作台：计时、计划、目标、复盘和小组协作，都放在一套安静清晰的系统里。

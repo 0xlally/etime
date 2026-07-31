@@ -9,11 +9,14 @@ import {
   HeatmapDay,
   MonthlyReview,
   ReviewCategoryItem,
-  ReviewCategorySummary,
   WeeklyReview,
+  WorkEvaluation,
+  WorkTarget,
+  YearlyReview,
 } from '../types';
+import { EmptyState, LoadingState } from '../components/ui';
 
-type ReviewMode = 'daily' | 'weekly' | 'monthly';
+type ReviewMode = 'daily' | 'weekly' | 'monthly' | 'yearly';
 
 const toDateInputValue = (date: Date) => {
   const copy = new Date(date);
@@ -27,7 +30,11 @@ const addLocalDays = (date: Date, days: number) => {
   return copy;
 };
 
-const getHeatmapRange = (anchorDate: string) => {
+const getHeatmapRange = (anchorDate: string, mode: ReviewMode) => {
+  if (mode === 'yearly') {
+    const year = anchorDate.slice(0, 4);
+    return { start: `${year}-01-01`, end: `${year}-12-31` };
+  }
   const end = new Date(`${anchorDate}T00:00:00`);
   const start = addLocalDays(end, -55);
   return {
@@ -48,6 +55,14 @@ const trendText = (seconds: number) => {
   if (seconds === 0) return '持平';
   const sign = seconds > 0 ? '+' : '-';
   return `${sign}${formatTime(Math.abs(seconds))}`;
+};
+
+const periodLabel = (period: string) => {
+  if (period === 'tomorrow') return '明日计划';
+  if (period === 'daily') return '每日';
+  if (period === 'weekly') return '每周';
+  if (period === 'monthly') return '每月';
+  return period;
 };
 
 const asArray = <T,>(value: T[] | unknown): T[] => (Array.isArray(value) ? value : []);
@@ -75,52 +90,50 @@ export const Review: React.FC = () => {
   const [daily, setDaily] = useState<DailyReview | null>(null);
   const [weekly, setWeekly] = useState<WeeklyReview | null>(null);
   const [monthly, setMonthly] = useState<MonthlyReview | null>(null);
+  const [yearly, setYearly] = useState<YearlyReview | null>(null);
   const [heatmapData, setHeatmapData] = useState<HeatmapDay[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [selectedCategoryId, setSelectedCategoryId] = useState<number | undefined>();
-  const [categorySummary, setCategorySummary] = useState<ReviewCategorySummary | null>(null);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
+  const [evaluations, setEvaluations] = useState<WorkEvaluation[]>([]);
+  const [targets, setTargets] = useState<WorkTarget[]>([]);
   const [loading, setLoading] = useState(false);
   const [heatmapLoading, setHeatmapLoading] = useState(false);
-  const [categorySummaryLoading, setCategorySummaryLoading] = useState(false);
+  const [evaluationsLoading, setEvaluationsLoading] = useState(false);
 
-  const heatmapRange = useMemo(() => getHeatmapRange(date), [date]);
+  const categoryIdsParam = selectedCategoryIds.length > 0 ? selectedCategoryIds.join(',') : undefined;
+  const heatmapRange = useMemo(() => getHeatmapRange(date, mode), [date, mode]);
 
   useEffect(() => {
     loadReview();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, date]);
+  }, [mode, date, categoryIdsParam]);
 
   useEffect(() => {
     loadCategories();
+    loadEvaluations();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     loadHeatmap();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [heatmapRange.start, heatmapRange.end]);
-
-  useEffect(() => {
-    if (!selectedCategoryId) {
-      setCategorySummary(null);
-      return;
-    }
-    loadCategorySummary(selectedCategoryId);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedCategoryId]);
+  }, [heatmapRange.start, heatmapRange.end, categoryIdsParam]);
 
   const loadReview = async () => {
     setLoading(true);
     try {
       if (mode === 'daily') {
-        const data = await apiClient.get<DailyReview>('/reviews/daily', { date });
+        const data = await apiClient.get<DailyReview>('/reviews/daily', { date, category_ids: categoryIdsParam });
         setDaily(data);
       } else if (mode === 'weekly') {
-        const data = await apiClient.get<WeeklyReview>('/reviews/weekly', { date });
+        const data = await apiClient.get<WeeklyReview>('/reviews/weekly', { date, category_ids: categoryIdsParam });
         setWeekly(data);
-      } else {
-        const data = await apiClient.get<MonthlyReview>('/reviews/monthly', { date });
+      } else if (mode === 'monthly') {
+        const data = await apiClient.get<MonthlyReview>('/reviews/monthly', { date, category_ids: categoryIdsParam });
         setMonthly(data);
+      } else {
+        const data = await apiClient.get<YearlyReview>('/reviews/yearly', { date, category_ids: categoryIdsParam });
+        setYearly(data);
       }
     } catch (error) {
       console.error('加载复盘失败', error);
@@ -132,7 +145,10 @@ export const Review: React.FC = () => {
   const loadHeatmap = async () => {
     setHeatmapLoading(true);
     try {
-      const data = await apiClient.get<HeatmapDay[]>('/heatmap', heatmapRange);
+      const data = await apiClient.get<HeatmapDay[]>('/heatmap', {
+        ...heatmapRange,
+        category_ids: categoryIdsParam,
+      });
       setHeatmapData(data);
     } catch (error) {
       console.error('加载热力预览失败', error);
@@ -146,28 +162,38 @@ export const Review: React.FC = () => {
     try {
       const data = asArray<Category>(await apiClient.get<Category[]>('/categories', { include_archived: true }));
       setCategories(data);
-      setSelectedCategoryId((current) => current ?? data[0]?.id);
     } catch (error) {
       console.error('加载分类列表失败', error);
       setCategories([]);
-      setSelectedCategoryId(undefined);
+      setSelectedCategoryIds([]);
     }
   };
 
-  const loadCategorySummary = async (categoryId: number) => {
-    setCategorySummaryLoading(true);
+  const loadEvaluations = async () => {
+    setEvaluationsLoading(true);
     try {
-      const data = await apiClient.get<ReviewCategorySummary>('/reviews/category-summary', { category_id: categoryId });
-      setCategorySummary(data);
+      const [evaluationData, targetData] = await Promise.all([
+        apiClient.get<WorkEvaluation[]>('/evaluations'),
+        apiClient.get<WorkTarget[]>('/targets'),
+      ]);
+      setEvaluations(asArray<WorkEvaluation>(evaluationData));
+      setTargets(asArray<WorkTarget>(targetData));
     } catch (error) {
-      console.error('加载分类累计失败', error);
-      setCategorySummary(null);
+      console.error('加载评估记录失败', error);
+      setEvaluations([]);
+      setTargets([]);
     } finally {
-      setCategorySummaryLoading(false);
+      setEvaluationsLoading(false);
     }
   };
 
-  const currentMarkdown = mode === 'daily' ? daily?.markdown : mode === 'weekly' ? weekly?.markdown : monthly?.markdown;
+  const currentMarkdown = mode === 'daily'
+    ? daily?.markdown
+    : mode === 'weekly'
+      ? weekly?.markdown
+      : mode === 'monthly'
+        ? monthly?.markdown
+        : yearly?.markdown;
 
   const handleCopy = async () => {
     if (!currentMarkdown) return;
@@ -183,22 +209,52 @@ export const Review: React.FC = () => {
     }));
   }, [daily]);
 
-  const weeklyChartData = useMemo(() => {
-    const period = mode === 'monthly' ? monthly : weekly;
+  const periodChartData = useMemo(() => {
+    const period = mode === 'yearly' ? yearly : mode === 'monthly' ? monthly : weekly;
+    if (mode === 'yearly') {
+      const monthlySeconds = Array.from({ length: 12 }, () => 0);
+      (period?.daily_totals ?? []).forEach((item) => {
+        monthlySeconds[Number(item.date.slice(5, 7)) - 1] += item.total_seconds;
+      });
+      return monthlySeconds.map((totalSeconds, index) => ({
+        date: `${String(index + 1).padStart(2, '0')}月`,
+        hours: Number((totalSeconds / 3600).toFixed(2)),
+      }));
+    }
     return (period?.daily_totals ?? []).map((item) => ({
       date: item.date.slice(5),
       hours: Number((item.total_seconds / 3600).toFixed(2)),
     }));
-  }, [mode, monthly, weekly]);
+  }, [mode, monthly, weekly, yearly]);
+
+  const targetById = useMemo(() => {
+    const map = new Map<number, WorkTarget>();
+    targets.forEach((target) => map.set(target.id, target));
+    return map;
+  }, [targets]);
 
   const handleHeatmapDayClick = (day: HeatmapDay) => {
     setMode('daily');
     setDate(day.date);
   };
 
+  const toggleCategory = (categoryId: number) => {
+    setSelectedCategoryIds((current) => (
+      current.includes(categoryId)
+        ? current.filter((id) => id !== categoryId)
+        : [...current, categoryId]
+    ));
+  };
+
+  const categoryFilterLabel = selectedCategoryIds.length === 0
+    ? '全部分类'
+    : selectedCategoryIds.length === 1
+      ? categories.find((category) => category.id === selectedCategoryIds[0])?.name ?? '已选 1 个分类'
+      : `已选 ${selectedCategoryIds.length} 个分类`;
+
   const renderHeatmapPreview = () => (
     <section className="review-panel review-heatmap-panel">
-      <h2><CalendarDays size={18} /> 近 8 周热力</h2>
+      <h2><CalendarDays size={18} /> {mode === 'yearly' ? '全年热力' : '近 8 周热力'}</h2>
       {heatmapLoading ? (
         <p>加载中...</p>
       ) : (
@@ -212,58 +268,36 @@ export const Review: React.FC = () => {
     </section>
   );
 
-  const renderCategorySummary = () => (
-    <section className="review-panel review-category-summary-panel">
-      <div className="review-category-summary-head">
-        <h2><ListFilter size={18} /> 分类累计</h2>
-        <select
-          value={selectedCategoryId ?? ''}
-          onChange={(event) => {
-            const nextValue = Number(event.target.value);
-            setSelectedCategoryId(Number.isFinite(nextValue) && nextValue > 0 ? nextValue : undefined);
-          }}
-          disabled={categories.length === 0}
-        >
-          {categories.length === 0 ? (
-            <option value="">暂无分类</option>
-          ) : (
-            categories.map((category) => (
-              <option key={category.id} value={category.id}>
-                {category.name}{category.is_archived ? '（已归档）' : ''}
-              </option>
-            ))
-          )}
-        </select>
+  const renderCategoryFilter = () => (
+    <details className="review-category-filter">
+      <summary>
+        <span><ListFilter size={18} /> 分类</span>
+        <strong>{categoryFilterLabel}</strong>
+      </summary>
+      <div className="review-category-options">
+        <label>
+          <input
+            type="checkbox"
+            checked={selectedCategoryIds.length === 0}
+            onChange={() => setSelectedCategoryIds([])}
+          />
+          <span className="review-category-all-swatch" />
+          <strong>全部分类</strong>
+        </label>
+        {categories.map((category) => (
+          <label key={category.id}>
+            <input
+              type="checkbox"
+              checked={selectedCategoryIds.includes(category.id)}
+              onChange={() => toggleCategory(category.id)}
+            />
+            <span style={{ background: category.color || '#64748b' }} />
+            <strong>{category.name}{category.is_archived ? '（已归档）' : ''}</strong>
+          </label>
+        ))}
+        {categories.length === 0 && <p>暂无分类，当前显示全部记录。</p>}
       </div>
-
-      {categorySummaryLoading ? (
-        <p>加载中...</p>
-      ) : categorySummary ? (
-        <div className="review-category-summary-body">
-          <div className="review-category-summary-total">
-            <span style={{ background: categorySummary.category_color || '#64748b' }} />
-            <div>
-              <small>{categorySummary.category_name}</small>
-              <strong>{formatTime(categorySummary.total_seconds)}</strong>
-            </div>
-          </div>
-          <div className="review-year-list">
-            {categorySummary.yearly_totals.length === 0 ? (
-              <p>这个分类还没有计时记录</p>
-            ) : (
-              categorySummary.yearly_totals.map((item) => (
-                <div key={item.year} className="review-year-row">
-                  <span>{item.year}</span>
-                  <strong>{formatTime(item.total_seconds)}</strong>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-      ) : (
-        <p>请选择一个分类查看累计时间</p>
-      )}
-    </section>
+    </details>
   );
 
   const renderDaily = () => {
@@ -331,10 +365,10 @@ export const Review: React.FC = () => {
   };
 
   const renderPeriod = () => {
-    const period = mode === 'monthly' ? monthly : weekly;
+    const period = mode === 'yearly' ? yearly : mode === 'monthly' ? monthly : weekly;
     if (!period) return null;
-    const label = mode === 'monthly' ? '本月' : '本周';
-    const traceTitle = mode === 'monthly' ? '月内时痕' : '周内时痕';
+    const label = mode === 'yearly' ? '本年' : mode === 'monthly' ? '本月' : '本周';
+    const traceTitle = mode === 'yearly' ? '年内时痕' : mode === 'monthly' ? '月内时痕' : '周内时痕';
 
     return (
       <>
@@ -363,9 +397,9 @@ export const Review: React.FC = () => {
             <CategoryRows items={period.by_category} />
           </section>
           <section className="review-panel">
-            <h2><CalendarDays size={18} /> 每日节奏</h2>
+            <h2><CalendarDays size={18} /> {mode === 'yearly' ? '每月节奏' : '每日节奏'}</h2>
             <ResponsiveContainer width="100%" height={260}>
-              <BarChart data={weeklyChartData}>
+              <BarChart data={periodChartData}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="date" />
                 <YAxis />
@@ -382,7 +416,7 @@ export const Review: React.FC = () => {
             <p>暂无时痕</p>
           ) : (
             <div className="review-traces">
-              {period.time_traces.slice(0, mode === 'monthly' ? 20 : 12).map((trace) => (
+              {period.time_traces.slice(0, mode === 'yearly' ? 30 : mode === 'monthly' ? 20 : 12).map((trace) => (
                 <article key={trace.id}>
                   <time>{new Date(trace.created_at).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })}</time>
                   <p>{trace.content}</p>
@@ -402,7 +436,7 @@ export const Review: React.FC = () => {
       <div className="review-header">
         <div>
           <h1>复盘</h1>
-          <p>{mode === 'daily' ? '日报' : mode === 'weekly' ? '周报' : '月报'}把统计、目标和时痕串在一起。</p>
+          <p>{mode === 'daily' ? '日报' : mode === 'weekly' ? '周报' : mode === 'monthly' ? '月报' : '年报'}把统计、目标和时痕串在一起。</p>
         </div>
         <button className="review-export-top" onClick={handleCopy} disabled={!currentMarkdown}>
           <Clipboard size={17} /> 导出 Markdown
@@ -414,23 +448,53 @@ export const Review: React.FC = () => {
           <button className={mode === 'daily' ? 'active' : ''} onClick={() => setMode('daily')}>每日复盘</button>
           <button className={mode === 'weekly' ? 'active' : ''} onClick={() => setMode('weekly')}>每周复盘</button>
           <button className={mode === 'monthly' ? 'active' : ''} onClick={() => setMode('monthly')}>每月复盘</button>
+          <button className={mode === 'yearly' ? 'active' : ''} onClick={() => setMode('yearly')}>每年复盘</button>
         </div>
         <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
       </div>
 
-      {renderCategorySummary()}
+      {renderCategoryFilter()}
 
       {loading ? <p>加载中...</p> : mode === 'daily' ? renderDaily() : renderPeriod()}
 
-      {currentMarkdown && (
-        <section className="review-panel markdown-panel">
-          <h2>Markdown 预览</h2>
-          <pre>{currentMarkdown}</pre>
-          <button className="review-export-bottom" onClick={handleCopy}>
-            <Clipboard size={17} /> 导出 Markdown
-          </button>
-        </section>
-      )}
+      <section className="review-panel evaluations-list review-evaluation-list">
+        <h2>记录</h2>
+        {evaluationsLoading ? (
+          <LoadingState text="正在查看最近评估..." />
+        ) : evaluations.length === 0 ? (
+          <EmptyState title="暂无评估记录" description="目标走过一个周期后，这里会出现结果。" />
+        ) : (
+          <table>
+            <thead>
+              <tr>
+                <th>周期</th>
+                <th>范围</th>
+                <th>目标</th>
+                <th>实际</th>
+                <th>结果</th>
+              </tr>
+            </thead>
+            <tbody>
+              {evaluations.slice(0, 8).map((evaluation) => {
+                const target = targetById.get(evaluation.target_id);
+                return (
+                  <tr key={evaluation.id}>
+                    <td>{periodLabel(target?.period ?? target?.target_type ?? 'daily')}</td>
+                    <td>
+                      {new Date(evaluation.period_start).toLocaleDateString()} - {new Date(evaluation.period_end).toLocaleDateString()}
+                    </td>
+                    <td>{formatTime(evaluation.target_seconds)}</td>
+                    <td>{formatTime(evaluation.actual_seconds)}</td>
+                    <td className={evaluation.status === 'met' ? 'pass' : 'fail'}>
+                      {evaluation.status === 'met' ? '达标' : `未达标，差 ${formatTime(evaluation.deficit_seconds)}`}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </section>
     </div>
   );
 };

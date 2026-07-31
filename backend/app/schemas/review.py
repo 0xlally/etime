@@ -1,4 +1,4 @@
-"""Review schemas for daily, weekly, and monthly retrospectives."""
+"""Review schemas for daily, weekly, monthly, and yearly retrospectives."""
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -16,19 +16,6 @@ class ReviewCategoryItem(BaseModel):
 class ReviewDayTotal(BaseModel):
     date: str
     total_seconds: int
-
-
-class ReviewCategoryYearTotal(BaseModel):
-    year: int
-    total_seconds: int
-
-
-class ReviewCategorySummaryResponse(BaseModel):
-    category_id: int
-    category_name: str
-    category_color: str | None = None
-    total_seconds: int
-    yearly_totals: List[ReviewCategoryYearTotal]
 
 
 class ReviewEvaluationItem(BaseModel):
@@ -76,4 +63,8 @@ class WeeklyReviewResponse(BaseModel):
 
 
 class MonthlyReviewResponse(WeeklyReviewResponse):
+    pass
+
+
+class YearlyReviewResponse(WeeklyReviewResponse):
     pass

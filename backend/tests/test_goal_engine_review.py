@@ -217,10 +217,11 @@ def test_daily_and_weekly_reviews_include_stats_targets_traces_and_markdown(clie
     assert "# 月报复盘 2025-12-01 - 2025-12-31" in monthly_data["markdown"]
 
 
-def test_category_summary_returns_all_time_and_yearly_totals(client: TestClient, db_session):
-    headers, _user_id = _auth(client, "category_summary@example.com", "categorysummary")
+def test_yearly_review_supports_all_single_and_multiple_categories(client: TestClient, db_session):
+    headers, _user_id = _auth(client, "yearly_review@example.com", "yearlyreview")
     study = client.post("/api/v1/categories", json={"name": "Study", "color": "#2563eb"}, headers=headers).json()
     exercise = client.post("/api/v1/categories", json={"name": "Exercise"}, headers=headers).json()
+    admin = client.post("/api/v1/categories", json={"name": "Admin"}, headers=headers).json()
 
     _manual_session(
         client,
@@ -243,18 +244,41 @@ def test_category_summary_returns_all_time_and_yearly_totals(client: TestClient,
         datetime(2025, 1, 6, 10, 0, tzinfo=timezone.utc),
         category_id=exercise["id"],
     )
+    _manual_session(
+        client,
+        headers,
+        datetime(2025, 1, 7, 9, 0, tzinfo=timezone.utc),
+        datetime(2025, 1, 7, 10, 0, tzinfo=timezone.utc),
+        category_id=admin["id"],
+    )
 
-    response = client.get(
-        f"/api/v1/reviews/category-summary?category_id={study['id']}",
+    all_categories = client.get("/api/v1/reviews/yearly?date=2025-06-01", headers=headers)
+    assert all_categories.status_code == 200, all_categories.text
+    all_data = all_categories.json()
+    assert all_data["start_date"] == "2025-01-01"
+    assert all_data["end_date"] == "2025-12-31"
+    assert all_data["total_seconds"] == 14400
+    assert "# 年报复盘 2025-01-01 - 2025-12-31" in all_data["markdown"]
+
+    single_category = client.get(
+        f"/api/v1/reviews/yearly?date=2025-06-01&category_ids={study['id']}",
         headers=headers,
     )
-    assert response.status_code == 200, response.text
+    assert single_category.status_code == 200, single_category.text
+    assert single_category.json()["total_seconds"] == 7200
 
-    data = response.json()
-    assert data["category_name"] == "Study"
-    assert data["category_color"] == "#2563eb"
-    assert data["total_seconds"] == 10800
-    assert data["yearly_totals"] == [
-        {"year": 2025, "total_seconds": 7200},
-        {"year": 2024, "total_seconds": 3600},
-    ]
+    category_ids = f"{study['id']},{exercise['id']}"
+    for endpoint in ("daily?date=2025-01-05", "weekly?date=2025-01-06", "monthly?date=2025-01-06", "yearly?date=2025-06-01"):
+        separator = "&" if "?" in endpoint else "?"
+        response = client.get(f"/api/v1/reviews/{endpoint}{separator}category_ids={category_ids}", headers=headers)
+        assert response.status_code == 200, response.text
+
+    multiple_categories = client.get(
+        f"/api/v1/reviews/yearly?date=2025-06-01&category_ids={category_ids}",
+        headers=headers,
+    ).json()
+    assert multiple_categories["total_seconds"] == 10800
+    assert {item["category_name"] for item in multiple_categories["by_category"]} == {"Study", "Exercise"}
+
+    invalid = client.get("/api/v1/reviews/yearly?date=2025-06-01&category_ids=1,nope", headers=headers)
+    assert invalid.status_code == 422
