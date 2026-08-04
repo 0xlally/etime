@@ -8305,6 +8305,215 @@ table td {
   justify-self: start;
 }
 
+/* Scrollable category picker rendered at the viewport level. */
+.category-picker {
+  min-width: 0;
+  width: 100%;
+}
+
+.category-picker-trigger {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid #000000;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #000000;
+  font: inherit;
+  font-weight: 800;
+  text-align: left;
+}
+
+.category-picker-trigger:focus-visible,
+.category-picker-menu button:focus-visible,
+.category-manager-icon-button:focus-visible {
+  outline: 3px solid #2f6fed;
+  outline-offset: 2px;
+}
+
+.category-picker-value,
+.category-picker-option-label,
+.category-manager-name {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+}
+
+.category-picker-value > span:last-child,
+.category-picker-option-label > span:last-child,
+.category-manager-name strong {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.category-color-dot {
+  width: 12px;
+  height: 12px;
+  flex: 0 0 12px;
+  border: 1px solid #000000;
+  border-radius: 2px;
+}
+
+.category-picker-menu {
+  position: fixed;
+  z-index: 220;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 0.3rem;
+  border: 1px solid #000000;
+  border-radius: 6px;
+  background: #ffffff;
+  box-shadow: 4px 4px 0 #000000;
+}
+
+.category-picker-menu button {
+  width: 100%;
+  min-height: 42px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.58rem 0.65rem;
+  border: 0;
+  border-radius: 3px;
+  background: #ffffff;
+  color: #000000;
+  font: inherit;
+  text-align: left;
+}
+
+.category-picker-menu button:hover,
+.category-picker-menu button.selected {
+  background: #000000;
+  color: #ffffff;
+}
+
+.category-picker-empty,
+.category-manager-state {
+  margin: 0;
+  padding: 0.8rem;
+  color: #555555;
+  text-align: center;
+}
+
+.timer-category-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.42rem;
+}
+
+.timer-category-actions .timer-create-category,
+.timer-category-close {
+  width: 44px;
+  min-width: 44px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+}
+
+.timer-category-dialog {
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top) - env(safe-area-inset-bottom));
+  overflow: hidden;
+}
+
+.timer-category-close {
+  min-height: 40px !important;
+}
+
+.category-manager {
+  min-height: 0;
+  display: grid;
+}
+
+.category-manager-list {
+  max-height: min(58vh, 480px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border-block: 1px solid #000000;
+}
+
+.category-manager-row {
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) repeat(3, 36px);
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid #d7d7d7;
+}
+
+.category-manager-row:last-child {
+  border-bottom: 0;
+}
+
+.category-manager-icon-button {
+  width: 36px;
+  height: 36px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid #000000;
+  border-radius: 4px;
+  background: #ffffff;
+  color: #000000;
+}
+
+.category-manager-icon-button:hover:not(:disabled) {
+  background: #000000;
+  color: #ffffff;
+}
+
+.category-manager-icon-button.danger:hover:not(:disabled) {
+  background: #b42318;
+  border-color: #b42318;
+  color: #ffffff;
+}
+
+.category-manager-icon-button:disabled {
+  opacity: 0.35;
+}
+
+.timer-category-inline .category-picker-trigger,
+.manual-category-field .category-picker-trigger {
+  min-height: 40px;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 700px) {
+  .timer-category-actions {
+    gap: 0.32rem;
+  }
+
+  .timer-category-actions .timer-create-category {
+    width: 36px;
+    min-width: 36px;
+    min-height: 36px;
+  }
+
+  .timer-category-inline .category-picker-trigger,
+  .manual-category-field .category-picker-trigger {
+    min-height: 36px;
+    padding: 0.45rem 0.55rem;
+    font-size: 0.82rem;
+  }
+
+  .timer-category-dialog {
+    width: min(100%, 460px);
+    padding: 0.9rem;
+  }
+
+  .category-manager-list {
+    max-height: 62vh;
+  }
+}
+
 /* Annual review heatmap timeline. */
 .months-container {
   display: block;

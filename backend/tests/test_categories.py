@@ -58,9 +58,30 @@ def test_category_crud_flow(client: TestClient):
     assert len(categories) == 2
     assert any(c["name"] == "Work" for c in categories)
     assert any(c["name"] == "Personal" for c in categories)
+    assert [c["id"] for c in categories] == [category2["id"], category1["id"]]
     print(f"✓ Listed {len(categories)} categories")
+
+    # Step 3: Reorder categories
+    response = client.post(
+        "/api/v1/categories/reorder",
+        json={"category_ids": [category1["id"], category2["id"]]},
+        headers=headers,
+    )
+    assert response.status_code == 200, response.text
+    assert [c["id"] for c in response.json()] == [category1["id"], category2["id"]]
+    assert [c["sort_order"] for c in response.json()] == [0, 1]
+
+    response = client.post(
+        "/api/v1/categories/reorder",
+        json={"category_ids": [category1["id"], category1["id"]]},
+        headers=headers,
+    )
+    assert response.status_code == 400
+
+    response = client.get("/api/v1/categories", headers=headers)
+    assert [c["id"] for c in response.json()] == [category1["id"], category2["id"]]
     
-    # Step 3: Update category
+    # Step 4: Update category
     update_data = {
         "name": "Work Projects",
         "color": "#E74C3C"
@@ -72,10 +93,25 @@ def test_category_crud_flow(client: TestClient):
     assert updated_category["color"] == "#E74C3C"
     print(f"✓ Updated category: {category1['name']} -> {updated_category['name']}")
     
-    # Step 4: Delete (archive) category
+    template_response = client.post(
+        "/api/v1/quick-start-templates",
+        json={
+            "title": "Personal shortcut",
+            "category_id": category2["id"],
+            "sort_order": 0,
+        },
+        headers=headers,
+    )
+    assert template_response.status_code == 201, template_response.text
+
+    # Step 5: Delete (archive) category and dependent active shortcuts
     response = client.delete(f"/api/v1/categories/{category2['id']}", headers=headers)
     assert response.status_code == 204
     print(f"✓ Archived category: {category2['name']}")
+
+    response = client.get("/api/v1/quick-start-templates", headers=headers)
+    assert response.status_code == 200
+    assert response.json() == []
     
     # Verify soft delete - should not appear in default list
     response = client.get("/api/v1/categories", headers=headers)

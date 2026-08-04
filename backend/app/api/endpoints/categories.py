@@ -1,11 +1,13 @@
 ﻿"""Category Endpoints"""
 from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from app.core.db import get_db
 from app.models.user import User
 from app.models.category import Category
-from app.schemas.category import CategoryCreate, CategoryUpdate, CategoryResponse
+from app.models.quick_start_template import QuickStartTemplate
+from app.schemas.category import CategoryCreate, CategoryReorder, CategoryUpdate, CategoryResponse
 from app.api.deps import get_current_active_user
 
 router = APIRouter()
@@ -44,11 +46,17 @@ def create_category(
             detail=f"Category '{category_data.name}' already exists"
         )
     
-    # Create new category
+    minimum_sort_order = db.query(func.min(Category.sort_order)).filter(
+        Category.user_id == current_user.id,
+        Category.is_archived == False,
+    ).scalar()
+
+    # Keep the established newest-first behavior until the user reorders categories.
     new_category = Category(
         user_id=current_user.id,
         name=category_data.name,
-        color=category_data.color
+        color=category_data.color,
+        sort_order=minimum_sort_order - 1 if minimum_sort_order is not None else 0,
     )
     
     db.add(new_category)
@@ -80,8 +88,40 @@ def list_categories(
     if not include_archived:
         query = query.filter(Category.is_archived == False)
     
-    categories = query.order_by(Category.created_at.desc()).all()
+    categories = query.order_by(
+        Category.sort_order.asc(),
+        Category.created_at.desc(),
+        Category.id.desc(),
+    ).all()
     return categories
+
+
+@router.post("/reorder", response_model=List[CategoryResponse])
+def reorder_categories(
+    reorder_data: CategoryReorder,
+    current_user: User = Depends(get_current_active_user),
+    db: Session = Depends(get_db),
+):
+    """Persist the complete order of the current user's active categories."""
+    categories = db.query(Category).filter(
+        Category.user_id == current_user.id,
+        Category.is_archived == False,
+    ).all()
+    active_ids = {category.id for category in categories}
+    requested_ids = reorder_data.category_ids
+
+    if len(requested_ids) != len(set(requested_ids)) or set(requested_ids) != active_ids:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Category order must include each active category exactly once",
+        )
+
+    categories_by_id = {category.id: category for category in categories}
+    for sort_order, category_id in enumerate(requested_ids):
+        categories_by_id[category_id].sort_order = sort_order
+
+    db.commit()
+    return [categories_by_id[category_id] for category_id in requested_ids]
 
 
 @router.get("/{category_id}", response_model=CategoryResponse)
@@ -228,6 +268,14 @@ def delete_category(
     else:
         # Soft delete (archive)
         category.is_archived = True
+        db.query(QuickStartTemplate).filter(
+            QuickStartTemplate.user_id == current_user.id,
+            QuickStartTemplate.category_id == category.id,
+            QuickStartTemplate.is_active == True,
+        ).update(
+            {QuickStartTemplate.is_active: False},
+            synchronize_session=False,
+        )
     
     db.commit()
     return None

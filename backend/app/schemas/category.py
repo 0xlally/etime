@@ -1,7 +1,7 @@
 ﻿"""Category Schemas (Pydantic Models)"""
 from pydantic import BaseModel, Field, ConfigDict
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 
 
 # Request Schemas
@@ -18,6 +18,11 @@ class CategoryUpdate(BaseModel):
     is_archived: Optional[bool] = None
 
 
+class CategoryReorder(BaseModel):
+    """Complete ordering of the current user's active categories."""
+    category_ids: List[int] = Field(..., min_length=1)
+
+
 # Response Schemas
 class CategoryResponse(BaseModel):
     """Category response model"""
@@ -26,6 +31,7 @@ class CategoryResponse(BaseModel):
     name: str
     color: Optional[str] = None
     is_archived: bool
+    sort_order: int
     created_at: datetime
     
     model_config = ConfigDict(from_attributes=True)

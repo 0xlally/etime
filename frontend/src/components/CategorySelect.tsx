@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { apiClient } from '../api/client';
 import { Category } from '../types';
+import { CategoryDropdown } from './CategoryDropdown';
 
 interface CategorySelectProps {
   value?: number;
@@ -11,6 +12,7 @@ interface CategorySelectProps {
   showSelect?: boolean; // 是否显示分类下拉
   showCreate?: boolean; // 是否显示创建分类表单
   showEdit?: boolean; // 是否显示当前分类编辑入口
+  refreshKey?: number;
 }
 
 export const CategorySelect: React.FC<CategorySelectProps> = ({
@@ -22,6 +24,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   showSelect = true,
   showCreate = true,
   showEdit = true,
+  refreshKey = 0,
 }) => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(false);
@@ -33,11 +36,7 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
   const [editColor, setEditColor] = useState('#3498db');
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
-
-  const loadCategories = async () => {
+  const loadCategories = useCallback(async () => {
     setLoading(true);
     try {
       const data = await apiClient.get<Category[]>('/categories');
@@ -47,7 +46,11 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories, refreshKey]);
 
   const handleCreateCategory = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -113,24 +116,17 @@ export const CategorySelect: React.FC<CategorySelectProps> = ({
       {showSelect && (
         <>
           <label>{label}</label>
-          <select
-            value={value !== undefined ? String(value) : ''}
-            onChange={(e) => {
-              const selected = e.target.value;
-              const id = selected ? Number(selected) : undefined;
+          <CategoryDropdown
+            categories={categories}
+            value={value}
+            onChange={(id) => {
               setEditingId(null);
               onChange(id);
             }}
             disabled={disabled || loading}
-            required={!allowEmpty}
-          >
-            <option value="">{allowEmpty ? '全部分类' : '-- 请选择 --'}</option>
-            {categories.map((cat) => (
-              <option key={cat.id} value={cat.id}>
-                {cat.name}
-              </option>
-            ))}
-          </select>
+            loading={loading}
+            allowEmpty={allowEmpty}
+          />
         </>
       )}
 

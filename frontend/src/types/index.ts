@@ -14,6 +14,7 @@ export interface Category {
   name: string;
   color?: string | null;
   is_archived?: boolean;
+  sort_order: number;
   created_at: string;
 }
 

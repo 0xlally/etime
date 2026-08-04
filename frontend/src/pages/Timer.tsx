@@ -1,5 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { Plus, Settings2, X } from 'lucide-react';
+import { CategoryManager } from '../components/CategoryManager';
 import { CategorySelect } from '../components/CategorySelect';
 import { QuickStartRequest, TimerControls, type TimerOfflineState } from '../components/TimerControls';
 import { Button, Card, EmptyState, LoadingState, PageShell, Progress, SectionHeader } from '../components/ui';
@@ -21,7 +23,8 @@ export const Timer: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
   const [templates, setTemplates] = useState<QuickStartTemplate[]>([]);
   const [templatesLoading, setTemplatesLoading] = useState(false);
-  const [categoryCreateOpen, setCategoryCreateOpen] = useState(false);
+  const [categoryModalMode, setCategoryModalMode] = useState<'create' | 'manage' | null>(null);
+  const [categoryRevision, setCategoryRevision] = useState(0);
   const [templateFormOpen, setTemplateFormOpen] = useState(false);
   const [editingTemplateId, setEditingTemplateId] = useState<number | null>(null);
   const [templateForm, setTemplateForm] = useState({
@@ -178,6 +181,12 @@ export const Timer: React.FC = () => {
     } finally {
       setTemplatesLoading(false);
     }
+  };
+
+  const handleCategoriesChanged = () => {
+    setCategoryRevision((current) => current + 1);
+    void loadCategories();
+    void loadTemplates();
   };
 
   const computeWindow = (t: WorkTarget, now: Date) => {
@@ -626,11 +635,29 @@ export const Timer: React.FC = () => {
                     onChange={setCategoryId}
                     showCreate={false}
                     showEdit={false}
+                    refreshKey={categoryRevision}
                   />
                 </div>
-                <button type="button" className="timer-create-category" onClick={() => setCategoryCreateOpen(true)}>
-                  新建
-                </button>
+                <div className="timer-category-actions">
+                  <button
+                    type="button"
+                    className="timer-create-category"
+                    onClick={() => setCategoryModalMode('create')}
+                    aria-label="新建分类"
+                    title="新建分类"
+                  >
+                    <Plus size={18} aria-hidden="true" />
+                  </button>
+                  <button
+                    type="button"
+                    className="timer-create-category"
+                    onClick={() => setCategoryModalMode('manage')}
+                    aria-label="管理分类"
+                    title="管理分类"
+                  >
+                    <Settings2 size={18} aria-hidden="true" />
+                  </button>
+                </div>
               </div>
 
               <TimerControls
@@ -654,6 +681,7 @@ export const Timer: React.FC = () => {
                   showCreate={false}
                   showEdit={false}
                   label="分类"
+                  refreshKey={categoryRevision}
                 />
               </div>
 
@@ -711,29 +739,44 @@ export const Timer: React.FC = () => {
           )}
         </Card>
 
-        {categoryCreateOpen && (
+        {categoryModalMode && (
           <div className="timer-category-modal" role="dialog" aria-modal="true">
             <div className="timer-category-dialog">
               <header>
                 <div>
                   <span>分类</span>
-                  <h2>新建分类</h2>
+                  <h2>{categoryModalMode === 'create' ? '新建分类' : '管理分类'}</h2>
                 </div>
-                <Button variant="ghost" type="button" onClick={() => setCategoryCreateOpen(false)}>
-                  关闭
+                <Button
+                  variant="ghost"
+                  className="timer-category-close"
+                  type="button"
+                  onClick={() => setCategoryModalMode(null)}
+                  aria-label="关闭"
+                  title="关闭"
+                >
+                  <X size={20} aria-hidden="true" />
                 </Button>
               </header>
-              <CategorySelect
-                value={categoryId}
-                onChange={(nextCategoryId) => {
-                  setCategoryId(nextCategoryId);
-                  void loadCategories();
-                  setCategoryCreateOpen(false);
-                }}
-                showSelect={false}
-                showCreate
-                showEdit={false}
-              />
+              {categoryModalMode === 'create' ? (
+                <CategorySelect
+                  value={categoryId}
+                  onChange={(nextCategoryId) => {
+                    setCategoryId(nextCategoryId);
+                    handleCategoriesChanged();
+                    setCategoryModalMode(null);
+                  }}
+                  showSelect={false}
+                  showCreate
+                  showEdit={false}
+                />
+              ) : (
+                <CategoryManager
+                  selectedCategoryId={categoryId}
+                  onChange={setCategoryId}
+                  onCategoriesChanged={handleCategoriesChanged}
+                />
+              )}
             </div>
           </div>
         )}
