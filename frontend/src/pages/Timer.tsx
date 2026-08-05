@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
-import { Plus, Settings2, X } from 'lucide-react';
+import { ArrowDown, ArrowUp, Clock3, History, Pencil, Plus, Settings2, Trash2, X } from 'lucide-react';
+import SakanaWidget from 'sakana-widget';
 import { CategoryManager } from '../components/CategoryManager';
 import { CategorySelect } from '../components/CategorySelect';
 import { QuickStartRequest, TimerControls, type TimerOfflineState } from '../components/TimerControls';
@@ -16,6 +17,21 @@ const getLocalDateInputValue = () => {
 };
 
 const asArray = <T,>(value: T[] | unknown): T[] => (Array.isArray(value) ? value : []);
+
+const beijingTimeFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: 'Asia/Shanghai',
+  hour: '2-digit',
+  minute: '2-digit',
+  second: '2-digit',
+  hourCycle: 'h23',
+});
+
+const beijingDateFormatter = new Intl.DateTimeFormat('zh-CN', {
+  timeZone: 'Asia/Shanghai',
+  month: 'long',
+  day: 'numeric',
+  weekday: 'short',
+});
 
 export const Timer: React.FC = () => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -35,6 +51,7 @@ export const Timer: React.FC = () => {
     color: '#172033',
     icon: '',
   });
+  const mascotMountRef = useRef<HTMLDivElement>(null);
   const [templateSaving, setTemplateSaving] = useState(false);
   const [quickStartRequest, setQuickStartRequest] = useState<QuickStartRequest | null>(null);
   const [manualMode, setManualMode] = useState(false);
@@ -48,6 +65,7 @@ export const Timer: React.FC = () => {
   const [progress, setProgress] = useState<{ completed: number; target: number; start: Date; end: Date } | null>(null);
   const [isRunning, setIsRunning] = useState(false);
   const [activeElapsed, setActiveElapsed] = useState(0);
+  const [beijingNow, setBeijingNow] = useState(() => new Date());
   const [offlineState, setOfflineState] = useState<TimerOfflineState>({
     ...getOfflineTimerSnapshot(),
     isOnline: isNetworkOnline(),
@@ -59,6 +77,35 @@ export const Timer: React.FC = () => {
     loadTargetsAndProgress();
     loadCategories();
     loadTemplates();
+  }, []);
+
+  useEffect(() => {
+    const clock = window.setInterval(() => setBeijingNow(new Date()), 1000);
+    return () => window.clearInterval(clock);
+  }, []);
+
+  useEffect(() => {
+    const mount = mascotMountRef.current;
+    if (!mount) return;
+
+    const widgetTarget = document.createElement('div');
+    widgetTarget.className = 'timer-mascot-widget';
+    mount.replaceChildren(widgetTarget);
+
+    const mascot = new SakanaWidget({
+      autoFit: true,
+      controls: false,
+      draggable: true,
+      rod: false,
+      stroke: { color: '#000000', width: 6 },
+      title: true,
+      stateKey: 'etime-timer-mascot',
+    }).mount(widgetTarget);
+
+    return () => {
+      mascot.unmount();
+      mount.replaceChildren();
+    };
   }, []);
 
   useEffect(() => {
@@ -449,24 +496,37 @@ export const Timer: React.FC = () => {
     : targetPeriod === 'weekly'
     ? '每周'
     : '每月';
+  const beijingTime = beijingTimeFormatter.format(beijingNow);
+  const beijingDate = beijingDateFormatter.format(beijingNow);
 
   return (
     <PageShell
       className="timer-page"
       title="计时"
-      description="选一个分类，开始一段安静的时间。"
       action={(
-        <div className={`timer-today-card ${progress ? '' : 'is-empty'}`}>
-          <span>今日剩余</span>
-          <strong>{progress ? formatTime(remainingTargetSeconds) : '未设置'}</strong>
-          <small>
-            {progress
-              ? `${targetPeriodLabel}目标 ${formatTime(displayedActualSeconds)} / ${formatTime(progress.target)}`
-              : '暂无追踪目标'}
-          </small>
-          {progress && (
-            <Progress value={displayedActualSeconds} max={progress.target} label="目标完成进度" />
-          )}
+        <div className="timer-header-status">
+          <div className="timer-header-metrics">
+            <div className="beijing-clock" aria-label={`北京时间 ${beijingTime}`}>
+              <span>北京时间</span>
+              <strong>{beijingTime}</strong>
+              <small>{beijingDate}</small>
+            </div>
+            <div className={`timer-today-card ${progress ? '' : 'is-empty'}`}>
+              <span>今日剩余</span>
+              <strong>{progress ? formatTime(remainingTargetSeconds) : '未设置'}</strong>
+              <small>
+                {progress
+                  ? `${targetPeriodLabel}目标 ${formatTime(displayedActualSeconds)} / ${formatTime(progress.target)}`
+                  : '暂无追踪目标'}
+              </small>
+              {progress && (
+                <Progress value={displayedActualSeconds} max={progress.target} label="目标完成进度" />
+              )}
+            </div>
+          </div>
+          <div className="timer-mascot" aria-label="计时陪伴看板娘">
+            <div ref={mascotMountRef} className="timer-mascot-mount" />
+          </div>
         </div>
       )}
     >
@@ -475,19 +535,13 @@ export const Timer: React.FC = () => {
           <SectionHeader
             eyebrow="快捷开始"
             title="常用卡片"
-            description="高频事项，一点即开始。"
-            action={(
-              <Button variant="secondary" onClick={handleOpenNewTemplate}>
-                新建模板
-              </Button>
-            )}
           />
 
           {templatesLoading ? (
             <LoadingState text="正在整理常用计时卡片..." />
           ) : templates.length > 0 ? (
             <div className="quick-template-list">
-              {templates.map((template, index) => (
+              {templates.map((template) => (
                 <article
                   key={template.id}
                   className="quick-template-item"
@@ -507,20 +561,6 @@ export const Timer: React.FC = () => {
                     </span>
                     <em>{formatTemplateDuration(template.duration_seconds)}</em>
                   </button>
-                  <div className="quick-template-actions">
-                    <button type="button" onClick={() => handleMoveTemplate(template, -1)} disabled={index === 0}>
-                      上移
-                    </button>
-                    <button type="button" onClick={() => handleMoveTemplate(template, 1)} disabled={index === templates.length - 1}>
-                      下移
-                    </button>
-                    <button type="button" onClick={() => handleEditTemplate(template)}>
-                      编辑
-                    </button>
-                    <button type="button" className="danger" onClick={() => handleDeleteTemplate(template)}>
-                      删除
-                    </button>
-                  </div>
                 </article>
               ))}
             </div>
@@ -533,94 +573,16 @@ export const Timer: React.FC = () => {
             />
           )}
 
-          {templateFormOpen && (
-            <form className="quick-template-form" onSubmit={handleTemplateSubmit}>
-              <div className="form-group">
-                <label>标题</label>
-                <input
-                  type="text"
-                  value={templateForm.title}
-                  onChange={(e) => setTemplateForm({ ...templateForm, title: e.target.value })}
-                  placeholder="英语 30 分钟"
-                />
-              </div>
-              <div className="form-group">
-                <label>分类</label>
-                <select
-                  value={templateForm.category_id}
-                  onChange={(e) => setTemplateForm({ ...templateForm, category_id: e.target.value })}
-                >
-                  <option value="">-- 请选择 --</option>
-                  {categories.map((cat) => (
-                    <option key={cat.id} value={cat.id}>
-                      {cat.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="form-group">
-                <label>固定时长（分钟）</label>
-                <input
-                  type="number"
-                  min="1"
-                  step="1"
-                  value={templateForm.duration_minutes}
-                  onChange={(e) => setTemplateForm({ ...templateForm, duration_minutes: e.target.value })}
-                  placeholder="留空表示不限时"
-                />
-              </div>
-              <div className="form-group">
-                <label>颜色</label>
-                <input
-                  type="color"
-                  value={templateForm.color}
-                  onChange={(e) => setTemplateForm({ ...templateForm, color: e.target.value })}
-                />
-              </div>
-              <div className="form-group">
-                <label>图标文字（可选）</label>
-                <input
-                  type="text"
-                  maxLength={8}
-                  value={templateForm.icon}
-                  onChange={(e) => setTemplateForm({ ...templateForm, icon: e.target.value })}
-                  placeholder="英"
-                />
-              </div>
-              <div className="form-group quick-template-note">
-                <label>备注模板（可选）</label>
-                <textarea
-                  rows={2}
-                  value={templateForm.note_template}
-                  onChange={(e) => setTemplateForm({ ...templateForm, note_template: e.target.value })}
-                />
-              </div>
-              <div className="quick-template-form-actions">
-                <Button
-                  variant="ghost"
-                  type="button"
-                  onClick={() => {
-                    resetTemplateForm();
-                    setTemplateFormOpen(false);
-                  }}
-                  disabled={templateSaving}
-                >
-                  取消
-                </Button>
-                <Button type="submit" disabled={templateSaving}>
-                  {templateSaving ? '保存中...' : editingTemplateId ? '保存模板' : '创建模板'}
-                </Button>
-              </div>
-            </form>
-          )}
         </Card>
 
-        <Card className="timer-card">
+        <Card className={`timer-card ${isRunning ? 'is-running' : ''}`}>
           <div className="mode-toggle">
             <button className={!manualMode ? 'active' : ''} onClick={() => setManualMode(false)}>
+              <Clock3 size={17} aria-hidden="true" />
               计时
             </button>
             <button className={manualMode ? 'active' : ''} onClick={() => setManualMode(true)}>
+              <History size={17} aria-hidden="true" />
               补录
             </button>
           </div>
@@ -771,11 +733,168 @@ export const Timer: React.FC = () => {
                   showEdit={false}
                 />
               ) : (
-                <CategoryManager
-                  selectedCategoryId={categoryId}
-                  onChange={setCategoryId}
-                  onCategoriesChanged={handleCategoriesChanged}
-                />
+                <>
+                  <CategoryManager
+                    selectedCategoryId={categoryId}
+                    onChange={setCategoryId}
+                    onCategoriesChanged={handleCategoriesChanged}
+                  />
+                  <section className="timer-template-manager" aria-label="管理快捷卡片">
+                  <div className="timer-template-manager-head">
+                    <div>
+                      <span>快捷开始</span>
+                      <h3>管理常用卡片</h3>
+                    </div>
+                    <Button variant="secondary" type="button" onClick={handleOpenNewTemplate}>
+                      <Plus size={17} aria-hidden="true" />
+                      新建卡片
+                    </Button>
+                  </div>
+                  {templatesLoading ? (
+                    <LoadingState text="正在整理常用计时卡片..." />
+                  ) : templates.length > 0 ? (
+                    <div className="timer-template-manager-list">
+                      {templates.map((template, index) => (
+                        <div className="timer-template-manager-row" key={template.id}>
+                          <div className="timer-template-manager-name">
+                            <span
+                              className="quick-template-icon"
+                              style={{ background: template.color ?? '#000000' }}
+                              aria-hidden="true"
+                            >
+                              {template.icon?.slice(0, 2) || template.title.slice(0, 1)}
+                            </span>
+                            <span>
+                              <strong>{template.title}</strong>
+                              <small>{template.category_name ?? '未命名分类'} · {formatTemplateDuration(template.duration_seconds)}</small>
+                            </span>
+                          </div>
+                          <div className="quick-template-actions">
+                            <button
+                              type="button"
+                              onClick={() => void handleMoveTemplate(template, -1)}
+                              disabled={index === 0}
+                              aria-label={`上移${template.title}`}
+                              title="上移"
+                            >
+                              <ArrowUp size={16} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => void handleMoveTemplate(template, 1)}
+                              disabled={index === templates.length - 1}
+                              aria-label={`下移${template.title}`}
+                              title="下移"
+                            >
+                              <ArrowDown size={16} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleEditTemplate(template)}
+                              aria-label={`编辑${template.title}`}
+                              title="编辑"
+                            >
+                              <Pencil size={16} aria-hidden="true" />
+                            </button>
+                            <button
+                              type="button"
+                              className="danger"
+                              onClick={() => void handleDeleteTemplate(template)}
+                              aria-label={`删除${template.title}`}
+                              title="删除"
+                            >
+                              <Trash2 size={16} aria-hidden="true" />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="category-manager-state">暂无快捷卡片</p>
+                  )}
+
+                  {templateFormOpen && (
+                    <form className="quick-template-form" onSubmit={handleTemplateSubmit}>
+                      <div className="form-group">
+                        <label>标题</label>
+                        <input
+                          type="text"
+                          value={templateForm.title}
+                          onChange={(e) => setTemplateForm({ ...templateForm, title: e.target.value })}
+                          placeholder="英语 30 分钟"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>分类</label>
+                        <select
+                          value={templateForm.category_id}
+                          onChange={(e) => setTemplateForm({ ...templateForm, category_id: e.target.value })}
+                        >
+                          <option value="">-- 请选择 --</option>
+                          {categories.map((cat) => (
+                            <option key={cat.id} value={cat.id}>
+                              {cat.name}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                      <div className="form-group">
+                        <label>固定时长（分钟）</label>
+                        <input
+                          type="number"
+                          min="1"
+                          step="1"
+                          value={templateForm.duration_minutes}
+                          onChange={(e) => setTemplateForm({ ...templateForm, duration_minutes: e.target.value })}
+                          placeholder="留空表示不限时"
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>颜色</label>
+                        <input
+                          type="color"
+                          value={templateForm.color}
+                          onChange={(e) => setTemplateForm({ ...templateForm, color: e.target.value })}
+                        />
+                      </div>
+                      <div className="form-group">
+                        <label>图标文字（可选）</label>
+                        <input
+                          type="text"
+                          maxLength={8}
+                          value={templateForm.icon}
+                          onChange={(e) => setTemplateForm({ ...templateForm, icon: e.target.value })}
+                          placeholder="英"
+                        />
+                      </div>
+                      <div className="form-group quick-template-note">
+                        <label>备注模板（可选）</label>
+                        <textarea
+                          rows={2}
+                          value={templateForm.note_template}
+                          onChange={(e) => setTemplateForm({ ...templateForm, note_template: e.target.value })}
+                        />
+                      </div>
+                      <div className="quick-template-form-actions">
+                        <Button
+                          variant="ghost"
+                          type="button"
+                          onClick={() => {
+                            resetTemplateForm();
+                            setTemplateFormOpen(false);
+                          }}
+                          disabled={templateSaving}
+                        >
+                          取消
+                        </Button>
+                        <Button type="submit" disabled={templateSaving}>
+                          {templateSaving ? '保存中...' : editingTemplateId ? '保存模板' : '创建模板'}
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                  </section>
+                </>
               )}
             </div>
           </div>
