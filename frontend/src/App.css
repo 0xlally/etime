@@ -9498,3 +9498,54 @@ table td {
   color: #ffffff;
   box-shadow: 3px 3px 0 rgba(179, 58, 52, 0.2);
 }
+
+/* Keep category and card management in one scroll surface. */
+.timer-category-dialog {
+  overflow-x: hidden;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
+}
+
+.timer-category-dialog .category-manager-list {
+  max-height: min(42dvh, 360px);
+}
+
+.timer-category-dialog .timer-template-manager-list {
+  max-height: none;
+  overflow: visible;
+}
+
+.timer-category-dialog .quick-template-form {
+  width: 100%;
+  min-width: 0;
+  grid-template-columns: minmax(0, 1fr);
+  padding: 0.8rem;
+}
+
+.timer-category-dialog .quick-template-form .form-group,
+.timer-category-dialog .quick-template-note,
+.timer-category-dialog .quick-template-form-actions {
+  min-width: 0;
+  grid-column: 1 / -1;
+}
+
+.timer-category-dialog .quick-template-form input,
+.timer-category-dialog .quick-template-form select,
+.timer-category-dialog .quick-template-form textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.timer-category-dialog .quick-template-form-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.timer-category-dialog .quick-template-form-actions button,
+.timer-category-dialog .quick-template-form-actions button[type='submit'] {
+  width: 100%;
+  min-width: 0;
+}
