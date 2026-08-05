@@ -88,23 +88,53 @@ export const Timer: React.FC = () => {
     const mount = mascotMountRef.current;
     if (!mount) return;
 
-    const widgetTarget = document.createElement('div');
-    widgetTarget.className = 'timer-mascot-widget';
-    mount.replaceChildren(widgetTarget);
+    let mascot: { unmount: () => unknown } | null = null;
+    const desktopQuery = window.matchMedia('(min-width: 701px)');
 
-    const mascot = new SakanaWidget({
-      autoFit: true,
-      controls: false,
-      draggable: true,
-      rod: false,
-      stroke: { color: '#000000', width: 6 },
-      title: true,
-      stateKey: 'etime-timer-mascot',
-    }).mount(widgetTarget);
+    const unmountMascot = () => {
+      if (mascot) {
+        try {
+          mascot.unmount();
+        } catch {
+          // Sakana may already be detached during React development remounts.
+        }
+        mascot = null;
+      }
+      if (mount.isConnected) mount.replaceChildren();
+    };
+
+    const syncMascot = () => {
+      if (!desktopQuery.matches) {
+        unmountMascot();
+        return;
+      }
+      if (mascot || !mount.isConnected) return;
+
+      const widgetTarget = document.createElement('div');
+      widgetTarget.className = 'timer-mascot-widget';
+      mount.replaceChildren(widgetTarget);
+
+      try {
+        mascot = new SakanaWidget({
+          autoFit: true,
+          controls: false,
+          draggable: true,
+          rod: false,
+          stroke: { color: '#000000', width: 6 },
+          title: true,
+          stateKey: 'etime-timer-mascot',
+        }).mount(widgetTarget);
+      } catch {
+        mount.replaceChildren();
+      }
+    };
+
+    syncMascot();
+    desktopQuery.addEventListener('change', syncMascot);
 
     return () => {
-      mascot.unmount();
-      mount.replaceChildren();
+      desktopQuery.removeEventListener('change', syncMascot);
+      unmountMascot();
     };
   }, []);
 

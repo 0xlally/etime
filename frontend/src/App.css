@@ -9482,3 +9482,19 @@ table td {
 .timer-category-dialog .quick-template-actions button:disabled {
   opacity: 0.32;
 }
+
+/* Stop stays neutral until the user is about to use the destructive action. */
+.timer-page .timer-card .timer-buttons button.stop {
+  border-color: #000000;
+  background: #000000;
+  background-image: none;
+  color: #ffffff;
+  box-shadow: 3px 3px 0 rgba(0, 0, 0, 0.16);
+}
+
+.timer-page .timer-card .timer-buttons button.stop:hover:not(:disabled) {
+  border-color: #b33a34;
+  background: #b33a34;
+  color: #ffffff;
+  box-shadow: 3px 3px 0 rgba(179, 58, 52, 0.2);
+}

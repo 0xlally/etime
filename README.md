@@ -1,120 +1,72 @@
 # ETime
 
-ETime 是一个开源、自托管的时间工作台，把计时、补录、计划、目标、复盘、小组协作和 Android 自律模式放在同一套安静清晰的系统里。
+ETime 是一个可自托管的时间工作台，包含计时、计划、目标、复盘、通知和 Android 自律模式。
 
-它不是只回答“我花了多久”的秒表，而是帮你持续回答三个问题：
+## 公网地址
 
-- 今天的投入够不够，离目标还差多少？
-- 哪些分类、任务和习惯正在真正推进长期目标？
-- 复盘时能不能一眼看到节奏，而不是重新翻账？
+- Web：<https://time.lally.top>
+- 项目仓库：<https://github.com/0xlally/etime>
+- Android 下载：<https://github.com/0xlally/etime/releases/latest>
 
-在线体验：<http://time.lally.top>
+## 服务器部署
 
-项目地址：<https://github.com/0xlally/etime>
+服务器要求：Docker、Docker Compose 和 Git。
 
-## 界面预览
+```bash
+git clone https://github.com/0xlally/etime.git
+cd etime
+cp backend/.env.example backend/.env
+```
 
-### 计时工作台
+编辑 `backend/.env` 和根目录 `.env`，至少配置随机的 `JWT_SECRET`、数据库连接和生产域名的 `BACKEND_CORS_ORIGINS`，然后执行：
 
-常用卡片、今日剩余、分类选择和大号计时器放在同一个首屏里。高频事项一键开始，临时事项也可以直接选分类计时。
+```bash
+docker compose up -d --build
+docker compose run --rm backend alembic upgrade head
+docker compose ps
+```
 
-![ETime 计时工作台](docs/assets/screenshots/timer-home.png)
+默认服务端口：
 
-### 计划与目标
+- 前端：`3000`
+- 后端 API：`8001`
+- API 路径：`/api/v1`
 
-月、周、日三种视图管理任务；待安排池先收纳想法，再安排到具体时间。目标进度和计划在同一页里联动，避免“计划归计划、目标归目标”。
+更新已有部署：
 
-![ETime 计划页面](docs/assets/screenshots/planner.png)
+```bash
+git pull --ff-only origin main
+docker compose up -d --build
+docker compose run --rm backend alembic upgrade head
+```
 
-### 复盘与热力
+## Android 构建
 
-日报、周报、月报、年报聚合分类占比、目标达成、最近评估记录、趋势、时痕和热力图；每种复盘范围都支持查看全部分类或多选若干分类，并可导出 Markdown。
+Android 工程位于 `frontend/android`，需要 Node.js、JDK 17+、Android SDK 和 Gradle wrapper。
 
-![ETime 复盘页面](docs/assets/screenshots/review.png)
+```powershell
+cd frontend
+npm install
+$env:VITE_API_BASE_URL = 'https://time.lally.top/api/v1'
+npm run android:sync
+cd android
+.\gradlew.bat assembleRelease
+```
 
-### 小组协作
+签名配置放在 `~/.android/etime-release-keystore.properties`。配置存在时会生成签名 APK，否则生成 unsigned APK。
 
-用邀请码加入轻量小组，分享今日状态、复盘卡片和文字消息，适合自习、备考、写作和项目结伴。
+Debug 构建：
 
-![ETime 小组协作](docs/assets/screenshots/groups.png)
+```powershell
+cd frontend
+npm run android:build:debug
+```
 
-### Android 体验
-
-Android 端复用同一套前端体验，加入离线计时队列和自律模式。自律模式可统计今日手机使用时长，超过上限后通过悬浮提醒介入。
-
-## 核心功能
-
-### 1. 计时与补录
-
-- 实时计时：选择分类后开始，结束时自动生成 session。
-- 快捷卡片：把“英语 30 分钟”“阅读 25 分钟”等高频事项做成一键入口。
-- 固定时长提醒：模板到点后提醒继续或结束。
-- 手动补录：忘记开计时时，可以补录日期、分类、小时、分钟和备注。
-- 效率系数：结束时可用系数折算有效时长。
-- 离线恢复：断网、刷新或 Android 前台切换后，本地运行状态仍可恢复并等待同步。
-
-### 2. 目标引擎
-
-- 支持每日、每周、每月、明日目标。
-- 可限定统计某些分类，适合学习、健身、写作、备考等长期投入。
-- 展示当前进度、剩余时长、连续达成、最佳连续、完成率、时间债务和补偿建议。
-- 目标进度会出现在计时首页、计划页、通知和复盘里。
-
-### 3. 计划日历
-
-- 月视图用于浏览安排，周/日视图用于更密集的任务操作。
-- 待安排池收纳还没有具体时间的任务。
-- 支持优先级、预计时长、提醒、完成、取消、转成时间记录和从计划直接开始计时。
-- 适合把“想做的事”落到具体时间块里。
-
-### 4. 复盘、统计与热力
-
-- 日报、周报、月报、年报覆盖总时长、分类趋势、目标达成和时间轨迹。
-- 所有复盘范围都可查看全部分类，或组合筛选多个分类。
-- 最近 8 条目标评估记录集中显示在复盘页。
-- 近 8 周热力图帮助判断节奏是否稳定。
-- 支持 Markdown 导出，方便沉淀到博客、Notion、Obsidian 或周报。
-- 时间轨迹记录一天中的关键状态，让数字和上下文一起保留。
-
-### 5. 小组协作
-
-- 创建/加入小组，使用邀请码轻量协作。
-- 支持公开小组申请、成员列表、群聊消息。
-- 支持分享今日状态和复盘卡片摘要。
-- 适合自习小组、学习搭子、备考打卡群、写作/开发结伴。
-
-### 6. Android 自律模式
-
-- Capacitor Android 客户端复用 Web 功能。
-- 原生侧统计今日手机使用时长。
-- 可设置每日上限、统计全部应用或指定应用。
-- 使用 Android 使用情况访问和悬浮窗权限，超过上限后显示悬浮提醒。
-- 本地解锁密码使用 PBKDF2-HMAC-SHA256 派生存储。
-
-### 7. 账号、安全与部署
-
-- JWT access token + refresh token 登录。
-- 邮箱找回密码，重置令牌绑定当前密码状态，改密后自动失效。
-- 管理端支持用户、session 和审计日志管理。
-- Docker Compose 自托管，默认不内置可登录管理员。
-- Android 禁止应用备份，生产构建可指定真实 API 地址。
-
-## 技术栈
-
-- 前端：React 18、Vite、TypeScript、Tailwind CSS、Recharts、lucide-react
-- 后端：FastAPI、SQLAlchemy、Alembic、PostgreSQL
-- 移动端：Capacitor Android、原生自律模式插件
-- 部署：Docker Compose、Nginx、PostgreSQL
-- 认证与安全：JWT、SMTP 密码重置、PBKDF2 本地密码派生
-
-## 快速开始
-
-### 本地开发
+## 本地开发
 
 ```bash
 cd backend
 pip install -r requirements.txt
-pytest
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8001
 ```
 
@@ -124,103 +76,4 @@ npm install
 npm run dev -- --host --port 3000
 ```
 
-开发入口：
-
-- Web: <http://localhost:3000>
-- API: <http://localhost:8001/api/v1>
-- API 文档: <http://localhost:8001/api/v1/docs>
-
-### Docker Compose
-
-在仓库根目录创建 `.env`：
-
-```env
-POSTGRES_DB=etime
-POSTGRES_USER=etime
-POSTGRES_PASSWORD=replace-with-a-long-random-password
-```
-
-复制并配置后端环境：
-
-```bash
-cp backend/.env.example backend/.env
-```
-
-启动：
-
-```bash
-docker compose up -d --build
-docker compose run --rm backend alembic upgrade head
-```
-
-默认端口：
-
-- 前端容器：<http://localhost:3000>
-- 后端 API：<http://localhost:8001/api/v1>
-
-## 关键配置
-
-生产环境至少检查：
-
-- `JWT_SECRET`：必须替换为长随机值。
-- `DATABASE_URL`：Docker Compose 默认由根目录 `.env` 注入 PostgreSQL 地址。
-- `BACKEND_CORS_ORIGINS`：按实际域名配置。
-- `SMTP_HOST` / `SMTP_USER` / `SMTP_PASSWORD` / `SMTP_FROM`：启用找回密码邮件。
-- `AUTO_INIT_ADMIN=False`：默认不自动创建管理员；确需种子管理员时，`DEFAULT_ADMIN_PASSWORD` 至少 12 位且不能使用常见默认密码。
-
-## Android
-
-Android 工程位于 `frontend/android`。
-
-调试包：
-
-```powershell
-cd frontend
-npm run android:sync
-npm run android:build:debug
-```
-
-生产 API 打包：
-
-```powershell
-cd frontend
-$env:VITE_API_BASE_URL = 'https://your-domain.example/api/v1'
-npm run android:sync
-cd android
-.\gradlew.bat assembleRelease
-```
-
-如已在 `~/.android/etime-release-keystore.properties` 配置 release keystore，Gradle 会生成签名 release APK；否则会生成 unsigned APK，需要签名后再分发。
-
-## API 概览
-
-主要接口挂在 `/api/v1` 下：
-
-- `POST /auth/register`, `POST /auth/login`, `POST /auth/refresh`
-- `GET /users/me`
-- `GET|POST /categories`
-- `POST /sessions/start`, `POST /sessions/stop`, `POST /sessions/manual`
-- `GET /stats/summary`
-- `GET /heatmap`
-- `GET|POST /targets`, `GET /targets/dashboard`
-- `GET /reviews/daily`, `GET /reviews/weekly`, `GET /reviews/monthly`, `GET /reviews/yearly`
-- `GET|POST /calendar-tasks`
-- `GET|POST /quick-start-templates`
-- `GET|POST /groups`
-
-## 验证
-
-本次发布前已执行：
-
-- `cd frontend && npm run build`
-- `cd frontend && npm run android:sync`
-- `cd frontend/android && .\gradlew.bat assembleRelease`
-- 使用 Playwright 在桌面和手机宽度生成并检查文档截图。
-
-## 推广文案
-
-完整项目介绍见 [docs/project-introduction.md](docs/project-introduction.md)。
-
-一句话版本：
-
-> ETime 是一个开源、自托管的时间工作台：计时、计划、目标、复盘和小组协作，都放在一套安静清晰的系统里。
+本地 Web 地址：<http://localhost:3000>
